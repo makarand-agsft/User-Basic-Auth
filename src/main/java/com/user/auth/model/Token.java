@@ -1,9 +1,9 @@
 package com.user.auth.model;
 
-import java.util.Date;
-import java.util.List;
+import com.user.auth.enums.TokenType;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Table(name = "token")
@@ -19,9 +19,10 @@ public class Token extends AuditingEntity{
 	
 	@Column(name = "expiry_date")
 	private Date expiryDate;
-	
+
+	@Enumerated(EnumType.STRING)
 	@Column(name = "token_type")
-	private String tokenType;
+	private TokenType tokenType;
 
 	@ManyToOne
 	@JoinColumn(name="user_id", nullable=false)
@@ -51,11 +52,11 @@ public class Token extends AuditingEntity{
 		this.expiryDate = expiryDate;
 	}
 
-	public String getTokenType() {
+	public TokenType getTokenType() {
 		return tokenType;
 	}
 
-	public void setTokenType(String tokenType) {
+	public void setTokenType(TokenType tokenType) {
 		this.tokenType = tokenType;
 	}
 

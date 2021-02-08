@@ -1,6 +1,7 @@
 package com.user.auth.service;
 
 import com.user.auth.dto.request.UserRegisterReqDto;
+import com.user.auth.enums.TokenType;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
 import com.user.auth.repository.TokenRepository;
@@ -12,7 +13,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
 
-import static com.user.auth.TokenType.RESET_PASSWORD_TOKEN;
 
 @Service
 public class UserService {
@@ -39,7 +39,7 @@ public class UserService {
             user.setRoles(dto.getRoles());
             Token token = new Token();
             token.setToken(generateKey(10));
-            token.setTokenType(RESET_PASSWORD_TOKEN);
+            token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);
             token.setUsers(user);
             token.setExpiryDate(new Date(System.currentTimeMillis()+tokenExpiry*1000));
             user.setTokens(Collections.singletonList(token));

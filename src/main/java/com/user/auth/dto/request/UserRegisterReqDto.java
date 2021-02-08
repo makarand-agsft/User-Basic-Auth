@@ -1,9 +1,9 @@
-package com.user.auth.dto;
+package com.user.auth.dto.request;
 
 import com.user.auth.model.Role;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserRegisterReqDto {
 
@@ -17,15 +17,13 @@ public class UserRegisterReqDto {
 	
 	private String address;
 	
-	private String password;
+	private List<Role> roles = new ArrayList<>();
 
-	private Set<Role> roles = new HashSet<>();
-
-	public Set<Role> getRoles() {
+	public List<Role> getRoles() {
 		return roles;
 	}
 
-	public void setRoles(Set<Role> roles) {
+	public void setRoles(List<Role> roles) {
 		this.roles = roles;
 	}
 
@@ -69,18 +67,11 @@ public class UserRegisterReqDto {
 		this.address = address;
 	}
 
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
 
 	@Override
 	public String toString() {
 		return "UserDto [firstName=" + firstName + ", lastName=" + lastName + ", email=" + email + ", mobile=" + mobile
-				+ ", address=" + address + ", password=" + password + "]";
+				+ ", address=" + address + "]";
 	}
 
 }

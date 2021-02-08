@@ -1,5 +1,4 @@
-package com.jwt.demo.config;
-
+package com.user.auth.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.PathSelectors;

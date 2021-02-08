@@ -17,9 +17,9 @@ import java.util.Map;
 @Component
 public class JwtProvider {
 
-    @Value("${secret}") public String secretKey;
+    @Value("${jwt.secret}") public String secretKey;
 
-    @Value("${tokenValidity}") public Long jwtTokenValidity;
+    @Value("${jwt.tokenValidity}") public Long jwtTokenValidity;
 
     private Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);

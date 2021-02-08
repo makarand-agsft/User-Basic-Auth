@@ -1,8 +1,11 @@
 package com.user.auth.dto;
 
-import java.io.Serializable;
+import com.user.auth.model.Role;
 
-public class UserDto {
+import java.util.HashSet;
+import java.util.Set;
+
+public class UserRegisterReqDto {
 
 	private String firstName;
 	
@@ -15,7 +18,17 @@ public class UserDto {
 	private String address;
 	
 	private String password;
-	
+
+	private Set<Role> roles = new HashSet<>();
+
+	public Set<Role> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(Set<Role> roles) {
+		this.roles = roles;
+	}
+
 	public String getFirstName() {
 		return firstName;
 	}

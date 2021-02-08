@@ -2,18 +2,11 @@ package com.user.auth.model;
 
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "user")
-public class User {
+public class User extends AuditingEntity{
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,12 +30,28 @@ public class User {
 	
 	@Column(name = "password")
 	private String password;
-	
-	@ManyToMany
+
+	@Column(name = "is_active")
+	private Boolean isActive;
+
+	public Boolean getActive() {
+		return isActive;
+	}
+
+	public void setActive(Boolean active) {
+		isActive = active;
+	}
+
+	@ManyToMany(cascade= CascadeType.ALL,fetch=FetchType.EAGER)
+	@JoinTable(name="user_roles",
+			joinColumns = {@JoinColumn(name="user_id", referencedColumnName="id")},
+			inverseJoinColumns = {@JoinColumn(name="role_id", referencedColumnName="id")}
+	)
 	private List<Role> roles;
-	
-	@ManyToMany
+
+	@OneToMany(mappedBy = "users")
 	private List<Token> tokens;
+
 	
 	public Long getUserId() {
 		return userId;
@@ -116,11 +125,7 @@ public class User {
 		this.tokens = tokens;
 	}
 
-	@Override
-	public String toString() {
-		return "User [userId=" + userId + ", firstName=" + firstName + ", lastName=" + lastName + ", email=" + email
-				+ ", address=" + address + ", mobileNumber=" + mobileNumber + ", password=" + password + ", roles="
-				+ roles + ", tokens=" + tokens + "]";
+	@Override public String toString() {
+		return "User{" + "userId=" + userId + ", firstName='" + firstName + '\'' + ", lastName='" + lastName + '\'' + ", email='" + email + '\'' + ", address='" + address + '\'' + ", mobileNumber=" + mobileNumber + ", password='" + password + '\'' + ", isActive=" + isActive + ", roles=" + roles + ", tokens=" + tokens + '}';
 	}
-
 }

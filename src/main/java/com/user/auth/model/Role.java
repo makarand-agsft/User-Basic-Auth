@@ -12,18 +12,16 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "role")
-public class Role {
+public class Role extends AuditingEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
 	private Long roleId;
-	
+
+	@Column(name = "role")
 	private String role;
 	
-	@ManyToMany(mappedBy = "roles")
-	private List<User> users;
-
 	public Long getRoleId() {
 		return roleId;
 	}
@@ -40,17 +38,7 @@ public class Role {
 		this.role = role;
 	}
 
-	public List<User> getUsers() {
-		return users;
+	@Override public String toString() {
+		return "Role{" + "roleId=" + roleId + ", role='" + role + '\'' + '}';
 	}
-
-	public void setUsers(List<User> users) {
-		this.users = users;
-	}
-
-	@Override
-	public String toString() {
-		return "Role [roleId=" + roleId + ", role=" + role + ", users=" + users + "]";
-	}
-	
 }

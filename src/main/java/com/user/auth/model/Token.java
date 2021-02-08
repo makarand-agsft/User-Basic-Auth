@@ -3,23 +3,18 @@ package com.user.auth.model;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "token")
-public class Token {
+public class Token extends AuditingEntity{
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
 	private Long tokenId;
-	
+
+	@Column(name = "token")
 	private String token;
 	
 	@Column(name = "expiry_date")
@@ -27,12 +22,10 @@ public class Token {
 	
 	@Column(name = "token_type")
 	private String tokenType;
-	
-	@Column(name = "created_at")
-	private Date createdAt;
-	
-	@ManyToMany(mappedBy = "tokens")
-	private List<User> users;
+
+	@ManyToOne
+	@JoinColumn(name="user_id", nullable=false)
+	private User users;
 
 	public Long getTokenId() {
 		return tokenId;
@@ -66,26 +59,15 @@ public class Token {
 		this.tokenType = tokenType;
 	}
 
-	public Date getCreatedAt() {
-		return createdAt;
-	}
-
-	public void setCreatedAt(Date createdAt) {
-		this.createdAt = createdAt;
-	}
-
-	public List<User> getUsers() {
+	public User getUsers() {
 		return users;
 	}
 
-	public void setUsers(List<User> users) {
+	public void setUsers(User users) {
 		this.users = users;
 	}
 
-	@Override
-	public String toString() {
-		return "Token [tokenId=" + tokenId + ", token=" + token + ", expiryDate=" + expiryDate + ", tokenType="
-				+ tokenType + ", createdAt=" + createdAt + ", users=" + users + "]";
+	@Override public String toString() {
+		return "Token{" + "tokenId=" + tokenId + ", token='" + token + '\'' + ", expiryDate=" + expiryDate + ", tokenType='" + tokenType + '\'' + ", users=" + users + '}';
 	}
-	
 }

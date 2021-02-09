@@ -1,10 +1,6 @@
 package com.user.auth.service.impl;
 
-import com.user.auth.dto.UserListResponseDto;
-import com.user.auth.dto.UserLoginReqDto;
-import com.user.auth.dto.UserLoginResDto;
-import com.user.auth.dto.ForgotPasswordDto;
-import com.user.auth.dto.UserRegisterReqDto;
+import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.exception.UserNotFoundException;
@@ -26,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -119,6 +116,30 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public boolean changePassword(ChangePasswordDto changePasswordDto) {
+        if (changePasswordDto != null && changePasswordDto.getEmail() != null && changePasswordDto.getOldPassword() != null 
+                && changePasswordDto.getNewPassword() != null) {
+            Optional<User> userFromDb= userRepository.findByEmail(changePasswordDto.getEmail());
+            if(userFromDb.isPresent()){
+                if(userFromDb.get().getPassword().equalsIgnoreCase(changePasswordDto.getOldPassword())){
+                    userFromDb.get().setPassword(changePasswordDto.getNewPassword());
+                    userRepository.save(userFromDb.get());
+                    return true;
+                }else{
+                    // old password not matched
+                    return false;
+                }
+
+            }else{
+                // user not present
+                return false;
+            }
+
+        }
+        return false;
+    }
+
     private boolean sendTokenMailToUser(User user) {
         if(user.getEmail()!=null ){
             String token=userAuthUtils.generateKey(10);
@@ -129,7 +150,9 @@ public class UserServiceImpl implements UserService {
             tokenToBeSave.setToken(token);
             tokenToBeSave.setTokenType(TokenType.FORGOT_PASSWORD_TOKEN);
             tokenToBeSave.setUsers(user);
-            tokenToBeSave.setExpiryDate(new Date(System.currentTimeMillis()+jwTokenExpiry*1000));
+            tokenToBeSave.setCreatedBy(user.getUserProfile().getFirstName()+"."+user.getUserProfile().getLastName());
+            tokenToBeSave.setCreatedDate(new Date());
+            tokenToBeSave.setExpiryDate(new Date(System.currentTimeMillis() + jwTokenExpiry * 1000));
             tokenRepository.save(tokenToBeSave);
             emailUtils.sendInvitationEmail(user.getEmail(),subject,text,fromEmail);
             return true;

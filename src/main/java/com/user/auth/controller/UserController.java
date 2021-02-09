@@ -49,7 +49,12 @@ public class UserController {
 
     @PostMapping(path = "/user/changepassword")
     public ResponseEntity changePassword(@RequestBody ChangePasswordDto changePasswordDto){
-
+       ResponseDto responseDto;
+        if(userService.changePassword(changePasswordDto)){
+            responseDto= new ResponseDto(200,"Password changed successfully..!",null);
+        }else{
+            responseDto= new ResponseDto(400,"Oops..! Failed to changed the password.",null);
+        }
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(null);
     }
 

@@ -1,6 +1,8 @@
 package com.user.auth.controller;
 
+
 import com.user.auth.dto.UserRegisterReqDto;
+import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.service.UserService;
 import com.user.auth.util.ResponseMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,4 +26,17 @@ public class UserController {
             responseMessage = new ResponseMessage(400,"User already exists in system",null);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
     }
+
+    @PostMapping(path = "/user/resetpassword")
+    public ResponseEntity registerNewUser(@RequestBody ResetPasswordReqDto dto){
+        ResponseMessage responseMessage;
+        if(null!=userService.resetPassword(dto))
+            responseMessage = new ResponseMessage(200, "User is Activated and changed password successfully",null);
+        else
+            responseMessage = new ResponseMessage(400,"Failed to changed the password",null);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
+    }
+
+
+
 }

@@ -6,6 +6,7 @@ import com.user.auth.dto.UserLoginResDto;
 import com.user.auth.dto.ForgotPasswordDto;
 import com.user.auth.dto.UserRegisterReqDto;
 import com.user.auth.enums.TokenType;
+import com.user.auth.exception.UserNotFoundException;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
@@ -99,7 +100,7 @@ public class UserServiceImpl implements UserService {
             if(userAuthUtils.validateEmail(forgotDto.getEmail())){
                 Optional<User> userFromDb=userRepository.findByEmail(forgotDto.getEmail());
                 if(!Objects.nonNull(userFromDb)) {
-                    throw new Exception("User not found with this email id...!");
+                    throw new UserNotFoundException();
                 }
                 if(sendPasswordToUser(userFromDb.get())){
                     responseErrorCode=200;

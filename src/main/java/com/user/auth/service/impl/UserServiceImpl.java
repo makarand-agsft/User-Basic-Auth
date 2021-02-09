@@ -1,6 +1,7 @@
 package com.user.auth.service.impl;
 
 import com.user.auth.dto.UserRegisterReqDto;
+import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
@@ -70,6 +71,24 @@ public class UserServiceImpl implements UserService {
             return true;
         }else
             return false;
+    }
+
+    @Override
+    public User resetPassword(ResetPasswordReqDto dto) {
+        User user = userRepository.findByEmail(dto.getEmail()).orElse(null);
+        if (null == user) {
+            throw new RuntimeException("User Not found");
+        }
+
+        Token token = tokenRepository.findByTokenAndTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN, user.getUserId());
+        if (null == token) {
+            throw new RuntimeException("Authentication Failed");
+        }
+
+        user.setPassword(dto.getPassword());
+        user.setActive(true);
+        return userRepository.save(user);
+
     }
 
 }

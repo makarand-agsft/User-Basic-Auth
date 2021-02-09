@@ -1,7 +1,5 @@
 package com.user.auth.dto;
 
-import com.user.auth.model.Role;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,18 +11,18 @@ public class UserRegisterReqDto {
 	
 	private String email;
 	
-	private Long mobile;
+	private Long mobileNumber;
 	
 	private String address;
 	
-	private List<Role> roles = new ArrayList<>();
+	private List<String> role = new ArrayList<>();
 
-	public List<Role> getRoles() {
-		return roles;
+	public List<String> getRole() {
+		return role;
 	}
 
-	public void setRoles(List<Role> roles) {
-		this.roles = roles;
+	public void setRole(List<String> role) {
+		this.role = role;
 	}
 
 	public String getFirstName() {
@@ -51,12 +49,12 @@ public class UserRegisterReqDto {
 		this.email = email;
 	}
 
-	public Long getMobile() {
-		return mobile;
+	public Long getMobileNumber() {
+		return mobileNumber;
 	}
 
-	public void setMobile(Long mobile) {
-		this.mobile = mobile;
+	public void setMobileNumber(Long mobileNumber) {
+		this.mobileNumber = mobileNumber;
 	}
 
 	public String getAddress() {
@@ -70,7 +68,7 @@ public class UserRegisterReqDto {
 
 	@Override
 	public String toString() {
-		return "UserDto [firstName=" + firstName + ", lastName=" + lastName + ", email=" + email + ", mobile=" + mobile
+		return "UserDto [firstName=" + firstName + ", lastName=" + lastName + ", email=" + email + ", mobile=" + mobileNumber
 				+ ", address=" + address + "]";
 	}
 

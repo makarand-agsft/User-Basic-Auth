@@ -1,5 +1,8 @@
 package com.user.auth.service.impl;
 
+import com.user.auth.dto.UserListResponseDto;
+import com.user.auth.dto.UserLoginReqDto;
+import com.user.auth.dto.UserLoginResDto;
 import com.user.auth.dto.UserRegisterReqDto;
 import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.enums.TokenType;
@@ -9,14 +12,19 @@ import com.user.auth.model.User;
 import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
+import com.user.auth.security.JwtProvider;
 import com.user.auth.service.UserService;
 import com.user.auth.utils.EmailUtils;
 import com.user.auth.utils.UserAuthUtils;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
@@ -34,25 +42,33 @@ public class UserServiceImpl implements UserService {
     private EmailUtils emailUtils;
 
     @Value("${reset.token.validity}")
-    private Long tokenExpiry = 3000l;
+    private Long resetTokenExpiry;
+
+    @Value("${jwt.tokenValidity}")
+    private Long jwTokenExpiry;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
+
+    @Autowired
+    private ModelMapper modelMapper;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtProvider jwtProvider;
 
     @Override
     public boolean registerNewUser(UserRegisterReqDto dto) {
         Optional<User> dupUser =  userRepository.findByEmail(dto.getEmail());
         if(!dupUser.isPresent()){
-            User user = new User();
-            user.setEmail(dto.getEmail());
-            user.setFirstName(dto.getFirstName());
-            user.setLastName(dto.getLastName());
+            User user = modelMapper.map(dto, User.class);
             user.setActive(Boolean.FALSE);
-            user.setAddress(dto.getAddress());
-            user.setMobileNumber(dto.getMobile());
+            user.setCreatedBy("");
             List<Role> roles = new ArrayList<>();
-            for(Role r : dto.getRoles()){
-                Optional<Role> role = roleRepository.findByRole(r.getRole());
+            for(String r : dto.getRole()){
+                Optional<Role> role = roleRepository.findByRole(r);
                 if(role.isPresent())
                     roles.add(role.get());
             }
@@ -61,7 +77,7 @@ public class UserServiceImpl implements UserService {
             token.setToken(userAuthUtils.generateKey(10));
             token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);
             token.setUsers(user);
-            token.setExpiryDate(new Date(System.currentTimeMillis()+tokenExpiry*1000));
+            token.setExpiryDate(new Date(System.currentTimeMillis()+resetTokenExpiry*1000));
             user.setTokens(Collections.singletonList(token));
             userRepository.save(user);
             tokenRepository.save(token);
@@ -74,6 +90,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+
     public User resetPassword(ResetPasswordReqDto dto) {
         User user = userRepository.findByEmail(dto.getEmail()).orElse(null);
         if (null == user) {
@@ -88,6 +105,38 @@ public class UserServiceImpl implements UserService {
         user.setPassword(dto.getPassword());
         user.setActive(true);
         return userRepository.save(user);
+
+    }
+    public UserLoginResDto loginUser(UserLoginReqDto dto) {
+        Optional<User> optUser = userRepository.findByEmail(dto.getEmail());
+        if (optUser.isPresent()) {
+            User user = optUser.get();
+            if (passwordEncoder.matches(dto.getPassword(), user.getPassword()) && user.getActive().equals(Boolean.TRUE)) {
+                Token token = new Token();
+                token.setToken(jwtProvider.generateToken(user));
+                token.setTokenType(TokenType.LOGIN_TOKEN);
+                token.setCreatedBy(user.getFirstName() + "." + user.getLastName());
+                token.setUsers(user);
+                token.setCreatedDate(new Date());
+                token.setExpiryDate(new Date(System.currentTimeMillis() + jwTokenExpiry * 1000));
+                tokenRepository.save(token);
+                UserLoginResDto resDto = modelMapper.map(user, UserLoginResDto.class);
+                resDto.setToken(token.getToken());
+                return resDto;
+            }
+        }
+        return null;
+    }
+
+    @Override public UserListResponseDto getAllAdminUsers() {
+        Optional<Role> role = roleRepository.findByRole("ADMIN");
+        UserListResponseDto userListResponseDto = new UserListResponseDto();
+        if (role.isPresent()){
+            List<User> users=userRepository.findByRoles(role.get());
+            if(users!=null)
+            userListResponseDto.setUserList(users.stream().map(x->modelMapper.map(x,UserRegisterReqDto.class)).collect(Collectors.toList()));
+        }
+      return  userListResponseDto;
 
     }
 

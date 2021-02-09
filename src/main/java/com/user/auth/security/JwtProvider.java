@@ -1,4 +1,4 @@
-package com.user.auth.jwtSecurity;
+package com.user.auth.security;
 
 import com.user.auth.model.User;
 import io.jsonwebtoken.Claims;

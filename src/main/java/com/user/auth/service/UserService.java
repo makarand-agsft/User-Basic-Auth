@@ -1,6 +1,6 @@
 package com.user.auth.service;
 
-import com.user.auth.dto.request.UserRegisterReqDto;
+import com.user.auth.dto.UserRegisterReqDto;
 
 public interface UserService {
 

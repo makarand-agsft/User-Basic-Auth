@@ -1,6 +1,6 @@
 package com.user.auth.service.impl;
 
-import com.user.auth.dto.request.UserRegisterReqDto;
+import com.user.auth.dto.UserRegisterReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;

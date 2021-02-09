@@ -1,4 +1,4 @@
-package com.user.auth.dto.request;
+package com.user.auth.dto;
 
 import com.user.auth.model.Role;
 

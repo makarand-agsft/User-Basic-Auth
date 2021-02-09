@@ -1,5 +1,6 @@
 package com.user.auth.controller;
 
+import com.user.auth.dto.ForgotPasswordDto;
 import com.user.auth.dto.UserRegisterReqDto;
 import com.user.auth.service.UserService;
 import com.user.auth.util.ResponseMessage;
@@ -22,6 +23,18 @@ public class UserController {
             responseMessage = new ResponseMessage(200, "User added successfully. Please check email for account activation",null);
         else
             responseMessage = new ResponseMessage(400,"User already exists in system",null);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
+    }
+
+    @PostMapping(path = "user/forgotpassword")
+    public ResponseEntity forgotPassword(@RequestBody ForgotPasswordDto forgotDto) throws Exception {
+        ResponseMessage responseMessage = null;
+        int message=userService.forgotPassword(forgotDto);
+        if(message==200){
+            responseMessage= new ResponseMessage(200,"Your password is sent to your registered email id.",null);
+        }else if(message==400){
+            responseMessage= new ResponseMessage(400,"Oops..! Something went wrong, email not sent.",null);
+        }
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
     }
 }

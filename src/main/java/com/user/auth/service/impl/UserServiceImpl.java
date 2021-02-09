@@ -1,5 +1,6 @@
 package com.user.auth.service.impl;
 
+import com.user.auth.dto.ForgotPasswordDto;
 import com.user.auth.dto.UserRegisterReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.model.Role;
@@ -14,15 +15,19 @@ import com.user.auth.utils.UserAuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
+
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private TokenRepository tokenRepository;
+
     @Autowired
     private RoleRepository roleRepository;
 
@@ -70,6 +75,48 @@ public class UserServiceImpl implements UserService {
             return true;
         }else
             return false;
+    }
+
+    @Override
+    public int forgotPassword(ForgotPasswordDto forgotDto) throws Exception {
+        if(forgotDto!=null && forgotDto.getEmail()!=null){
+            int responseErrorCode;
+            if(userAuthUtils.validateEmail(forgotDto.getEmail())){
+                Optional<User> userFromDb=userRepository.findByEmail(forgotDto.getEmail());
+                if(!Objects.nonNull(userFromDb)) {
+                    throw new Exception("User not found with this email id...!");
+                }
+                if(sendPasswordToUser(userFromDb.get())){
+                    responseErrorCode=200;
+                }else{
+                    responseErrorCode=400;
+                }
+                return responseErrorCode;
+            }else{
+                throw new Exception("Invalid Email Id, Please provide valid email id...!");
+            }
+        }else{
+            throw new Exception("Email not provided...!");
+        }
+    }
+
+    private boolean sendPasswordToUser(User user) {
+        if(user.getEmail()!=null && user!=null){
+            String token=userAuthUtils.generateKey(10);
+            EmailUtils emailSender= new EmailUtils();
+            String subject="Forgot Password auto generated mail.";
+            String text=" Hello "+user.getEmail()+" , \n your requested token is "+token +" \n \t Use this token to change or reset your password.";
+
+            Token tokenToBeSave= new Token();
+            tokenToBeSave.setToken(token);
+            tokenToBeSave.setTokenType(TokenType.FORGOT_PASSWORD_TOKEN);
+            tokenToBeSave.setUsers(user);
+            tokenToBeSave.setExpiryDate(new Date(System.currentTimeMillis()+tokenExpiry*1000));
+            tokenRepository.save(tokenToBeSave);
+            emailSender.sendInvitationEmail(user.getEmail(),subject,text,fromEmail);
+            return true;
+        }
+        return false;
     }
 
 }

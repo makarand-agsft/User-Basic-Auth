@@ -17,12 +17,12 @@ import java.util.Date;
 public class AuditingEntity{
 
     @CreatedBy
-    @Column(name = "created_by", nullable = false, updatable = false)
+    @Column(name = "created_by")
     @JsonIgnore
     private String createdBy;
 
     @CreatedDate
-    @Column(name = "created_date", updatable = false)
+    @Column(name = "created_date")
     @JsonIgnore
     private Date createdDate = new Date();
 

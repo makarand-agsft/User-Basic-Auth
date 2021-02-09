@@ -2,16 +2,16 @@ package com.user.auth.service;
 
 import com.user.auth.dto.request.UserRegisterReqDto;
 import com.user.auth.enums.TokenType;
+import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
+import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 
 
 @Service
@@ -22,6 +22,8 @@ public class UserService {
 
     @Autowired
     private TokenRepository tokenRepository;
+    @Autowired
+    private RoleRepository roleRepository;
 
 
     private Long tokenExpiry = 3000l;
@@ -36,7 +38,14 @@ public class UserService {
             user.setActive(Boolean.FALSE);
             user.setAddress(dto.getAddress());
             user.setMobileNumber(dto.getMobile());
-            user.setRoles(dto.getRoles());
+            user.setCreatedBy("");
+            List<Role> roles = new ArrayList<>();
+            for(Role r : dto.getRoles()){
+                Optional<Role> role = roleRepository.findByRole(r.getRole());
+                if(role.isPresent())
+                    roles.add(role.get());
+            }
+            user.setRoles(roles);
             Token token = new Token();
             token.setToken(generateKey(10));
             token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);

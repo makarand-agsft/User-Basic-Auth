@@ -4,6 +4,7 @@ import com.user.auth.dto.UserListResponseDto;
 import com.user.auth.dto.UserLoginReqDto;
 import com.user.auth.dto.UserLoginResDto;
 import com.user.auth.dto.UserRegisterReqDto;
+import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
@@ -76,7 +77,7 @@ public class UserServiceImpl implements UserService {
             token.setToken(userAuthUtils.generateKey(10));
             token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);
             token.setUsers(user);
-            token.setExpiryDate(new Date(System.currentTimeMillis()+resetTokenExpiry*1000));
+            token.setExpiryDate(new Date(System.currentTimeMillis()+jwTokenExpiry*1000));
             user.setTokens(Collections.singletonList(token));
             userRepository.save(user);
             tokenRepository.save(token);
@@ -119,6 +120,24 @@ public class UserServiceImpl implements UserService {
             userListResponseDto.setUserList(users.stream().map(x->modelMapper.map(x,UserRegisterReqDto.class)).collect(Collectors.toList()));
         }
       return  userListResponseDto;
+    }
+
+    @Override
+    public User resetPassword(ResetPasswordReqDto dto) {
+        User user = userRepository.findByEmail(dto.getEmail()).orElse(null);
+        if (null == user) {
+            throw new RuntimeException("User Not found");
+        }
+
+        Token token = tokenRepository.findByTokenAndTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN, user.getUserId());
+        if (null == token) {
+            throw new RuntimeException("Authentication Failed");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setActive(true);
+        return userRepository.save(user);
+
     }
 
 }

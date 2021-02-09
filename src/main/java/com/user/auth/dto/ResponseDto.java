@@ -1,14 +1,14 @@
-package com.user.auth.util;
+package com.user.auth.dto;
 
-public class ResponseMessage {
+public class ResponseDto {
     private int code;
     private String message;
     private Object object;
 
-    public ResponseMessage(){
+    public ResponseDto(){
 
     }
-    public ResponseMessage(int code, String message, Object object) {
+    public ResponseDto(int code, String message, Object object) {
         this.code = code;
         this.message = message;
         this.object = object;

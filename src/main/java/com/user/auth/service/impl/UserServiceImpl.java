@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
             return false;
     }
 
-    @Override public ResponseEntity<UserListResponseDto> getAllAdminUsers() {
+    @Override public UserListResponseDto getAllAdminUsers() {
         Optional<Role> role = roleRepository.findByRole("ADMIN");
         UserListResponseDto userListResponseDto = new UserListResponseDto();
         if (role.isPresent()){
@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
             if(users!=null)
             userListResponseDto.setUserList(users.stream().map(x->modelMapper.map(x,UserRegisterReqDto.class)).collect(Collectors.toList()));
         }
-        return new ResponseEntity(new ResponseDto(HttpStatus.OK.value(),"Users Fetched succesfully",userListResponseDto),HttpStatus.OK);
+      return  userListResponseDto;
     }
 
 }

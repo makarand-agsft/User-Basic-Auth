@@ -26,7 +26,7 @@ public class UserController {
 
     @GetMapping(value = "/user/getAllAdminUsers")
     @ResponseBody
-    public ResponseEntity<UserListResponseDto> getAllAdminUsers(){
+    public UserListResponseDto getAllAdminUsers(){
         return userService.getAllAdminUsers();
     }
 }

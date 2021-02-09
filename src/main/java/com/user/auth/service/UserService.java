@@ -8,5 +8,5 @@ public interface UserService {
 
     boolean registerNewUser(UserRegisterReqDto dto);
 
-    ResponseEntity<UserListResponseDto> getAllAdminUsers();
+    UserListResponseDto getAllAdminUsers();
 }

@@ -1,14 +1,13 @@
 package com.user.auth.controller;
 
+import com.user.auth.dto.UserListResponseDto;
 import com.user.auth.dto.UserRegisterReqDto;
 import com.user.auth.service.UserService;
 import com.user.auth.util.ResponseMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class UserController {
@@ -23,5 +22,11 @@ public class UserController {
         else
             responseMessage = new ResponseMessage(400,"User already exists in system",null);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
+    }
+
+    @GetMapping(value = "/user/getAllAdminUsers")
+    @ResponseBody
+    public ResponseEntity<UserListResponseDto> getAllAdminUsers(){
+        return userService.getAllAdminUsers();
     }
 }

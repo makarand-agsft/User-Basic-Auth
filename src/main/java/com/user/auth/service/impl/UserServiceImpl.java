@@ -1,5 +1,7 @@
 package com.user.auth.service.impl;
 
+import com.user.auth.dto.ResponseDto;
+import com.user.auth.dto.UserListResponseDto;
 import com.user.auth.dto.UserRegisterReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.model.Role;
@@ -11,11 +13,16 @@ import com.user.auth.repository.UserRepository;
 import com.user.auth.service.UserService;
 import com.user.auth.utils.EmailUtils;
 import com.user.auth.utils.UserAuthUtils;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
@@ -32,6 +39,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private EmailUtils emailUtils;
 
+    @Autowired
+    private ModelMapper modelMapper;
     @Value("${reset.token.validity}")
     private Long tokenExpiry = 3000l;
 
@@ -70,6 +79,17 @@ public class UserServiceImpl implements UserService {
             return true;
         }else
             return false;
+    }
+
+    @Override public ResponseEntity<UserListResponseDto> getAllAdminUsers() {
+        Optional<Role> role = roleRepository.findByRole("ADMIN");
+        UserListResponseDto userListResponseDto = new UserListResponseDto();
+        if (role.isPresent()){
+            List<User> users=userRepository.findByRoles(role.get());
+            if(users!=null)
+            userListResponseDto.setUserList(users.stream().map(x->modelMapper.map(x,UserRegisterReqDto.class)).collect(Collectors.toList()));
+        }
+        return new ResponseEntity(new ResponseDto(HttpStatus.OK.value(),"Users Fetched succesfully",userListResponseDto),HttpStatus.OK);
     }
 
 }

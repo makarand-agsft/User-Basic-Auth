@@ -9,6 +9,7 @@ import com.user.auth.enums.TokenType;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
+import com.user.auth.model.UserProfile;
 import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
@@ -64,7 +65,7 @@ public class UserServiceImpl implements UserService {
         Optional<User> dupUser =  userRepository.findByEmail(dto.getEmail());
         if(!dupUser.isPresent()){
             User user = modelMapper.map(dto, User.class);
-            user.setActive(Boolean.FALSE);
+            user.getUserProfile().setActive(Boolean.FALSE);
             user.setCreatedBy("");
             List<Role> roles = new ArrayList<>();
             for(String r : dto.getRole()){
@@ -77,12 +78,12 @@ public class UserServiceImpl implements UserService {
             token.setToken(userAuthUtils.generateKey(10));
             token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);
             token.setUsers(user);
-            token.setExpiryDate(new Date(System.currentTimeMillis()+resetTokenExpiry*1000));
+            token.setExpiryDate(new Date(System.currentTimeMillis()+jwTokenExpiry*1000));
             user.setTokens(Collections.singletonList(token));
             userRepository.save(user);
             tokenRepository.save(token);
             //send email
-            String message ="Hello "+user.getFirstName() +"This is your temporary password ,use this to change your password :"+token.getToken();
+            String message ="Hello "+user.getUserProfile().getFirstName() +"This is your temporary password ,use this to change your password :"+token.getToken();
             emailUtils.sendInvitationEmail(user.getEmail(),"Invitation",message,fromEmail);
             return true;
         }else
@@ -90,32 +91,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-
-    public User resetPassword(ResetPasswordReqDto dto) {
-        User user = userRepository.findByEmail(dto.getEmail()).orElse(null);
-        if (null == user) {
-            throw new RuntimeException("User Not found");
-        }
-
-        Token token = tokenRepository.findByTokenAndTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN, user.getUserId());
-        if (null == token) {
-            throw new RuntimeException("Authentication Failed");
-        }
-
-        user.setPassword(dto.getPassword());
-        user.setActive(true);
-        return userRepository.save(user);
-
-    }
     public UserLoginResDto loginUser(UserLoginReqDto dto) {
         Optional<User> optUser = userRepository.findByEmail(dto.getEmail());
         if (optUser.isPresent()) {
             User user = optUser.get();
-            if (passwordEncoder.matches(dto.getPassword(), user.getPassword()) && user.getActive().equals(Boolean.TRUE)) {
+            if (passwordEncoder.matches(dto.getPassword(), user.getPassword()) && user.getUserProfile().getActive().equals(Boolean.TRUE)) {
                 Token token = new Token();
                 token.setToken(jwtProvider.generateToken(user));
                 token.setTokenType(TokenType.LOGIN_TOKEN);
-                token.setCreatedBy(user.getFirstName() + "." + user.getLastName());
+                token.setCreatedBy(user.getUserProfile().getFirstName() + "." + user.getUserProfile().getLastName());
                 token.setUsers(user);
                 token.setCreatedDate(new Date());
                 token.setExpiryDate(new Date(System.currentTimeMillis() + jwTokenExpiry * 1000));
@@ -137,6 +121,25 @@ public class UserServiceImpl implements UserService {
             userListResponseDto.setUserList(users.stream().map(x->modelMapper.map(x,UserRegisterReqDto.class)).collect(Collectors.toList()));
         }
       return  userListResponseDto;
+    }
+
+    @Override
+    public User resetPassword(ResetPasswordReqDto dto) {
+        User user = userRepository.findByEmail(dto.getEmail()).orElse(null);
+        if (null == user) {
+            throw new RuntimeException("User Not found");
+        }
+
+        Token token = tokenRepository.findByTokenAndTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN, user.getUserId());
+        if (null == token) {
+            throw new RuntimeException("Authentication Failed");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        UserProfile userProfile=user.getUserProfile();
+        userProfile.setActive(true);
+        user.setUserProfile(userProfile);
+        return userRepository.save(user);
 
     }
 

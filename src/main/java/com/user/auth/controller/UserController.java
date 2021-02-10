@@ -18,10 +18,10 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping(path = "/user/register")
-    public ResponseEntity registerNewUser(@RequestParam("file")MultipartFile file, @RequestParam("userReqDto")String userReqDto){
+    @PostMapping(path = "/user/add")
+    public ResponseEntity addUser(@RequestParam(name = "file", required = false)MultipartFile file, @RequestParam("userReqDto")String userReqDto,HttpServletRequest request){
         ResponseDto responseMessage;
-        if(userService.registerNewUser(userReqDto,file))
+        if(userService.addUser(userReqDto,file,request))
             responseMessage = new ResponseDto(200, "User added successfully. Please check email for account activation",null);
         else
             responseMessage = new ResponseDto(400,"User already exists in system",null);
@@ -59,6 +59,8 @@ public class UserController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
 
     }
+
+    @PostMapping(path = "/user/get/profileimg")
 
 
     @GetMapping(value = "/user/getAllAdminUsers")

@@ -17,5 +17,5 @@ public interface UserService {
 
     UserProfileResDto getUserProfile(HttpServletRequest request);
 
-    boolean registerNewUser(String userReqDto, MultipartFile file);
+    boolean addUser(String userReqDto, MultipartFile file, HttpServletRequest request);
 }

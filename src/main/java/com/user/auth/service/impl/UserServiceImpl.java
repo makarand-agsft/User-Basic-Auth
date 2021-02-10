@@ -72,7 +72,9 @@ public class UserServiceImpl implements UserService {
     private String UPLOAD_DIRECTORY;
 
     @Override
-    public boolean registerNewUser(String jsonString, MultipartFile file) {
+    public boolean addUser(String jsonString, MultipartFile file, HttpServletRequest request) {
+        User admin = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
+                ()-> new RuntimeException("Unauthorized"));
         ObjectMapper objectMapper = new ObjectMapper();
         UserRegisterReqDto dto = null;
         try {
@@ -87,21 +89,11 @@ public class UserServiceImpl implements UserService {
             UserProfile userProfile = modelMapper.map(dto, UserProfile.class);
             Address address = modelMapper.map(dto, Address.class);
             address.setUser(user);
-            if(!file.isEmpty()){
-                try {
-                    String fileName = user.getEmail();
-                    byte[] bytes = file.getBytes();
-                    profile_path = UPLOAD_DIRECTORY + fileName;
-                    Path path = Paths.get(profile_path);
-                    Files.write(path, bytes);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            profile_path = userAuthUtils.saveProfileImage(file, user);
             userProfile.setActive(Boolean.FALSE);
             userProfile.setProfilePicture(profile_path);
             userProfile.setUser(user);
-            String uname = userProfile.getFirstName()+"."+userProfile.getLastName();
+            String uname = admin.getUserProfile().getFirstName()+"."+admin.getUserProfile().getLastName();
             user.setCreatedBy(uname);
             userProfile.setCreatedBy(uname);
             List<Role> roles = new ArrayList<>();
@@ -184,7 +176,10 @@ public class UserServiceImpl implements UserService {
     public UserProfileResDto getUserProfile(HttpServletRequest request) {
         String token = request.getHeader(jwtHeader);
         User user = authUtils.getUserFromToken(token).orElseThrow(()-> new RuntimeException("Unauthorized"));
-        UserProfileResDto resDto = modelMapper.map(user.getUserProfile(), UserProfileResDto.class);
+        UserProfile userProfile = user.getUserProfile();
+        UserProfileResDto resDto = modelMapper.map(userProfile, UserProfileResDto.class);
+        resDto.setAddresses(user.getAddresses());
+        resDto.setEmail(user.getEmail());
         return resDto;
     }
 

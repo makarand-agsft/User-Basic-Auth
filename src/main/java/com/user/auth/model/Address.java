@@ -1,5 +1,6 @@
 package com.user.auth.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.user.auth.enums.AddressType;
 
 import javax.persistence.*;
@@ -32,6 +33,7 @@ public class Address extends AuditingEntity{
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     public Long getId() {

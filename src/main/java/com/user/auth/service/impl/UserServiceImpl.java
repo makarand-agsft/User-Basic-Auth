@@ -166,10 +166,10 @@ public class UserServiceImpl implements UserService {
         userProfile.setId(userAuth.getUserProfile().getId());
         for(Address a : user.getAddresses())
             a.setUser(user);
-        profile_path = userAuthUtils.saveProfileImage(file, user);
-        userProfile.setProfilePicture(profile_path);
         userProfile.setUser(user);
         user.setUserProfile(userProfile);
+        profile_path = userAuthUtils.saveProfileImage(file, userAuth);
+        userProfile.setProfilePicture(profile_path);
         userRepository.save(user);
         return true;
     }

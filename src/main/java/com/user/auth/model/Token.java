@@ -14,7 +14,7 @@ public class Token extends AuditingEntity{
 	@Column(name = "id")
 	private Long tokenId;
 
-	@Column(name = "token")
+	@Column(name = "token", columnDefinition = "text")
 	private String token;
 	
 	@Column(name = "expiry_date")

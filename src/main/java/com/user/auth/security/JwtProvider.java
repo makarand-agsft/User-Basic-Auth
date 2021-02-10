@@ -1,5 +1,6 @@
 package com.user.auth.security;
 
+import com.user.auth.model.Role;
 import com.user.auth.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -9,10 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class JwtProvider {
@@ -71,6 +69,17 @@ public class JwtProvider {
 			username = null;
 		}
 		return username;
+
+	}
+
+	public List<Role> getRolesfromToken(String token) {
+		try {
+			final Claims claims = getClaimFromToken(token);
+			return (List<Role>) claims.get("roles");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 
 	}
 }

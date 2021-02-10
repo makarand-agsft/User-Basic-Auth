@@ -9,6 +9,6 @@ import com.user.auth.model.Token;
 @Repository
 public interface TokenRepository extends JpaRepository<Token, Long> {
 
-    Token findByTokenAndTokenTypeAndUsersUserId(String token, TokenType tokenType, Long userId);
+    Token findByTokenAndTokenTypeOrTokenTypeAndUsersUserId(String token, TokenType resetToken,TokenType forgetToken, Long userId);
 
 }

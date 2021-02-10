@@ -4,16 +4,23 @@ import com.user.auth.dto.*;
 
 import com.user.auth.dto.UserRegisterReqDto;
 import com.user.auth.dto.request.ResetPasswordReqDto;
+import com.user.auth.dto.request.UserUpdateRoleReqDto;
 import com.user.auth.service.UserService;
+import com.user.auth.utils.UserAuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
 
 @RestController
 public class UserController {
     @Autowired
     private UserService userService;
+    @Autowired
+    UserAuthUtils userAuthUtils;
 
     @PostMapping(path = "/user/register")
     public ResponseEntity registerNewUser(@RequestBody UserRegisterReqDto dto){
@@ -52,5 +59,24 @@ public class UserController {
     @ResponseBody
     public UserListResponseDto getAllAdminUsers(){
         return userService.getAllAdminUsers();
+    }
+
+    @PostMapping(path = "/user/updaterole")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    public ResponseEntity updateUserRole(HttpServletRequest httpServletRequest, @RequestBody UserUpdateRoleReqDto dto){
+
+        ResponseDto responseMessage;
+        if(userAuthUtils.checkAccess(httpServletRequest)) {
+
+
+            if (null != userService.updateRole(dto))
+                responseMessage = new ResponseDto(200, "User Role changed successfully", null);
+            else
+                responseMessage = new ResponseDto(400, "Failed to changed the Roles", null);
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
+        }
+        responseMessage = new ResponseDto(401, "Access denied", null);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
+
     }
 }

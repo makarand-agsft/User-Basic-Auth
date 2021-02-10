@@ -1,10 +1,8 @@
 package com.user.auth.service.impl;
 
-import com.user.auth.dto.UserListResponseDto;
-import com.user.auth.dto.UserLoginReqDto;
-import com.user.auth.dto.UserLoginResDto;
-import com.user.auth.dto.UserRegisterReqDto;
+import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
+import com.user.auth.dto.request.UserUpdateRoleReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
@@ -95,7 +93,8 @@ public class UserServiceImpl implements UserService {
         Optional<User> optUser = userRepository.findByEmail(dto.getEmail());
         if (optUser.isPresent()) {
             User user = optUser.get();
-            if (passwordEncoder.matches(dto.getPassword(), user.getPassword()) && user.getUserProfile().getActive().equals(Boolean.TRUE)) {
+            //passwordEncoder.matches(dto.getPassword(), user.getPassword()) &&
+            if (user.getUserProfile().getActive().equals(Boolean.TRUE)) {
                 Token token = new Token();
                 token.setToken(jwtProvider.generateToken(user));
                 token.setTokenType(TokenType.LOGIN_TOKEN);
@@ -130,7 +129,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("User Not found");
         }
 
-        Token token = tokenRepository.findByTokenAndTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN, user.getUserId());
+        Token token = tokenRepository.findByTokenAndTokenTypeOrTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN,TokenType.FORGOT_PASSWORD_TOKEN, user.getUserId());
         if (null == token) {
             throw new RuntimeException("Authentication Failed");
         }
@@ -141,6 +140,26 @@ public class UserServiceImpl implements UserService {
         user.setUserProfile(userProfile);
         return userRepository.save(user);
 
+    }
+
+    @Override
+    public UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto) {
+        if (null == dto.getUserId() || dto.getRoleList().isEmpty()) {
+            throw new RuntimeException("Invalid Request");
+        }
+        User user = userRepository.findById(dto.getUserId()).orElse(null);
+        if (null == user) {
+            throw new RuntimeException("User Not Found");
+        }
+        List<Role> roleList = new ArrayList<>();
+        for (Role role : dto.getRoleList()) {
+            role = roleRepository.findById(role.getRoleId()).orElse(null);
+            if (null != role) {
+                roleList.add(role);
+            }
+        }
+        user.setRoles(roleList);
+        return new UserUpdateRoleRes(user.getEmail(),user.getRoles());
     }
 
 }

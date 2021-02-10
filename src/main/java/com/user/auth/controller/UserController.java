@@ -78,6 +78,8 @@ import javax.servlet.http.HttpServletRequest;
                         HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
+
+
     @GetMapping(path = "/user/getprofile")
     public ResponseEntity getUserProfile(HttpServletRequest request){
         ResponseDto responseDto;

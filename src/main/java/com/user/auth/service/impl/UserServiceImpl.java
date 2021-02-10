@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
+import com.user.auth.dto.request.UserUpdateRoleReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.model.*;
 import com.user.auth.exception.InvalidEmailException;
@@ -108,7 +109,7 @@ public class UserServiceImpl implements UserService {
             userProfile.setUser(user);
             String uname = admin.getUserProfile().getFirstName()+"."+admin.getUserProfile().getLastName();
             user.setCreatedBy(uname);
-            userProfile.setCreatedBy(uname);
+
             List<Role> roles = new ArrayList<>();
             for(String r : dto.getRoles()){
                 Optional<Role> role = roleRepository.findByRole(r);
@@ -262,7 +263,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("User Not found");
         }
 
-        Token token = tokenRepository.findByTokenAndTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN, user.getUserId());
+        Token token = tokenRepository.findByTokenAndTokenTypeOrTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN,TokenType.FORGOT_PASSWORD_TOKEN, user.getUserId());
         if (null == token) {
             throw new RuntimeException("Authentication Failed");
         }
@@ -273,6 +274,8 @@ public class UserServiceImpl implements UserService {
 
     }
 
+
+
     @Override
     public UserProfileResDto getUserProfile(HttpServletRequest request) {
         String token = request.getHeader(jwtHeader);
@@ -282,6 +285,37 @@ public class UserServiceImpl implements UserService {
         resDto.setAddresses(user.getAddresses());
         resDto.setEmail(user.getEmail());
         return resDto;
+    }
+
+    public UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto) {
+        if (null == dto.getUserId() || dto.getRoleList().isEmpty()) {
+            throw new RuntimeException("Invalid Request");
+        }
+        User user = userRepository.findById(dto.getUserId()).orElse(null);
+        if (null == user) {
+            throw new RuntimeException("User Not Found");
+        }
+        List<Role> roleList = new ArrayList<>();
+        for (Role role : dto.getRoleList()) {
+            role = roleRepository.findById(role.getRoleId()).orElse(null);
+            if (null != role) {
+                roleList.add(role);
+            }
+        }
+        user.setRoles(roleList);
+        userRepository.save(user);
+
+
+        List<String> roles =new ArrayList<>();
+       for(Role role:user.getRoles())
+       {
+           roles.add(role.getRole());
+       }
+        String message = "Hello " + user.getUserProfile().getFirstName() + "Your Roles are changed "+roles.toString();
+
+        emailUtils.sendInvitationEmail(user.getEmail(), "Invitation", message, fromEmail);
+        return new UserUpdateRoleRes(user.getEmail(), roles);
+
     }
 
 }

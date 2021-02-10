@@ -108,9 +108,10 @@ public class UserController {
         ResponseDto responseMessage;
         if(userAuthUtils.checkAccess(httpServletRequest)) {
 
+            UserUpdateRoleRes userUpdateRoleRes=userService.updateRole(dto);
 
-            if (null != userService.updateRole(dto))
-                responseMessage = new ResponseDto(200, "User Role changed successfully", null);
+            if (null !=userUpdateRoleRes )
+                responseMessage = new ResponseDto(200, "User Role changed successfully", userUpdateRoleRes);
             else
                 responseMessage = new ResponseDto(400, "Failed to changed the Roles", null);
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);

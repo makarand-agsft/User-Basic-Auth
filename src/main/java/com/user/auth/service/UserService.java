@@ -3,6 +3,7 @@ package com.user.auth.service;
 
 import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
+import com.user.auth.dto.request.UserUpdateRoleReqDto;
 import com.user.auth.model.User;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,4 +24,6 @@ public interface UserService {
     int forgotPassword(ForgotPasswordDto forgotDto) throws Exception;
 
     boolean changePassword(ChangePasswordDto changePasswordDto, HttpServletRequest request);
+
+    UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto);
 }

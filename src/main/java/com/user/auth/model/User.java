@@ -40,10 +40,10 @@ public class User extends AuditingEntity{
 	@OneToMany(mappedBy = "users")
 	private List<Token> tokens;
 
-	@OneToMany(mappedBy = "user")
+	@OneToMany(mappedBy = "user",cascade = CascadeType.ALL)
 	private List<Address> addresses;
 
-	@OneToOne(mappedBy = "user")
+	@OneToOne(mappedBy = "user",cascade = CascadeType.ALL)
 	private UserProfile userProfile;
 
 	public String getEmail() {

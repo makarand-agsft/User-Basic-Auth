@@ -33,8 +33,8 @@ public class JwtProvider {
 		Map<String, Object> claims = new HashMap<>();
 		claims.put("roles", user.getRoles());
 		claims.put("userName", user.getEmail());
-		claims.put("firstName", user.getFirstName());
-		claims.put("lastName", user.getLastName());
+		claims.put("firstName", user.getUserProfile().getFirstName());
+		claims.put("lastName", user.getUserProfile().getLastName());
 		return Jwts.builder().setClaims(claims).setIssuedAt(new Date(System.currentTimeMillis()))
 				.setExpiration(new Date(System.currentTimeMillis() + jwtTokenValidity * 1000))
 				.signWith(SignatureAlgorithm.HS256, secretKey).compact();

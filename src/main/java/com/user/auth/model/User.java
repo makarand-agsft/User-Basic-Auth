@@ -12,35 +12,12 @@ public class User extends AuditingEntity{
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
 	private Long userId;
-	
-	@Column(name = "first_name")
-	private String firstName;
-	
-	@Column(name = "last_name")
-	private String lastName;
-	
+
 	@Column(name = "email")
 	private String email;
-	
-	@Column(name = "address")
-	private String address;
-	
-	@Column(name = "mobile")
-	private Long mobileNumber; 
-	
+
 	@Column(name = "password")
 	private String password;
-
-	@Column(name = "is_active")
-	private Boolean isActive;
-
-	public Boolean getActive() {
-		return isActive;
-	}
-
-	public void setActive(Boolean active) {
-		isActive = active;
-	}
 
 	@ManyToMany(cascade= CascadeType.ALL,fetch=FetchType.EAGER)
 	@JoinTable(name="user_roles",
@@ -52,30 +29,11 @@ public class User extends AuditingEntity{
 	@OneToMany(mappedBy = "users")
 	private List<Token> tokens;
 
-	
-	public Long getUserId() {
-		return userId;
-	}
+	@OneToMany(mappedBy = "user")
+	private List<Address> addresses;
 
-	public void setUserId(Long userId) {
-		this.userId = userId;
-	}
-
-	public String getFirstName() {
-		return firstName;
-	}
-
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-
-	public String getLastName() {
-		return lastName;
-	}
-
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
+	@OneToOne(mappedBy = "user")
+	private UserProfile userProfile;
 
 	public String getEmail() {
 		return email;
@@ -85,20 +43,28 @@ public class User extends AuditingEntity{
 		this.email = email;
 	}
 
-	public String getAddress() {
-		return address;
+	public List<Address> getAddresses() {
+		return addresses;
 	}
 
-	public void setAddress(String address) {
-		this.address = address;
+	public void setAddresses(List<Address> addresses) {
+		this.addresses = addresses;
 	}
 
-	public Long getMobileNumber() {
-		return mobileNumber;
+	public UserProfile getUserProfile() {
+		return userProfile;
 	}
 
-	public void setMobileNumber(Long mobileNumber) {
-		this.mobileNumber = mobileNumber;
+	public void setUserProfile(UserProfile userProfile) {
+		this.userProfile = userProfile;
+	}
+
+	public Long getUserId() {
+		return userId;
+	}
+
+	public void setUserId(Long userId) {
+		this.userId = userId;
 	}
 
 	public String getPassword() {
@@ -125,7 +91,11 @@ public class User extends AuditingEntity{
 		this.tokens = tokens;
 	}
 
-	@Override public String toString() {
-		return "User{" + "userId=" + userId + ", firstName='" + firstName + '\'' + ", lastName='" + lastName + '\'' + ", email='" + email + '\'' + ", address='" + address + '\'' + ", mobileNumber=" + mobileNumber + ", password='" + password + '\'' + ", isActive=" + isActive + ", roles=" + roles + ", tokens=" + tokens + '}';
+	@Override
+	public String toString() {
+		return "User{" +
+				"userId=" + userId +
+				", password='" + password + '\'' +
+				'}';
 	}
 }

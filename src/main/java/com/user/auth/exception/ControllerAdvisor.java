@@ -1,6 +1,7 @@
 package com.user.auth.exception;
 
 import com.user.auth.dto.ResponseDto;
+import com.user.auth.dto.ResponseObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +39,8 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(InvalidPasswordException.class)
     public ResponseEntity<Object> handleInvalidOldPasswordException(InvalidPasswordException invalidPasswordException){
-        ResponseDto responseDto= new ResponseDto(invalidPasswordException.getCode(),invalidPasswordException.getMessage(),null);
+        ResponseDto responseDto= new ResponseDto(new ResponseObject(invalidPasswordException.getCode(),invalidPasswordException.getMessage(),null),
+                HttpStatus.OK);
         return new ResponseEntity<>(responseDto,HttpStatus.OK);
     }
 }

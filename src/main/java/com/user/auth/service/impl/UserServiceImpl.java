@@ -4,6 +4,7 @@ import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.exception.InvalidEmailException;
+import com.user.auth.exception.InvalidPasswordException;
 import com.user.auth.exception.UserNotFoundException;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
@@ -72,7 +73,7 @@ public class UserServiceImpl implements UserService {
         if(!dupUser.isPresent()){
             User user = modelMapper.map(dto, User.class);
             UserProfile userProfile= new UserProfile();
-            user.getUserProfile().setActive(Boolean.FALSE);
+//            user.getUserProfile().setActive(Boolean.FALSE);
             user.setCreatedBy("");
             List<Role> roles = new ArrayList<>();
             for(String r : dto.getRole()){
@@ -90,7 +91,7 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
             tokenRepository.save(token);
             //send email
-            String message ="Hello "+user.getUserProfile().getFirstName() +"This is your temporary password ,use this to change your password :"+token.getToken();
+            String message ="Hello This is your temporary password ,use this to change your password :"+token.getToken();
             emailUtils.sendInvitationEmail(user.getEmail(),"Invitation",message,fromEmail);
             return true;
         }else
@@ -141,13 +142,13 @@ public class UserServiceImpl implements UserService {
 
                     Optional<User> userFromDb = userRepository.findByEmail(email);
                     if (userFromDb.isPresent()) {
-                        if (userFromDb.get().getPassword().equalsIgnoreCase(passwordEncoder.encode(changePasswordDto.getOldPassword()))) {
+                        // userFromDb.get().getPassword().equalsIgnoreCase(passwordEncoder.encode(changePasswordDto.getOldPassword()))
+                        if (passwordEncoder.matches(changePasswordDto.getOldPassword(),userFromDb.get().getPassword())) {
                             userFromDb.get().setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
                             userRepository.save(userFromDb.get());
                             return true;
                         } else {
-                            // old password not matched with new passwword
-                            return false;
+                            throw new InvalidPasswordException(101,"Your old password is incorrect...!");
                         }
 
                     } else {

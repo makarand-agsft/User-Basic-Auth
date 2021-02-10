@@ -57,7 +57,7 @@ public class UserController {
         }else{
             responseDto= new ResponseDto(400,"Oops..! Failed to changed the password.",null);
         }
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(null);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
 
     @PostMapping(path = "/user/resetpassword")

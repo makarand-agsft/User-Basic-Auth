@@ -1,5 +1,9 @@
 package com.user.auth.service;
 
+import com.user.auth.dto.UserLoginReqDto;
+import com.user.auth.dto.UserLoginResDto;
+import com.user.auth.dto.UserListResponseDto;
+import com.user.auth.dto.UserRegisterReqDto;
 
 import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
@@ -14,8 +18,6 @@ public interface UserService {
 
     UserLoginResDto loginUser(UserLoginReqDto dto);
 
-    public User resetPassword(ResetPasswordReqDto dto);
-
     UserProfileResDto getUserProfile(HttpServletRequest request);
 
     boolean addUser(String userReqDto, MultipartFile file, HttpServletRequest request);
@@ -23,4 +25,8 @@ public interface UserService {
     int forgotPassword(ForgotPasswordDto forgotDto) throws Exception;
 
     boolean changePassword(ChangePasswordDto changePasswordDto, HttpServletRequest request);
+
+    UserRegisterReqDto resetPassword(ResetPasswordReqDto dto);
+
+    void deleteUserById(Long userId) throws Exception;
 }

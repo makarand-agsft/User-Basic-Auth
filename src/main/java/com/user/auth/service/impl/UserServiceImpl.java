@@ -36,8 +36,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
+/**
+ * This class is responsible for handling user authentication
+ */
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
@@ -47,7 +49,6 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private TokenRepository tokenRepository;
-
     @Autowired
     private RoleRepository roleRepository;
 
@@ -75,6 +76,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private JwtProvider jwtProvider;
 
+
     @Value("${jwt.header}")
     private String jwtHeader;
 
@@ -84,6 +86,11 @@ public class UserServiceImpl implements UserService {
     @Value("${upload.directory}")
     private String UPLOAD_DIRECTORY;
 
+    /**
+     * This method registers new user
+     * @param
+     * @throws Exception
+     */
     @Override
     public boolean addUser(String jsonString, MultipartFile file, HttpServletRequest request) {
         User admin = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
@@ -222,6 +229,11 @@ public class UserServiceImpl implements UserService {
         return false;
     }
 
+    /**
+     * This method verifies the user credentials and logs in and sends jwt token in response
+     * @param dto
+     * @return user information with jwt token
+     */
     @Override
     public UserLoginResDto loginUser(UserLoginReqDto dto) {
         Optional<User> optUser = userRepository.findByEmail(dto.getEmail());
@@ -244,19 +256,40 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
+    /**
+     * Fetches list of user
+     * @return This method returns list of all users with role admin
+     */
     @Override public UserListResponseDto getAllAdminUsers() {
         Optional<Role> role = roleRepository.findByRole("ADMIN");
         UserListResponseDto userListResponseDto = new UserListResponseDto();
-        if (role.isPresent()){
-            List<User> users=userRepository.findByRoles(role.get());
-            if(users!=null)
-            userListResponseDto.setUserList(users.stream().map(x->modelMapper.map(x,UserRegisterReqDto.class)).collect(Collectors.toList()));
+        List<UserRegisterReqDto> userResponse = new ArrayList<>();
+        if (role.isPresent()) {
+            List<User> users = userRepository.findByRoles(role.get());
+            if (users != null) {
+
+                for (User user : users) {
+                    List<String> userRoles = new ArrayList<>();
+                    for (Role userRole : user.getRoles()) {
+                        userRoles.add(userRole.getRole());
+                    }
+                    UserRegisterReqDto userRegisterReqDto=modelMapper.map(user, UserRegisterReqDto.class);
+                    userRegisterReqDto.setRoles(userRoles);
+                    userResponse.add(userRegisterReqDto);
+                }
+                userListResponseDto.setUserList(userResponse);
+            }
         }
-      return  userListResponseDto;
+        return userListResponseDto;
     }
 
+    /**
+     * This method resets the one time password of user sent on email
+     * @param dto containing user one time password and email address
+     * @return Success message of user activation
+     */
     @Override
-    public User resetPassword(ResetPasswordReqDto dto) {
+    public UserRegisterReqDto resetPassword(ResetPasswordReqDto dto) {
         User user = userRepository.findByEmail(dto.getEmail()).orElse(null);
         if (null == user) {
             throw new RuntimeException("User Not found");
@@ -266,11 +299,33 @@ public class UserServiceImpl implements UserService {
         if (null == token) {
             throw new RuntimeException("Authentication Failed");
         }
-
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.getUserProfile().setActive(Boolean.TRUE);
-        return userRepository.save(user);
+//        user.getUserProfile().setActive(true);
+         userRepository.save(user);
+        UserRegisterReqDto userDto = modelMapper.map(user,UserRegisterReqDto.class);
+        return userDto;
 
+    }
+
+    /**
+     * This method soft deletes user from system ( only admin can delete other users)
+     * @param userId
+     * @throws Exception
+     */
+    @Override public void deleteUserById(Long userId) throws Exception {
+
+        User loggedInUser = userAuthUtils.getLoggedInUser();
+        if (loggedInUser.getRoles().stream().noneMatch(x -> x.getRole().equalsIgnoreCase(com.user.auth.enums.Role.ADMIN.name()))) {
+            throw new Exception("Unauthorised");
+        }
+        if (userId == null) {
+            throw new Exception("Error");
+        }
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isPresent()) {
+            user.get().setDeleted(true);
+            userRepository.save(user.get());
+        }
     }
 
     @Override

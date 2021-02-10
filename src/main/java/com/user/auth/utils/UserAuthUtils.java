@@ -1,5 +1,11 @@
 package com.user.auth.utils;
 
+import com.user.auth.model.User;
+import com.user.auth.repository.UserRepository;
+import com.user.auth.security.JwtProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
 import com.user.auth.repository.TokenRepository;
@@ -18,8 +24,17 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.util.Optional;
+
 @Component
 public class UserAuthUtils {
+
+
+    @Autowired
+    private JwtProvider jwtProvider;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Value("${upload.directory}")
     private String UPLOAD_DIRECTORY ;
@@ -34,6 +49,23 @@ public class UserAuthUtils {
             sb.append(AlphaNumericString.charAt(index));
         }
         return sb.toString();
+    }
+
+    public String getLoggedInUserName(){
+            Object userDetails = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (userDetails instanceof UserDetails) {
+                return ((UserDetails) userDetails).getUsername();
+            }
+            return null;
+    }
+
+    public User getLoggedInUser() {
+        String userName = getLoggedInUserName();
+        Optional<User> user = userRepository.findByEmail(userName);
+        if (user.isPresent())
+            return user.get();
+        return null;
+
     }
     public Optional<User> getUserFromToken(String token){
         Optional<Token> optToken = tokenRepository.findByToken(token);

@@ -150,7 +150,7 @@ public class UserServiceImpl implements UserService {
                 if(userFromDb.isEmpty()) {
                     throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(),ErrorCodes.USER_NOT_FOUND.getValue());
                 }
-                if(sendTokenMailToUser(userFromDb.get(), )){
+                if(sendTokenMailToUser(userFromDb.get(), TokenType.FORGOT_PASSWORD_TOKEN)){
                     responseErrorCode=200;
                 }else{
                     responseErrorCode=400;

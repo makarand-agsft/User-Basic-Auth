@@ -38,6 +38,28 @@ import javax.servlet.http.HttpServletRequest;
             responseMessage = new ResponseDto(new ResponseObject(400,"User already exists in system",null),HttpStatus.BAD_REQUEST);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
     }
+    @PostMapping(path = "user/forgotpassword")
+    public ResponseEntity forgotPassword(@RequestBody ForgotPasswordDto forgotDto) throws Exception {
+        ResponseDto responseDto = null;
+        int message=userService.forgotPassword(forgotDto);
+        if(message==200){
+            responseDto= new ResponseDto(new ResponseObject(200,"Your password token is sent to your registered email id.",null),HttpStatus.OK);
+        }else if(message==400){
+            responseDto= new ResponseDto(new ResponseObject(400,"Oops..! Something went wrong, email not sent.",null),HttpStatus.OK);
+        }
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
+    }
+
+    @PostMapping(path = "/user/changepassword")
+    public ResponseEntity changePassword(@RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request){
+        ResponseDto responseDto;
+        if(userService.changePassword(changePasswordDto,request)){
+            responseDto= new ResponseDto(new ResponseObject(200,"Password changed successfully..!",null),HttpStatus.OK);
+        }else{
+            responseDto= new ResponseDto(new ResponseObject(400,"Oops..! Failed to changed the password.",null),HttpStatus.OK);
+        }
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
+    }
 
     /**
      * This method is an endpoint for logging in the user
@@ -78,8 +100,6 @@ import javax.servlet.http.HttpServletRequest;
                         HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
-
-
     @GetMapping(path = "/user/getprofile")
     public ResponseEntity getUserProfile(HttpServletRequest request){
         ResponseDto responseDto;

@@ -1,8 +1,13 @@
 package com.user.auth.service;
 
+import com.user.auth.dto.UserLoginReqDto;
+import com.user.auth.dto.UserLoginResDto;
+import com.user.auth.dto.UserListResponseDto;
+import com.user.auth.dto.UserRegisterReqDto;
 
 import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
+import com.user.auth.dto.request.UserUpdateRoleReqDto;
 import com.user.auth.model.User;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,7 +19,6 @@ public interface UserService {
     UserListResponseDto getAllAdminUsers();
 
     UserLoginResDto loginUser(UserLoginReqDto dto);
-    public User resetPassword(ResetPasswordReqDto dto);
 
     UserProfileResDto getUserProfile(HttpServletRequest request);
 
@@ -25,4 +29,16 @@ public interface UserService {
     Boolean UpdateUser(String userReqDto, MultipartFile file, HttpServletRequest request);
 
     boolean addProfileImage(MultipartFile file, HttpServletRequest request);
+
+    int forgotPassword(ForgotPasswordDto forgotDto) throws Exception;
+
+    boolean changePassword(ChangePasswordDto changePasswordDto, HttpServletRequest request);
+
+
+    UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto);
+
+    UserRegisterReqDto resetPassword(ResetPasswordReqDto dto);
+
+    void deleteUserById(Long userId) throws Exception;
+
 }

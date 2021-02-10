@@ -12,6 +12,9 @@ import springfox.documentation.spring.web.plugins.Docket;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * This class represents swagger configuration
+ */
 @Configuration
 public class Swagger2Config {
         @Bean

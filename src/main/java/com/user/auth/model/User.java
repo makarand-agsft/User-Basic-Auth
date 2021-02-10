@@ -19,6 +19,17 @@ public class User extends AuditingEntity{
 	@Column(name = "password")
 	private String password;
 
+	@Column(name = "is_deleted")
+	private Boolean isDeleted;
+
+	public Boolean getDeleted() {
+		return isDeleted;
+	}
+
+	public void setDeleted(Boolean deleted) {
+		isDeleted = deleted;
+	}
+
 	@ManyToMany(cascade= CascadeType.ALL,fetch=FetchType.EAGER)
 	@JoinTable(name="user_roles",
 			joinColumns = {@JoinColumn(name="user_id", referencedColumnName="id")},
@@ -91,11 +102,7 @@ public class User extends AuditingEntity{
 		this.tokens = tokens;
 	}
 
-	@Override
-	public String toString() {
-		return "User{" +
-				"userId=" + userId +
-				", password='" + password + '\'' +
-				'}';
+	@Override public String toString() {
+		return "User{" + "userId=" + userId + ", email='" + email + '\'' + ", password='" + password + '\'' + ", isDeleted=" + isDeleted + ", roles=" + roles + ", tokens=" + tokens + ", addresses=" + addresses + ", userProfile=" + userProfile + '}';
 	}
 }

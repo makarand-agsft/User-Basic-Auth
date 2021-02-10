@@ -1,5 +1,7 @@
 package com.user.auth.dto;
 
+import com.user.auth.enums.AddressType;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,16 +15,74 @@ public class UserRegisterReqDto {
 	
 	private Long mobileNumber;
 	
-	private String address;
-	
-	private List<String> role = new ArrayList<>();
+	private String city;
 
-	public List<String> getRole() {
-		return role;
+	private String state;
+
+	private String addressString;
+
+	private String country;
+
+	private Long pincode;
+
+	private AddressType addressType;
+
+	private List<String> roles = new ArrayList<>();
+
+	public AddressType getAddressType() {
+		return addressType;
 	}
 
-	public void setRole(List<String> role) {
-		this.role = role;
+	public void setAddressType(AddressType addressType) {
+		this.addressType = addressType;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
+	public String getAddressString() {
+		return addressString;
+	}
+
+	public void setAddressString(String addressString) {
+		this.addressString = addressString;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
+
+	public Long getPincode() {
+		return pincode;
+	}
+
+	public void setPincode(Long pincode) {
+		this.pincode = pincode;
+	}
+
+	public List<String> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(List<String> roles) {
+		this.roles = roles;
 	}
 
 	public String getFirstName() {
@@ -57,19 +117,19 @@ public class UserRegisterReqDto {
 		this.mobileNumber = mobileNumber;
 	}
 
-	public String getAddress() {
-		return address;
-	}
-
-	public void setAddress(String address) {
-		this.address = address;
-	}
-
-
 	@Override
 	public String toString() {
-		return "UserDto [firstName=" + firstName + ", lastName=" + lastName + ", email=" + email + ", mobile=" + mobileNumber
-				+ ", address=" + address + "]";
+		return "UserRegisterReqDto{" +
+				"firstName='" + firstName + '\'' +
+				", lastName='" + lastName + '\'' +
+				", email='" + email + '\'' +
+				", mobileNumber=" + mobileNumber +
+				", city='" + city + '\'' +
+				", state='" + state + '\'' +
+				", addressString='" + addressString + '\'' +
+				", country='" + country + '\'' +
+				", pincode=" + pincode +
+				", roles=" + roles +
+				'}';
 	}
-
 }

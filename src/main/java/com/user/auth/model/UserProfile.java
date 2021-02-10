@@ -21,9 +21,20 @@ public class UserProfile extends AuditingEntity{
     @Column(name = "is_active")
     private Boolean isActive;
 
+    @Column(name = "profile_picture")
+    private String profilePicture;
+
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
 
     public Long getId() {
         return id;

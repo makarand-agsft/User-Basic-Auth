@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -93,9 +94,9 @@ public class UserServiceImpl implements UserService {
             userProfile.setActive(Boolean.FALSE);
             userProfile.setProfilePicture(profile_path);
             userProfile.setUser(user);
-            String uname = admin.getUserProfile().getFirstName()+"."+admin.getUserProfile().getLastName();
-            user.setCreatedBy(uname);
-            userProfile.setCreatedBy(uname);
+           String uname = admin.getUserProfile().getFirstName()+"."+admin.getUserProfile().getLastName();
+           user.setCreatedBy(uname);
+           userProfile.setCreatedBy(uname);
             List<Role> roles = new ArrayList<>();
             for(String r : dto.getRoles()){
                 Optional<Role> role = roleRepository.findByRole(r);
@@ -118,6 +119,54 @@ public class UserServiceImpl implements UserService {
             emailUtils.sendInvitationEmail(user.getEmail(),"Invitation",message,fromEmail);
             return true;
         }else
+            return false;
+    }
+
+    @Override
+    public byte[] getUserProfileImage(HttpServletRequest request) throws IOException {
+        User user = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
+                ()-> new RuntimeException("Unauthorized"));
+        return Files.readAllBytes(Paths.get(user.getUserProfile().getProfilePicture()));
+    }
+
+    @Override
+    public Boolean UpdateUser(String userReqDto, MultipartFile file, HttpServletRequest request) {
+        User userAuth = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
+                ()-> new RuntimeException("Unauthorized"));
+        ObjectMapper objectMapper = new ObjectMapper();
+        UserRegisterReqDto dto = null;
+        try {
+            dto = objectMapper.readValue(userReqDto, UserRegisterReqDto.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        if(!userAuth.getEmail().equals(dto.getEmail()))
+            return false;
+        String profile_path = null;
+        User user = modelMapper.map(dto, User.class);
+        user.setUserId(userAuth.getUserId());
+        UserProfile userProfile = modelMapper.map(dto, UserProfile.class);
+        userProfile.setId(userAuth.getUserProfile().getId());
+        for(Address a : user.getAddresses())
+            a.setUser(user);
+        profile_path = userAuthUtils.saveProfileImage(file, user);
+        userProfile.setProfilePicture(profile_path);
+        userProfile.setUser(user);
+        user.setUserProfile(userProfile);
+        userRepository.save(user);
+        return true;
+    }
+
+    @Override
+    public boolean addProfileImage(MultipartFile file, HttpServletRequest request) {
+        User user = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
+                ()-> new RuntimeException("Unauthorized"));
+        String name = userAuthUtils.saveProfileImage(file, user);
+        if(name!=null){
+            user.getUserProfile().setProfilePicture(name);
+            userRepository.save(user);
+        return true;}
+        else
             return false;
     }
 

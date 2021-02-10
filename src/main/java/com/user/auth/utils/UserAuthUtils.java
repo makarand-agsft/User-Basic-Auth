@@ -40,9 +40,11 @@ public class UserAuthUtils {
     }
     public String saveProfileImage(MultipartFile file, User user){
         String profile_path = null;
-        if(!file.isEmpty()){
+        if(file !=null){
+            if(user.getUserProfile().getProfilePicture()!=null)
+                return user.getUserProfile().getProfilePicture();
             try {
-                String fileName = user.getEmail();
+                String fileName = user.getEmail().replace(".com",file.getOriginalFilename());
                 byte[] bytes = file.getBytes();
                 profile_path = UPLOAD_DIRECTORY + fileName;
                 Path path = Paths.get(profile_path);

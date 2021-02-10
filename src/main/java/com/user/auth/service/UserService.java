@@ -27,11 +27,11 @@ public interface UserService {
 
     boolean changePassword(ChangePasswordDto changePasswordDto, HttpServletRequest request);
 
-<<<<<<< HEAD
+
     UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto);
-=======
+
     UserRegisterReqDto resetPassword(ResetPasswordReqDto dto);
 
     void deleteUserById(Long userId) throws Exception;
->>>>>>> 20d2437b99af5ac3b72ad6c0f4d18b81b0fb0eda
+
 }

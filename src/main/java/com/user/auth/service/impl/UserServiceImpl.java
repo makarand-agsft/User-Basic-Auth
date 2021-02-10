@@ -1,14 +1,11 @@
 package com.user.auth.service.impl;
 
-import com.user.auth.dto.UserListResponseDto;
-import com.user.auth.dto.UserLoginReqDto;
-import com.user.auth.dto.UserLoginResDto;
-import com.user.auth.dto.UserRegisterReqDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.enums.TokenType;
-import com.user.auth.model.Role;
-import com.user.auth.model.Token;
-import com.user.auth.model.User;
+import com.user.auth.model.*;
 import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
@@ -21,8 +18,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -63,26 +65,60 @@ public class UserServiceImpl implements UserService {
     @Value("${jwt.header}")
     private String jwtHeader;
 
+    @Autowired
+    private UserAuthUtils authUtils;
+
+    @Value("${upload.directory}")
+    private String UPLOAD_DIRECTORY;
+
     @Override
-    public boolean registerNewUser(UserRegisterReqDto dto) {
+    public boolean registerNewUser(String jsonString, MultipartFile file) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        UserRegisterReqDto dto = null;
+        try {
+           dto = objectMapper.readValue(jsonString, UserRegisterReqDto.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         Optional<User> dupUser =  userRepository.findByEmail(dto.getEmail());
+        String profile_path = null;
         if(!dupUser.isPresent()){
             User user = modelMapper.map(dto, User.class);
-            user.getUserProfile().setActive(Boolean.FALSE);
-            user.setCreatedBy("");
+            UserProfile userProfile = modelMapper.map(dto, UserProfile.class);
+            Address address = modelMapper.map(dto, Address.class);
+            address.setUser(user);
+            if(!file.isEmpty()){
+                try {
+                    String fileName = user.getEmail();
+                    byte[] bytes = file.getBytes();
+                    profile_path = UPLOAD_DIRECTORY + fileName;
+                    Path path = Paths.get(profile_path);
+                    Files.write(path, bytes);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            userProfile.setActive(Boolean.FALSE);
+            userProfile.setProfilePicture(profile_path);
+            userProfile.setUser(user);
+            String uname = userProfile.getFirstName()+"."+userProfile.getLastName();
+            user.setCreatedBy(uname);
+            userProfile.setCreatedBy(uname);
             List<Role> roles = new ArrayList<>();
-            for(String r : dto.getRole()){
+            for(String r : dto.getRoles()){
                 Optional<Role> role = roleRepository.findByRole(r);
                 if(role.isPresent())
                     roles.add(role.get());
             }
-            user.setRoles(roles);
             Token token = new Token();
             token.setToken(userAuthUtils.generateKey(10));
             token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);
             token.setUsers(user);
             token.setExpiryDate(new Date(System.currentTimeMillis()+jwTokenExpiry*1000));
             user.setTokens(Collections.singletonList(token));
+            user.setRoles(roles);
+            user.setAddresses(Collections.singletonList(address));
+            user.setUserProfile(userProfile);
             userRepository.save(user);
             tokenRepository.save(token);
             //send email
@@ -139,15 +175,17 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setActive(true);
+        user.getUserProfile().setActive(Boolean.TRUE);
         return userRepository.save(user);
 
     }
 
     @Override
-    public void getUserProfile(HttpServletRequest request) {
+    public UserProfileResDto getUserProfile(HttpServletRequest request) {
         String token = request.getHeader(jwtHeader);
-        jwtProvider.validateToken()
+        User user = authUtils.getUserFromToken(token).orElseThrow(()-> new RuntimeException("Unauthorized"));
+        UserProfileResDto resDto = modelMapper.map(user.getUserProfile(), UserProfileResDto.class);
+        return resDto;
     }
 
 }

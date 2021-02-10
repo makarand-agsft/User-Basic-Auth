@@ -14,8 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * This class represents an endpoint of user authentication services
  */
@@ -81,7 +79,7 @@ import javax.servlet.http.HttpServletRequest;
     @GetMapping(path = "/user/getprofile")
     public ResponseEntity getUserProfile(HttpServletRequest request){
         ResponseDto responseDto;
-        UserProfileResDto resDto = userService.getUserProfile(request);
+        UserProfileResDto resDto = userService.getUserProfile();
         if(resDto!=null)
             responseDto = new ResponseDto(new ResponseObject(200, "User profile fetched successfully",resDto),HttpStatus.OK);
         else

@@ -22,24 +22,29 @@ import java.util.stream.Collectors;
 public class ControllerAdvisor extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Object> handleUserNotFoundException(UserNotFoundException userNotFoundException,WebRequest webRequest){
-        Map<String,Object> body= new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("message","User Not Found !");
-        return new ResponseEntity<>(body,HttpStatus.NOT_FOUND);
+    public ResponseEntity<Object> handleUserNotFoundException(UserNotFoundException userNotFoundException) {
+        ResponseDto responseDto =
+                new ResponseDto(new ResponseObject(userNotFoundException.getCode(), userNotFoundException.getMessage(), null), HttpStatus.OK);
+        return new ResponseEntity<>(responseDto, HttpStatus.OK);
     }
 
     @ExceptionHandler(InvalidEmailException.class)
-    public ResponseEntity<Object> handleInvalidEmailException(InvalidEmailException invalidEmailException,WebRequest webRequest){
-        Map<String,Object> body= new LinkedHashMap<>();
-        body.put("timestamp",LocalDateTime.now());
-        body.put("message","Invalid Email Id, Please provide valid email id...!");
-        return  new ResponseEntity<>(body,HttpStatus.NOT_ACCEPTABLE);
+    public ResponseEntity<Object> handleInvalidEmailException(InvalidEmailException invalidEmailException, WebRequest webRequest) {
+        ResponseDto responseDto =
+                new ResponseDto(new ResponseObject(invalidEmailException.getCode(), invalidEmailException.getMessage(), null), HttpStatus.OK);
+        return new ResponseEntity<>(responseDto, HttpStatus.OK);
     }
 
     @ExceptionHandler(InvalidPasswordException.class)
     public ResponseEntity<Object> handleInvalidOldPasswordException(InvalidPasswordException invalidPasswordException){
         ResponseDto responseDto= new ResponseDto(new ResponseObject(invalidPasswordException.getCode(),invalidPasswordException.getMessage(),null),
+                HttpStatus.OK);
+        return new ResponseEntity<>(responseDto,HttpStatus.OK);
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<Object> invalidRequest(InvalidRequestException invalidRequest){
+        ResponseDto responseDto= new ResponseDto(new ResponseObject(invalidRequest.getCode(),invalidRequest.getMessage(),null),
                 HttpStatus.OK);
         return new ResponseEntity<>(responseDto,HttpStatus.OK);
     }

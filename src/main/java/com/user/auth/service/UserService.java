@@ -7,7 +7,6 @@ import com.user.auth.dto.UserRegisterReqDto;
 
 import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
-import com.user.auth.model.User;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,7 +17,7 @@ public interface UserService {
 
     UserLoginResDto loginUser(UserLoginReqDto dto);
 
-    UserProfileResDto getUserProfile(HttpServletRequest request);
+    UserProfileResDto getUserProfile();
 
     boolean addUser(String userReqDto, MultipartFile file, HttpServletRequest request);
 

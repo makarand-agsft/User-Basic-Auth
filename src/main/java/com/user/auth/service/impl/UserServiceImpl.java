@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.enums.ErrorCodes;
+import com.user.auth.dto.request.UserUpdateRoleReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.exception.*;
 import com.user.auth.model.*;
@@ -12,6 +13,10 @@ import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
 import com.user.auth.model.UserProfile;
+import com.user.auth.exception.InvalidEmailException;
+import com.user.auth.exception.InvalidPasswordException;
+import com.user.auth.exception.UserNotFoundException;
+import com.user.auth.model.*;
 import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
@@ -26,8 +31,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -110,7 +115,7 @@ public class UserServiceImpl implements UserService {
             userProfile.setUser(user);
             String uname = admin.getUserProfile().getFirstName()+"."+admin.getUserProfile().getLastName();
             user.setCreatedBy(uname);
-            userProfile.setCreatedBy(uname);
+
             List<Role> roles = new ArrayList<>();
             for(String r : dto.getRoles()){
                 Optional<Role> role = roleRepository.findByRole(r);
@@ -229,7 +234,8 @@ public class UserServiceImpl implements UserService {
      * @param dto
      * @return user information with jwt token
      */
-    @Override public UserLoginResDto loginUser(UserLoginReqDto dto) {
+    @Override
+    public UserLoginResDto loginUser(UserLoginReqDto dto) {
         Optional<User> optUser = userRepository.findByEmail(dto.getEmail());
         if (optUser.isPresent()) {
             User user = optUser.get();
@@ -291,7 +297,7 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(),ErrorCodes.USER_NOT_FOUND.getValue());
         }
 
-        Token token = tokenRepository.findByTokenAndTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN, user.getUserId());
+        Token token = tokenRepository.findByTokenAndTokenTypeOrTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN,TokenType.FORGOT_PASSWORD_TOKEN, user.getUserId());
         if (null == token) {
             throw new UnAuthorisedException(ErrorCodes.UNAUTHORIZED.getCode(),ErrorCodes.UNAUTHORIZED.getValue());
         }
@@ -334,6 +340,37 @@ public class UserServiceImpl implements UserService {
         resDto.setAddresses(user.getAddresses());
         resDto.setEmail(user.getEmail());
         return resDto;
+    }
+
+    public UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto) {
+        if (null == dto.getUserId() || dto.getRoleList().isEmpty()) {
+            throw new RuntimeException("Invalid Request");
+        }
+        User user = userRepository.findById(dto.getUserId()).orElse(null);
+        if (null == user) {
+            throw new RuntimeException("User Not Found");
+        }
+        List<Role> roleList = new ArrayList<>();
+        for (Role role : dto.getRoleList()) {
+            role = roleRepository.findById(role.getRoleId()).orElse(null);
+            if (null != role) {
+                roleList.add(role);
+            }
+        }
+        user.setRoles(roleList);
+        userRepository.save(user);
+
+
+        List<String> roles =new ArrayList<>();
+       for(Role role:user.getRoles())
+       {
+           roles.add(role.getRole());
+       }
+        String message = "Hello " + user.getUserProfile().getFirstName() + "Your Roles are changed "+roles.toString();
+
+        emailUtils.sendInvitationEmail(user.getEmail(), "Invitation", message, fromEmail);
+        return new UserUpdateRoleRes(user.getEmail(), roles);
+
     }
 
 }

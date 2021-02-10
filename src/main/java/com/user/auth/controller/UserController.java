@@ -4,11 +4,14 @@ import com.user.auth.dto.*;
 
 import com.user.auth.dto.UserRegisterReqDto;
 import com.user.auth.dto.request.ResetPasswordReqDto;
+import com.user.auth.dto.request.UserUpdateRoleReqDto;
 import com.user.auth.service.UserService;
+import com.user.auth.utils.UserAuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,6 +22,9 @@ import javax.servlet.http.HttpServletRequest;
  */
 @RestController public class UserController {
     @Autowired private UserService userService;
+
+    @Autowired
+   private UserAuthUtils userAuthUtils;
 
     /**
      * This method registers new user in system
@@ -35,6 +41,29 @@ import javax.servlet.http.HttpServletRequest;
         else
             responseMessage = new ResponseDto(new ResponseObject(400,"User already exists in system",null),HttpStatus.BAD_REQUEST);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
+    }
+
+    @PostMapping(path = "user/forgotpassword")
+    public ResponseEntity forgotPassword(@RequestBody ForgotPasswordDto forgotDto) throws Exception {
+        ResponseDto responseDto = null;
+        int message=userService.forgotPassword(forgotDto);
+        if(message==200){
+            responseDto= new ResponseDto(new ResponseObject(200,"Your password token is sent to your registered email id.",null),HttpStatus.OK);
+        }else if(message==400){
+            responseDto= new ResponseDto(new ResponseObject(400,"Oops..! Something went wrong, email not sent.",null),HttpStatus.OK);
+        }
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
+    }
+
+    @PostMapping(path = "/user/changepassword")
+    public ResponseEntity changePassword(@RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request){
+        ResponseDto responseDto;
+        if(userService.changePassword(changePasswordDto,request)){
+            responseDto= new ResponseDto(new ResponseObject(200,"Password changed successfully..!",null),HttpStatus.OK);
+        }else{
+            responseDto= new ResponseDto(new ResponseObject(400,"Oops..! Failed to changed the password.",null),HttpStatus.OK);
+        }
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
 
     /**
@@ -99,5 +128,25 @@ import javax.servlet.http.HttpServletRequest;
         userService.deleteUserById(userId);
         ResponseDto responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User deleted successfully", null), HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
+    }
+
+    @PostMapping(path = "/user/updaterole")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    public ResponseEntity updateUserRole(HttpServletRequest httpServletRequest, @RequestBody UserUpdateRoleReqDto dto){
+
+        ResponseDto responseMessage;
+        if(userAuthUtils.checkAccess(httpServletRequest)) {
+
+            UserUpdateRoleRes userUpdateRoleRes=userService.updateRole(dto);
+
+            if (null !=userUpdateRoleRes )
+                responseMessage = new ResponseDto(new ResponseObject(200, "User Role changed successfully", userUpdateRoleRes),HttpStatus.OK);
+            else
+                responseMessage = new ResponseDto(new ResponseObject(400, "Failed to changed the Roles", null),HttpStatus.NOT_FOUND);
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
+        }
+        responseMessage = new ResponseDto(new ResponseObject(401, "Access denied", null),HttpStatus.FORBIDDEN);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
+
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -17,6 +18,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	JwtAuthenticationEntryPoint authenticationEntryPoint;
 
+	@Autowired
+	private JwtProvider jwtProvider;
+
+	@Autowired UserDetailsService userDetailsService;
 	@Override
 	public void configure(WebSecurity web) throws Exception {
 		web.ignoring()
@@ -35,7 +40,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.permitAll().anyRequest().authenticated().and().exceptionHandling()
 				.authenticationEntryPoint(authenticationEntryPoint).and().sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-		http.addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class);
+		http.addFilterBefore(new JwtFilter(jwtProvider,userDetailsService), UsernamePasswordAuthenticationFilter.class);
 	}
 
 }

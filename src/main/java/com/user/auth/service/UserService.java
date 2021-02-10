@@ -10,6 +10,8 @@ import com.user.auth.model.User;
 
 import org.springframework.http.ResponseEntity;
 
+import javax.servlet.http.HttpServletRequest;
+
 public interface UserService {
 
     boolean registerNewUser(UserRegisterReqDto dto);
@@ -18,4 +20,6 @@ public interface UserService {
 
     UserLoginResDto loginUser(UserLoginReqDto dto);
     public User resetPassword(ResetPasswordReqDto dto);
+
+    void getUserProfile(HttpServletRequest request);
 }

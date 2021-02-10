@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -58,6 +59,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private JwtProvider jwtProvider;
+
+    @Value("${jwt.header}")
+    private String jwtHeader;
 
     @Override
     public boolean registerNewUser(UserRegisterReqDto dto) {
@@ -138,6 +142,12 @@ public class UserServiceImpl implements UserService {
         user.setActive(true);
         return userRepository.save(user);
 
+    }
+
+    @Override
+    public void getUserProfile(HttpServletRequest request) {
+        String token = request.getHeader(jwtHeader);
+        jwtProvider.validateToken()
     }
 
 }

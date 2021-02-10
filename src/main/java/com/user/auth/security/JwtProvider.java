@@ -64,7 +64,7 @@ public class JwtProvider {
 		String username;
 		try {
 			final Claims claims = getClaimFromToken(token);
-			username = (String) claims.get("username");
+			username = (String) claims.get("userName");
 		} catch (Exception e) {
 			username = null;
 		}

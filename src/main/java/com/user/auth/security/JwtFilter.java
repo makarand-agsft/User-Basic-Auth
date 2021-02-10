@@ -20,20 +20,21 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
 
 
-    @Autowired
-    JwtProvider jwtProvider;
+    private JwtProvider jwtProvider;
 
-
-    @Autowired UserDetailsService userDetailsService;
+    private UserDetailsService userDetailsService;
+    public JwtFilter(JwtProvider jwtProvider,UserDetailsService userDetailsService) {
+        this.jwtProvider = jwtProvider;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String header = request.getHeader("Authorization");
         String username = null;
-        String authToken = null;
         if (header != null) {
             try {
-                username = jwtProvider.getUsernameFromToken(authToken);
+                username = jwtProvider.getUsernameFromToken(header);
             } catch (IllegalArgumentException e) {
                 logger.error("an error occured during getting username from token", e);
             } catch (ExpiredJwtException e) {
@@ -46,9 +47,9 @@ public class JwtFilter extends OncePerRequestFilter {
         }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-            if (jwtProvider.validateToken(authToken, userDetails)) {
+            if (jwtProvider.validateToken(header, userDetails)) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 logger.info("authenticated user " + username + ", setting security context");

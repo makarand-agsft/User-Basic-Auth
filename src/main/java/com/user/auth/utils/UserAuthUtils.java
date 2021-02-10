@@ -15,6 +15,9 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Optional;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @Component
 public class UserAuthUtils {
 
@@ -52,5 +55,15 @@ public class UserAuthUtils {
             }
         }
         return profile_path;
+    }
+
+    public boolean validateEmail(String email) {
+        String regex = "^(.+)@(.+)$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(email);
+        if(matcher.matches()){
+            return true;
+        }
+        return false;
     }
 }

@@ -13,9 +13,14 @@ public interface UserService {
     UserListResponseDto getAllAdminUsers();
 
     UserLoginResDto loginUser(UserLoginReqDto dto);
+
     public User resetPassword(ResetPasswordReqDto dto);
 
     UserProfileResDto getUserProfile(HttpServletRequest request);
 
     boolean addUser(String userReqDto, MultipartFile file, HttpServletRequest request);
+
+    int forgotPassword(ForgotPasswordDto forgotDto) throws Exception;
+
+    boolean changePassword(ChangePasswordDto changePasswordDto, HttpServletRequest request);
 }

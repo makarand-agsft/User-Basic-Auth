@@ -6,6 +6,13 @@ import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.model.*;
+import com.user.auth.exception.InvalidEmailException;
+import com.user.auth.exception.InvalidPasswordException;
+import com.user.auth.exception.UserNotFoundException;
+import com.user.auth.model.Role;
+import com.user.auth.model.Token;
+import com.user.auth.model.User;
+import com.user.auth.model.UserProfile;
 import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
@@ -13,12 +20,15 @@ import com.user.auth.security.JwtProvider;
 import com.user.auth.service.UserService;
 import com.user.auth.utils.EmailUtils;
 import com.user.auth.utils.UserAuthUtils;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.SignatureException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -29,12 +39,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
+
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private TokenRepository tokenRepository;
+
     @Autowired
     private RoleRepository roleRepository;
 
@@ -119,6 +132,94 @@ public class UserServiceImpl implements UserService {
             return true;
         }else
             return false;
+    }
+
+    @Override
+    public int forgotPassword(ForgotPasswordDto forgotDto) throws Exception {
+        if(forgotDto!=null && forgotDto.getEmail()!=null){
+            int responseErrorCode;
+            if(userAuthUtils.validateEmail(forgotDto.getEmail())){
+                Optional<User> userFromDb=userRepository.findByEmail(forgotDto.getEmail());
+                if(userFromDb.isEmpty()) {
+                    throw new UserNotFoundException();
+                }
+                if(sendTokenMailToUser(userFromDb.get())){
+                    responseErrorCode=200;
+                }else{
+                    responseErrorCode=400;
+                }
+                return responseErrorCode;
+            }else{
+                throw new InvalidEmailException();
+            }
+        }else{
+            throw new InvalidEmailException();
+        }
+    }
+
+    @Override
+    public boolean changePassword(ChangePasswordDto changePasswordDto , HttpServletRequest request) {
+        if (changePasswordDto != null && changePasswordDto.getEmail() != null && changePasswordDto.getOldPassword() != null
+                && changePasswordDto.getNewPassword() != null) {
+            String header = request.getHeader("Authorization");
+            String email = null;
+            if (header != null) {
+                try {
+                    email=jwtProvider.getUsernameFromToken(header);
+                } catch (IllegalArgumentException e) {
+                   // logger.error("an error occured during getting username from token", e);
+                } catch (ExpiredJwtException e) {
+                   // logger.warn("the token is expired and not valid anymore", e);
+                } catch(SignatureException e){
+                   // logger.error("Authentication Failed. Username or Password not valid.");
+                }
+
+                if(email.equalsIgnoreCase(changePasswordDto.getEmail())) {
+
+                    Optional<User> userFromDb = userRepository.findByEmail(email);
+                    if (userFromDb.isPresent()) {
+                        // userFromDb.get().getPassword().equalsIgnoreCase(passwordEncoder.encode(changePasswordDto.getOldPassword()))
+                        if (passwordEncoder.matches(changePasswordDto.getOldPassword(),userFromDb.get().getPassword())) {
+                            userFromDb.get().setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
+                            userRepository.save(userFromDb.get());
+                            return true;
+                        } else {
+                            throw new InvalidPasswordException(101,"Your old password is incorrect...!");
+                        }
+
+                    } else {
+                        // user not present
+                        return false;
+                    }
+                }else{
+                    // provided email id not matched with token mail id
+                    return false;
+                }
+            }else{
+                throw new RuntimeException("No token found");
+            }
+        }
+        return false;
+    }
+
+    private boolean sendTokenMailToUser(User user) {
+        if(user.getEmail()!=null ){
+            String token=userAuthUtils.generateKey(10);
+            String subject="Forgot password auto generated mail.";
+            String text=" Hello "+user.getUserProfile().getFirstName()+" , \n your requested token is "+token +" \n Use this token to change or reset your password.";
+
+            Token tokenToBeSave= new Token();
+            tokenToBeSave.setToken(token);
+            tokenToBeSave.setTokenType(TokenType.FORGOT_PASSWORD_TOKEN);
+            tokenToBeSave.setUsers(user);
+            tokenToBeSave.setCreatedBy(user.getUserProfile().getFirstName()+"."+user.getUserProfile().getLastName());
+            tokenToBeSave.setCreatedDate(new Date());
+            tokenToBeSave.setExpiryDate(new Date(System.currentTimeMillis() + jwTokenExpiry * 1000));
+            tokenRepository.save(tokenToBeSave);
+            emailUtils.sendInvitationEmail(user.getEmail(),subject,text,fromEmail);
+            return true;
+        }
+        return false;
     }
 
     @Override

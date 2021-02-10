@@ -7,6 +7,7 @@ import com.user.auth.dto.UserRegisterReqDto;
 
 import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
+import com.user.auth.dto.request.UserUpdateRoleReqDto;
 import com.user.auth.model.User;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,7 +27,11 @@ public interface UserService {
 
     boolean changePassword(ChangePasswordDto changePasswordDto, HttpServletRequest request);
 
+
+    UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto);
+
     UserRegisterReqDto resetPassword(ResetPasswordReqDto dto);
 
     void deleteUserById(Long userId) throws Exception;
+
 }

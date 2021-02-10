@@ -127,7 +127,7 @@ import java.io.IOException;
 
     }
 
-    @PostMapping(path = "/user/profileimg", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PostMapping(path = "/user/get/profileimg", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getUserProfileImage(HttpServletRequest request) throws IOException {
         byte[] image = userService.getUserProfileImage(request);
         if (image != null) {
@@ -169,10 +169,10 @@ import java.io.IOException;
 
     }
 
-    @PostMapping(path = "/user/edituser")
+    @PostMapping(path = "/user/update")
     public ResponseEntity editUser(@RequestParam(name = "file", required = false)MultipartFile file, @RequestParam("userReqDto")String userReqDto,HttpServletRequest request){
         ResponseDto responseMessage;
-        if(userService.UpdateUser(userReqDto,file,request))
+        if(userService.addUser(userReqDto,file,request))
             responseMessage = new ResponseDto(new ResponseObject(200, "User updated successfully.",null),HttpStatus.OK);
         else
             responseMessage = new ResponseDto(new ResponseObject(400,"User not updated.",null),HttpStatus.OK);

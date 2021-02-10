@@ -2,6 +2,7 @@ package com.user.auth.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.dto.request.UserUpdateRoleReqDto;
@@ -101,39 +102,45 @@ public class UserServiceImpl implements UserService {
             e.printStackTrace();
         }
         Optional<User> dupUser =  userRepository.findByEmail(dto.getEmail());
-        String profile_path = null;
-        if(!dupUser.isPresent()){
+        boolean isUser = admin.getEmail().equals(dto.getEmail());
+        String profile_path;
+        if(!dupUser.isPresent() || isUser){
             User user = modelMapper.map(dto, User.class);
             UserProfile userProfile = modelMapper.map(dto, UserProfile.class);
-            Address address = modelMapper.map(dto, Address.class);
-            address.setUser(user);
-            profile_path = userAuthUtils.saveProfileImage(file, user);
-            userProfile.setActive(Boolean.FALSE);
-            userProfile.setProfilePicture(profile_path);
-            userProfile.setUser(user);
-            String uname = admin.getUserProfile().getFirstName()+"."+admin.getUserProfile().getLastName();
-            user.setCreatedBy(uname);
-            userProfile.setCreatedBy(uname);
-            List<Role> roles = new ArrayList<>();
-            for(String r : dto.getRoles()){
-                Optional<Role> role = roleRepository.findByRole(r);
-                if(role.isPresent())
-                    roles.add(role.get());
+            if(isUser){
+                user.setUserId(admin.getUserId());
+                userProfile.setId(admin.getUserProfile().getId());
             }
-            Token token = new Token();
-            token.setToken(userAuthUtils.generateKey(10));
-            token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);
-            token.setUsers(user);
-            token.setExpiryDate(new Date(System.currentTimeMillis()+jwTokenExpiry*1000));
-            user.setTokens(Collections.singletonList(token));
-            user.setRoles(roles);
-            user.setAddresses(Collections.singletonList(address));
+            for(Address a : user.getAddresses())
+                a.setUser(user);
+            userProfile.setUser(user);
             user.setUserProfile(userProfile);
-            userRepository.save(user);
-            tokenRepository.save(token);
-            //send email
-            String message ="Hello "+user.getUserProfile().getFirstName() +"This is your temporary password ,use this to change your password :"+token.getToken();
-            emailUtils.sendInvitationEmail(user.getEmail(),"Invitation",message,fromEmail);
+            profile_path = userAuthUtils.saveProfileImage(file, (isUser)?admin:user);
+            userProfile.setProfilePicture(profile_path);
+            if(!isUser){
+                userProfile.setActive(Boolean.FALSE);
+                String uname = admin.getUserProfile().getFirstName()+"."+admin.getUserProfile().getLastName();
+                user.setCreatedBy(uname);
+                userProfile.setCreatedBy(uname);
+                List<Role> roles = new ArrayList<>();
+                for(String r : dto.getRoles()){
+                    Optional<Role> role = roleRepository.findByRole(r);
+                    role.ifPresent(roles::add);
+                }
+                Token token = new Token();
+                token.setToken(userAuthUtils.generateKey(10));
+                token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);
+                token.setUsers(user);
+                token.setExpiryDate(new Date(System.currentTimeMillis()+jwTokenExpiry*1000));
+                user.setTokens(Collections.singletonList(token));
+                user.setRoles(roles);
+                userRepository.save(user);
+                tokenRepository.save(token);
+                //send email
+                String message ="Hello "+user.getUserProfile().getFirstName() +"This is your temporary password ,use this to change your password :"+token.getToken();
+                emailUtils.sendInvitationEmail(user.getEmail(),"Invitation",message,fromEmail);
+            }else
+                userRepository.save(user);
             return true;
         }else
             return false;
@@ -143,6 +150,8 @@ public class UserServiceImpl implements UserService {
     public byte[] getUserProfileImage(HttpServletRequest request) throws IOException {
         User user = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
                 ()-> new RuntimeException("Unauthorized"));
+        if(user.getUserProfile().getProfilePicture()==null)
+            return null;
         return Files.readAllBytes(Paths.get(user.getUserProfile().getProfilePicture()));
     }
 
@@ -159,7 +168,7 @@ public class UserServiceImpl implements UserService {
         }
         if(!userAuth.getEmail().equals(dto.getEmail()))
             return false;
-        String profile_path = null;
+        String profile_path;
         User user = modelMapper.map(dto, User.class);
         user.setUserId(userAuth.getUserId());
         UserProfile userProfile = modelMapper.map(dto, UserProfile.class);
@@ -348,8 +357,7 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.getUserProfile().setActive(true);
          userRepository.save(user);
-        UserRegisterReqDto userDto = modelMapper.map(user,UserRegisterReqDto.class);
-        return userDto;
+        return modelMapper.map(user,UserRegisterReqDto.class);
 
     }
 

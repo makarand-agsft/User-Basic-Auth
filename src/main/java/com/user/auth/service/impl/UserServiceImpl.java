@@ -135,7 +135,7 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setActive(true);
+        user.getUserProfile().setActive(true);
         return userRepository.save(user);
 
     }

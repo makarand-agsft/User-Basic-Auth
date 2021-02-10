@@ -300,7 +300,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Authentication Failed");
         }
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-//        user.getUserProfile().setActive(true);
+        user.getUserProfile().setActive(true);
          userRepository.save(user);
         UserRegisterReqDto userDto = modelMapper.map(user,UserRegisterReqDto.class);
         return userDto;

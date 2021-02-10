@@ -179,6 +179,7 @@ public class UserServiceImpl implements UserService {
                     Optional<User> userFromDb = userRepository.findByEmail(email);
                     if (userFromDb.isPresent()) {
                         // userFromDb.get().getPassword().equalsIgnoreCase(passwordEncoder.encode(changePasswordDto.getOldPassword()))
+
                         if (passwordEncoder.matches(changePasswordDto.getOldPassword(),userFromDb.get().getPassword())) {
                             userFromDb.get().setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
                             userRepository.save(userFromDb.get());
@@ -206,7 +207,7 @@ public class UserServiceImpl implements UserService {
         if(user.getEmail()!=null ){
             String token=userAuthUtils.generateKey(10);
             String subject="Forgot password auto generated mail.";
-            String text=" Hello "+user.getUserProfile().getFirstName()+" , \n your requested token is "+token +" \n Use this token to change or reset your password.";
+            String text=" Hello "+user.getUserProfile().getFirstName()+" , \n your requested token is "+token +" \n Use this token to reset your password.";
 
             Token tokenToBeSave= new Token();
             tokenToBeSave.setToken(token);

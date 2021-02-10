@@ -19,15 +19,14 @@ import javax.servlet.http.HttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * This class represents an endpoint of user authentication services
+ */
+@RestController public class UserController {
+    @Autowired private UserService userService;
 
-
-@RestController
-public class UserController {
     @Autowired
-    private UserService userService;
-    @Autowired
-    UserAuthUtils userAuthUtils;
-
+   private UserAuthUtils userAuthUtils;
 
     /**
      * This method registers new user in system
@@ -44,6 +43,28 @@ public class UserController {
         else
             responseMessage = new ResponseDto(new ResponseObject(400,"User already exists in system",null),HttpStatus.BAD_REQUEST);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
+    }
+    @PostMapping(path = "user/forgotpassword")
+    public ResponseEntity forgotPassword(@RequestBody ForgotPasswordDto forgotDto) throws Exception {
+        ResponseDto responseDto = null;
+        int message=userService.forgotPassword(forgotDto);
+        if(message==200){
+            responseDto= new ResponseDto(new ResponseObject(200,"Your password token is sent to your registered email id.",null),HttpStatus.OK);
+        }else if(message==400){
+            responseDto= new ResponseDto(new ResponseObject(400,"Oops..! Something went wrong, email not sent.",null),HttpStatus.OK);
+        }
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
+    }
+
+    @PostMapping(path = "/user/changepassword")
+    public ResponseEntity changePassword(@RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request){
+        ResponseDto responseDto;
+        if(userService.changePassword(changePasswordDto,request)){
+            responseDto= new ResponseDto(new ResponseObject(200,"Password changed successfully..!",null),HttpStatus.OK);
+        }else{
+            responseDto= new ResponseDto(new ResponseObject(400,"Oops..! Failed to changed the password.",null),HttpStatus.OK);
+        }
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
 
     /**

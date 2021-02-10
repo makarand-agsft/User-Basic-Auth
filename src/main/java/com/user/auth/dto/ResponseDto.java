@@ -1,40 +1,26 @@
 package com.user.auth.dto;
 
+import org.springframework.http.HttpStatus;
+
+/**
+ * This class is responsible for sending custom response
+ * Http status will always be 200 if api hits successfully
+ */
 public class ResponseDto {
-    private int code;
-    private String message;
-    private Object object;
 
-    public ResponseDto(){
+    private  ResponseObject responseObject;
+    private HttpStatus httpStatus;
 
-    }
-    public ResponseDto(int code, String message, Object object) {
-        this.code = code;
-        this.message = message;
-        this.object = object;
+    public ResponseDto(ResponseObject responseObject, HttpStatus httpStatus) {
+        this.responseObject = responseObject;
+        this.httpStatus = httpStatus;
     }
 
-    public int getCode() {
-        return code;
+    public ResponseObject getResponseObject() {
+        return responseObject;
     }
 
-    public void setCode(int code) {
-        this.code = code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public Object getObject() {
-        return object;
-    }
-
-    public void setObject(Object object) {
-        this.object = object;
+    public void setResponseObject(ResponseObject responseObject) {
+        this.responseObject = responseObject;
     }
 }

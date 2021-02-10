@@ -1,14 +1,17 @@
 package com.user.auth.utils;
 
+
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
 import com.user.auth.repository.TokenRepository;
+import com.user.auth.repository.UserRepository;
 import com.user.auth.security.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,13 +19,22 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Date;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
 public class UserAuthUtils {
+
+
+    @Autowired
+    private JwtProvider jwtProvider;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Value("${upload.directory}")
     private String UPLOAD_DIRECTORY ;
@@ -30,8 +42,6 @@ public class UserAuthUtils {
     private TokenRepository tokenRepository;
     @Value("${jwt.header}")
     private String jwtHeader;
-    @Autowired
-    private JwtProvider jwtProvider;
 
 
     public String generateKey(int n) {
@@ -42,6 +52,23 @@ public class UserAuthUtils {
             sb.append(AlphaNumericString.charAt(index));
         }
         return sb.toString();
+    }
+
+    public String getLoggedInUserName(){
+            Object userDetails = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (userDetails instanceof UserDetails) {
+                return ((UserDetails) userDetails).getUsername();
+            }
+            return null;
+    }
+
+    public User getLoggedInUser() {
+        String userName = getLoggedInUserName();
+        Optional<User> user = userRepository.findByEmail(userName);
+        if (user.isPresent())
+            return user.get();
+        return null;
+
     }
     public Optional<User> getUserFromToken(String token){
         Optional<Token> optToken = tokenRepository.findByToken(token);
@@ -85,14 +112,8 @@ public class UserAuthUtils {
             throw new RuntimeException("Authorization failed");
         }
         List<Role> roleList =jwtProvider.getRolesfromToken(token);
+        return roleList.stream().anyMatch(role -> role.getRole().equals(com.user.auth.enums.Role.ADMIN));
 
-       for(Role role:roleList)
-       {
-           if(role.getRole()!=null && role.getRole().equals("ADMIN"))
-           {
-               return true;
-           }
-       }
-        throw new RuntimeException("Access Denied");
+
     }
 }

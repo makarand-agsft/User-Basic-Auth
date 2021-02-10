@@ -383,6 +383,23 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public boolean deleteProfileImage(HttpServletRequest request) {
+        User user = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
+                ()-> new RuntimeException("Unauthorized"));
+        if (user != null) {
+            String location = user.getUserProfile().getProfilePicture();
+            if (location != null) {
+                File file = new File(location);
+                file.delete();
+                user.getUserProfile().setProfilePicture(null);
+                userRepository.save(user);
+                return true;
+            }
+       }
+        return false;
+    }
+
 
     @Override
     public UserProfileResDto getUserProfile(HttpServletRequest request) {

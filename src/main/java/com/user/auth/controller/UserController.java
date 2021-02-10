@@ -5,6 +5,7 @@ import com.user.auth.dto.*;
 import com.user.auth.dto.UserRegisterReqDto;
 import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.dto.request.UserUpdateRoleReqDto;
+import com.user.auth.model.User;
 import com.user.auth.service.UserService;
 import com.user.auth.utils.UserAuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +30,10 @@ import java.io.IOException;
 
     /**
      * This method registers new user in system
-     *
      * @param
      * @return Success message is user adds successfully
+     * @author aakash
+     * @date 09/02/2021
      * @throws Exception
      */
     @PostMapping(path = "/user/add")
@@ -68,9 +70,10 @@ import java.io.IOException;
 
     /**
      * This method is an endpoint for logging in the user
-     *
      * @param dto
      * @return user information including jwt token
+     * @author aakash
+     * @date 09/02/2021
      */
     @PostMapping(path = "/user/login") public ResponseEntity loginUser(@RequestBody UserLoginReqDto dto) {
         ResponseObject responseMessage;
@@ -92,7 +95,14 @@ import java.io.IOException;
                         HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
-
+    /**
+     * This method is used to add profile image for user/admin in the system
+     * @param request
+     * @author aakash
+     * @date 10/02/21
+     * @return profile photo added message
+     * @throws Exception
+     */
     @PostMapping(path = "/user/add/profileimg")
     public ResponseEntity addProfileImage(@RequestParam(name = "file", required = false)MultipartFile file,HttpServletRequest request){
         ResponseDto responseMessage;
@@ -115,6 +125,14 @@ import java.io.IOException;
                         HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
+    /**
+     * This method is used to fetch details for user/admin in the system
+     * @param request
+     * @author aakash
+     * @date 10/02/21
+     * @return user's profile details
+     * @throws Exception
+     */
     @GetMapping(path = "/user/getprofile")
     public ResponseEntity getUserProfile(HttpServletRequest request){
         ResponseDto responseDto;
@@ -126,7 +144,14 @@ import java.io.IOException;
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
 
     }
-
+    /**
+     * This method is used get profile picture of user.
+     * @param request
+     * @author aakash
+     * @date 10/02/21
+     * @return profile photo
+     * @throws Exception
+     */
     @PostMapping(path = "/user/get/profileimg", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getUserProfileImage(HttpServletRequest request) throws IOException {
         byte[] image = userService.getUserProfileImage(request);
@@ -168,7 +193,14 @@ import java.io.IOException;
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
 
     }
-
+    /**
+     * This method is used to update details for user/admin in the system
+     * @param file, request
+     * @author aakash
+     * @date 10/02/21
+     * @return User updated message
+     * @throws Exception
+     */
     @PostMapping(path = "/user/update")
     public ResponseEntity editUser(@RequestParam(name = "file", required = false)MultipartFile file, @RequestParam("userReqDto")String userReqDto,HttpServletRequest request){
         ResponseDto responseMessage;
@@ -177,6 +209,25 @@ import java.io.IOException;
         else
             responseMessage = new ResponseDto(new ResponseObject(400,"User not updated.",null),HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
+    }
+
+    /**
+     * This method is used to delete profile image of user/admin
+     * @param
+     * @author aakash
+     * @date 10/02/21
+     * @return Photo deleted message
+     * @throws Exception
+     */
+    @DeleteMapping(path = "/user/delete/profileImg")
+    public ResponseEntity deleteProfileImage(HttpServletRequest request){
+        ResponseDto responseDto;
+        boolean deleted = userService.deleteProfileImage(request);
+        if(deleted)
+            responseDto = new ResponseDto(new ResponseObject(200,"Profile picture deleted",null),HttpStatus.OK);
+        else
+            responseDto = new ResponseDto(new ResponseObject(200, "Profile picture not found",null),HttpStatus.OK);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
 
 }

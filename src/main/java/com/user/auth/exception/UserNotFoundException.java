@@ -5,7 +5,4 @@ public class UserNotFoundException extends RuntimeException{
         super("User Not Found !");
     }
 
-    public UserNotFoundException(String message) {
-        super(message);
-    }
 }

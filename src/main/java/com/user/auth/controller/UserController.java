@@ -10,6 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
 public class UserController {
     @Autowired
@@ -40,7 +42,7 @@ public class UserController {
         ResponseDto responseMessage = null;
         int message=userService.forgotPassword(forgotDto);
         if(message==200){
-            responseMessage= new ResponseDto(200,"Your password is sent to your registered email id.",null);
+            responseMessage= new ResponseDto(200,"Your password token is sent to your registered email id.",null);
         }else if(message==400){
             responseMessage= new ResponseDto(400,"Oops..! Something went wrong, email not sent.",null);
         }
@@ -48,9 +50,9 @@ public class UserController {
     }
 
     @PostMapping(path = "/user/changepassword")
-    public ResponseEntity changePassword(@RequestBody ChangePasswordDto changePasswordDto){
+    public ResponseEntity changePassword(@RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request){
        ResponseDto responseDto;
-        if(userService.changePassword(changePasswordDto)){
+        if(userService.changePassword(changePasswordDto,request)){
             responseDto= new ResponseDto(200,"Password changed successfully..!",null);
         }else{
             responseDto= new ResponseDto(400,"Oops..! Failed to changed the password.",null);
@@ -67,8 +69,6 @@ public class UserController {
             responseMessage = new ResponseDto(400,"Failed to changed the password",null);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
     }
-
-
 
 
     @GetMapping(value = "/user/getAllAdminUsers")

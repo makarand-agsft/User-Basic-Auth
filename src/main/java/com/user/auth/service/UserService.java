@@ -6,6 +6,8 @@ import com.user.auth.model.User;
 
 import org.springframework.http.ResponseEntity;
 
+import javax.servlet.http.HttpServletRequest;
+
 public interface UserService {
 
     boolean registerNewUser(UserRegisterReqDto dto);
@@ -18,5 +20,5 @@ public interface UserService {
 
     int forgotPassword(ForgotPasswordDto forgotDto) throws Exception;
 
-    boolean changePassword(ChangePasswordDto changePasswordDto);
+    boolean changePassword(ChangePasswordDto changePasswordDto, HttpServletRequest request);
 }

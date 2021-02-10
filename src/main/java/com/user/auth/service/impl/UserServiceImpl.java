@@ -3,6 +3,7 @@ package com.user.auth.service.impl;
 import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.enums.TokenType;
+import com.user.auth.exception.InvalidEmailException;
 import com.user.auth.exception.UserNotFoundException;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
@@ -15,6 +16,8 @@ import com.user.auth.security.JwtProvider;
 import com.user.auth.service.UserService;
 import com.user.auth.utils.EmailUtils;
 import com.user.auth.utils.UserAuthUtils;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.SignatureException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +38,7 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private TokenRepository tokenRepository;
+
     @Autowired
     private RoleRepository roleRepository;
 
@@ -99,7 +103,7 @@ public class UserServiceImpl implements UserService {
             int responseErrorCode;
             if(userAuthUtils.validateEmail(forgotDto.getEmail())){
                 Optional<User> userFromDb=userRepository.findByEmail(forgotDto.getEmail());
-                if(!Objects.nonNull(userFromDb)) {
+                if(userFromDb.isEmpty()) {
                     throw new UserNotFoundException();
                 }
                 if(sendTokenMailToUser(userFromDb.get())){
@@ -109,33 +113,54 @@ public class UserServiceImpl implements UserService {
                 }
                 return responseErrorCode;
             }else{
-                throw new Exception("Invalid Email Id, Please provide valid email id...!");
+                throw new InvalidEmailException();
             }
         }else{
-            throw new Exception("Email not provided...!");
+            throw new InvalidEmailException();
         }
     }
 
     @Override
-    public boolean changePassword(ChangePasswordDto changePasswordDto) {
+    public boolean changePassword(ChangePasswordDto changePasswordDto , HttpServletRequest request) {
         if (changePasswordDto != null && changePasswordDto.getEmail() != null && changePasswordDto.getOldPassword() != null 
                 && changePasswordDto.getNewPassword() != null) {
-            Optional<User> userFromDb= userRepository.findByEmail(changePasswordDto.getEmail());
-            if(userFromDb.isPresent()){
-                if(userFromDb.get().getPassword().equalsIgnoreCase(changePasswordDto.getOldPassword())){
-                    userFromDb.get().setPassword(changePasswordDto.getNewPassword());
-                    userRepository.save(userFromDb.get());
-                    return true;
-                }else{
-                    // old password not matched
-                    return false;
+            String header = request.getHeader("Authorization");
+            String email = null;
+            if (header != null) {
+                try {
+                    email=jwtProvider.getUsernameFromToken(header);
+                } catch (IllegalArgumentException e) {
+                   // logger.error("an error occured during getting username from token", e);
+                } catch (ExpiredJwtException e) {
+                   // logger.warn("the token is expired and not valid anymore", e);
+                } catch(SignatureException e){
+                   // logger.error("Authentication Failed. Username or Password not valid.");
                 }
 
-            }else{
-                // user not present
-                return false;
-            }
+                if(email.equalsIgnoreCase(changePasswordDto.getEmail())) {
 
+                    Optional<User> userFromDb = userRepository.findByEmail(email);
+                    if (userFromDb.isPresent()) {
+                        if (userFromDb.get().getPassword().equalsIgnoreCase(passwordEncoder.encode(changePasswordDto.getOldPassword()))) {
+                            userFromDb.get().setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
+                            userRepository.save(userFromDb.get());
+                            return true;
+                        } else {
+                            // old password not matched with new passwword
+                            return false;
+                        }
+
+                    } else {
+                        // user not present
+                        return false;
+                    }
+                }else{
+                    // provided email id not matched with token mail id
+                    return false;
+                }
+            }else{
+                throw new RuntimeException("No token found");
+            }
         }
         return false;
     }
@@ -143,7 +168,7 @@ public class UserServiceImpl implements UserService {
     private boolean sendTokenMailToUser(User user) {
         if(user.getEmail()!=null ){
             String token=userAuthUtils.generateKey(10);
-            String subject="Forgot Password auto generated mail.";
+            String subject="Forgot password auto generated mail.";
             String text=" Hello "+user.getUserProfile().getFirstName()+" , \n your requested token is "+token +" \n Use this token to change or reset your password.";
 
             Token tokenToBeSave= new Token();
@@ -165,6 +190,7 @@ public class UserServiceImpl implements UserService {
         Optional<User> optUser = userRepository.findByEmail(dto.getEmail());
         if (optUser.isPresent()) {
             User user = optUser.get();
+            //passwordEncoder.matches(dto.getPassword(), user.getPassword()) &&
             if (passwordEncoder.matches(dto.getPassword(), user.getPassword()) && user.getUserProfile().getActive().equals(Boolean.TRUE)) {
                 Token token = new Token();
                 token.setToken(jwtProvider.generateToken(user));

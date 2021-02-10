@@ -27,16 +27,12 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(body,HttpStatus.NOT_FOUND);
     }
 
-    @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDate.now());
-        body.put("status", status.value());
-        List<String> errors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(x -> x.getDefaultMessage())
-                .collect(Collectors.toList());
-        body.put("errors", errors);
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);    }
+    @ExceptionHandler(InvalidEmailException.class)
+    public ResponseEntity<Object> handleInvalidEmailException(InvalidEmailException invalidEmailException,WebRequest webRequest){
+        Map<String,Object> body= new LinkedHashMap<>();
+        body.put("timestamp",LocalDateTime.now());
+        body.put("message","Invalid Email Id, Please provide valid email id...!");
+        return  new ResponseEntity<>(body,HttpStatus.NOT_ACCEPTABLE);
+    }
+
 }

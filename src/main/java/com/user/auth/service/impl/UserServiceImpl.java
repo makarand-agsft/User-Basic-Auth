@@ -376,7 +376,9 @@ public class UserServiceImpl implements UserService {
         user.getUserProfile().setActive(true);
         userRepository.save(user);
         UserDto userDto = modelMapper.map(user, UserDto.class);
-        userDto.setRoles(user.getRoles().stream().map(x -> x.getRole()).collect(Collectors.toList()));
+        if(user.getRoles()!=null && !user.getRoles().isEmpty()) {
+            userDto.setRoles(user.getRoles().stream().map(x -> x.getRole()).collect(Collectors.toList()));
+        }
         return userDto;
 
     }

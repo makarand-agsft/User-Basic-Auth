@@ -2,20 +2,13 @@ package com.user.auth.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.user.auth.dto.*;
-import com.user.auth.dto.request.ResetPasswordReqDto;
+import com.user.auth.dto.response.UserUpdateRoleRes;
+import com.user.auth.dto.request.*;
+import com.user.auth.dto.response.UserDto;
+import com.user.auth.dto.response.UserListResponseDto;
 import com.user.auth.enums.ErrorCodes;
-import com.user.auth.dto.request.UserUpdateRoleReqDto;
 import com.user.auth.enums.TokenType;
 import com.user.auth.exception.*;
-import com.user.auth.model.*;
-import com.user.auth.model.Role;
-import com.user.auth.model.Token;
-import com.user.auth.model.User;
-import com.user.auth.model.UserProfile;
-import com.user.auth.exception.InvalidEmailException;
-import com.user.auth.exception.InvalidPasswordException;
-import com.user.auth.exception.UserNotFoundException;
 import com.user.auth.model.*;
 import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
@@ -38,9 +31,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This class is responsible for handling user authentication
@@ -101,9 +94,9 @@ public class UserServiceImpl implements UserService {
         User admin = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
                 ()-> new RuntimeException("Unauthorized"));
         ObjectMapper objectMapper = new ObjectMapper();
-        UserRegisterReqDto dto = null;
+        UserDto dto = null;
         try {
-           dto = objectMapper.readValue(jsonString, UserRegisterReqDto.class);
+           dto = objectMapper.readValue(jsonString, UserDto.class);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -112,7 +105,7 @@ public class UserServiceImpl implements UserService {
         String profile_path;
         if(!dupUser.isPresent() || isUser){
             User user = modelMapper.map(dto, User.class);
-            UserProfile userProfile = modelMapper.map(dto, UserProfile.class);
+            UserProfile userProfile = modelMapper.map(dto.getUserProfile(), UserProfile.class);
             if(isUser){
                 user.setUserId(admin.getUserId());
                 userProfile.setId(admin.getUserProfile().getId());
@@ -163,9 +156,9 @@ public class UserServiceImpl implements UserService {
         User userAuth = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
                 ()-> new RuntimeException("Unauthorized"));
         ObjectMapper objectMapper = new ObjectMapper();
-        UserRegisterReqDto dto = null;
+        UserDto dto = null;
         try {
-            dto = objectMapper.readValue(userReqDto, UserRegisterReqDto.class);
+            dto = objectMapper.readValue(userReqDto, UserDto.class);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -209,6 +202,8 @@ public class UserServiceImpl implements UserService {
                 }
                 if (sendTokenMailToUser(userFromDb.get(), TokenType.FORGOT_PASSWORD_TOKEN)) {
                     responseErrorCode = 200;
+                    userFromDb.get().setReset(false);
+                    userRepository.save(userFromDb.get());
                 } else {
                     responseErrorCode = 400;
                 }
@@ -292,7 +287,7 @@ public class UserServiceImpl implements UserService {
      * @return user information with jwt token
      */
     @Override
-    public UserLoginResDto loginUser(UserLoginReqDto dto) {
+    public UserDto loginUser(UserLoginReqDto dto) {
         Optional<User> optUser = userRepository.findByEmail(dto.getEmail());
         if (optUser.isPresent()) {
             User user = optUser.get();
@@ -305,7 +300,11 @@ public class UserServiceImpl implements UserService {
                 token.setCreatedDate(new Date());
                 token.setExpiryDate(new Date(System.currentTimeMillis() + jwTokenExpiry * 1000));
                 tokenRepository.save(token);
-                UserLoginResDto resDto = modelMapper.map(user, UserLoginResDto.class);
+                UserDto resDto = modelMapper.map(user, UserDto.class);
+                List<String> userRoles = new ArrayList<>();
+                for (Role userRole : user.getRoles()) {
+                    userRoles.add(userRole.getRole());
+                }resDto.setRoles(userRoles);
                 resDto.setToken(token.getToken());
                 return resDto;
             }
@@ -322,7 +321,7 @@ public class UserServiceImpl implements UserService {
     @Override public UserListResponseDto getAllAdminUsers() {
         Optional<Role> role = roleRepository.findByRole("ADMIN");
         UserListResponseDto userListResponseDto = new UserListResponseDto();
-        List<UserRegisterReqDto> userResponse = new ArrayList<>();
+        List<UserDto> userResponse = new ArrayList<>();
         if (role.isPresent()) {
             List<User> users = userRepository.findByRoles(role.get());
             if (users != null) {
@@ -332,7 +331,7 @@ public class UserServiceImpl implements UserService {
                     for (Role userRole : user.getRoles()) {
                         userRoles.add(userRole.getRole());
                     }
-                    UserRegisterReqDto userRegisterReqDto=modelMapper.map(user, UserRegisterReqDto.class);
+                    UserDto userRegisterReqDto=modelMapper.map(user, UserDto.class);
                     userRegisterReqDto.setRoles(userRoles);
                     userResponse.add(userRegisterReqDto);
                 }
@@ -347,21 +346,25 @@ public class UserServiceImpl implements UserService {
      * @param dto containing user one time password and email address
      * @return Success message of user activation
      */
-    @Override
-    public UserRegisterReqDto resetPassword(ResetPasswordReqDto dto) {
+    @Override public UserDto resetPassword(ResetPasswordReqDto dto) {
         User user = userRepository.findByEmail(dto.getEmail()).orElse(null);
         if (null == user) {
-            throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(),ErrorCodes.USER_NOT_FOUND.getValue());
+            throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
         }
-
-        Token token = tokenRepository.findByTokenAndTokenTypeOrTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN,TokenType.FORGOT_PASSWORD_TOKEN, user.getUserId());
+        if(user.getReset()){
+            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),"Your profile is already active, Please login OR do forgot password");
+        }
+        Token token = tokenRepository.findByTokenAndUsersUserId(dto.getToken(), user.getUserId());
         if (null == token) {
-            throw new UnAuthorisedException(ErrorCodes.UNAUTHORIZED.getCode(),ErrorCodes.UNAUTHORIZED.getValue());
+            throw new UnAuthorisedException(ErrorCodes.UNAUTHORIZED.getCode(), "Either your password is already reset OR you have entered bad credentials");
         }
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setReset(true);
         user.getUserProfile().setActive(true);
-         userRepository.save(user);
-        return modelMapper.map(user,UserRegisterReqDto.class);
+        userRepository.save(user);
+        UserDto userDto = modelMapper.map(user, UserDto.class);
+        userDto.setRoles(user.getRoles().stream().map(x -> x.getRole()).collect(Collectors.toList()));
+        return userDto;
 
     }
 
@@ -406,13 +409,13 @@ public class UserServiceImpl implements UserService {
         return false;
     }
 
-
-    @Override
-    public UserProfileResDto getUserProfile() {
+    @Override public UserDto getUserProfile() {
         User user = userAuthUtils.getLoggedInUser();
         UserProfile userProfile = user.getUserProfile();
-        UserProfileResDto resDto = modelMapper.map(userProfile, UserProfileResDto.class);
-        resDto.setAddresses(user.getAddresses());
+        UserDto resDto = modelMapper.map(userProfile, UserDto.class);
+        if (user.getAddresses() != null && !user.getAddresses().isEmpty())
+            resDto.setAddresses(user.getAddresses().stream().map(x -> modelMapper.map(x, AddressDto.class)).collect(Collectors.toList()));
+        resDto.setRoles(user.getRoles().stream().map(x -> x.getRole()).collect(Collectors.toList()));
         resDto.setEmail(user.getEmail());
         return resDto;
     }

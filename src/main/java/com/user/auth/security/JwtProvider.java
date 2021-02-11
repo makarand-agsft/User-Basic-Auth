@@ -14,6 +14,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+/**
+ * This class is responsible for jwt token creation/validation
+ * @author makarand 
+ */
 @Component
 public class JwtProvider {
 

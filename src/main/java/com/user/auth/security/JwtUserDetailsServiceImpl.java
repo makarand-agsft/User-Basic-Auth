@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+/**
+ * This class responsible for fetching user details from email
+ */
 @Service
 public class JwtUserDetailsServiceImpl implements UserDetailsService {
 

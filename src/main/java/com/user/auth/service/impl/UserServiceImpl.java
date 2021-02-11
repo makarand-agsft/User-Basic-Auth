@@ -334,6 +334,9 @@ public class UserServiceImpl implements UserService {
                     }
                     UserRegisterReqDto userRegisterReqDto=modelMapper.map(user, UserRegisterReqDto.class);
                     userRegisterReqDto.setRoles(userRoles);
+                    userRegisterReqDto.setFirstName(user.getUserProfile().getFirstName());
+                    userRegisterReqDto.setLastName(user.getUserProfile().getLastName());
+                    userRegisterReqDto.setMobileNumber(user.getUserProfile().getMobileNumber());
                     userResponse.add(userRegisterReqDto);
                 }
                 userListResponseDto.setUserList(userResponse);
@@ -417,13 +420,20 @@ public class UserServiceImpl implements UserService {
         return resDto;
     }
 
+    /**
+     * This method is used to change the roles of users
+     * @Author Akshay
+     * @param dto
+     * @return UserUpdateRoleRes
+     * @Date 09-02-2021
+     */
     public UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto) {
         if (null == dto.getUserId() || dto.getRoleList().isEmpty()) {
-            throw new RuntimeException("Invalid Request");
+            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),ErrorCodes.BAD_REQUEST.getValue());
         }
         User user = userRepository.findById(dto.getUserId()).orElse(null);
         if (null == user) {
-            throw new RuntimeException("User Not Found");
+            throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
         }
         List<Role> roleList = new ArrayList<>();
         for (Role role : dto.getRoleList()) {

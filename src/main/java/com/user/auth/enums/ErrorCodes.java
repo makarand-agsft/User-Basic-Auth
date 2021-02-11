@@ -13,6 +13,7 @@ public enum ErrorCodes {
     private  Integer code;
     ErrorCodes(Integer code,String value) {
         this.value = value;
+        this.code = code;
     }
 
     public String getValue() {

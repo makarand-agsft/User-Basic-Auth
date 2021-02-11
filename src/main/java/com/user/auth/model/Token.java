@@ -16,7 +16,7 @@ public class Token extends AuditingEntity{
 
 	@Column(name = "token", columnDefinition = "text")
 	private String token;
-	
+
 	@Column(name = "expiry_date")
 	private Date expiryDate;
 
@@ -27,6 +27,11 @@ public class Token extends AuditingEntity{
 	@ManyToOne
 	@JoinColumn(name="user_id", nullable=false)
 	private User users;
+
+
+
+    @Column(name = "is_expired")
+	private Boolean isExpired;
 
 	public Long getTokenId() {
 		return tokenId;
@@ -68,6 +73,13 @@ public class Token extends AuditingEntity{
 		this.users = users;
 	}
 
+    public Boolean getExpired() {
+        return isExpired;
+    }
+
+    public void setExpired(Boolean expired) {
+        isExpired = expired;
+    }
 	@Override public String toString() {
 		return "Token{" + "tokenId=" + tokenId + ", token='" + token + '\'' + ", expiryDate=" + expiryDate + ", tokenType='" + tokenType + '\'' + ", users=" + users + '}';
 	}

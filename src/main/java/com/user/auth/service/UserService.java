@@ -37,4 +37,6 @@ public interface UserService {
     void deleteUserById(Long userId) throws Exception;
 
     boolean deleteProfileImage(HttpServletRequest request);
+
+    void logout(HttpServletRequest request);
 }

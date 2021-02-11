@@ -7,9 +7,9 @@ import java.util.List;
 
 public class UserLoginResDto {
     private Long userId;
-    private UserProfile userProfile;
+    private UserProfileDto userProfile;
     private String email;
-    private List<Address> addresses;
+    private List<AddressDto> addresses;
     private String token;
 
     public Long getUserId() {
@@ -24,11 +24,11 @@ public class UserLoginResDto {
         return email;
     }
 
-    public UserProfile getUserProfile() {
+    public UserProfileDto getUserProfile() {
         return userProfile;
     }
 
-    public void setUserProfile(UserProfile userProfile) {
+    public void setUserProfile(UserProfileDto userProfile) {
         this.userProfile = userProfile;
     }
 
@@ -36,11 +36,11 @@ public class UserLoginResDto {
         this.email = email;
     }
 
-    public List<Address> getAddresses() {
+    public List<AddressDto> getAddresses() {
         return addresses;
     }
 
-    public void setAddresses(List<Address> addresses) {
+    public void setAddresses(List<AddressDto> addresses) {
         this.addresses = addresses;
     }
 

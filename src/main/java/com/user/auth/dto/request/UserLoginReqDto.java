@@ -1,4 +1,4 @@
-package com.user.auth.dto;
+package com.user.auth.dto.request;
 
 public class UserLoginReqDto {
     private String email;

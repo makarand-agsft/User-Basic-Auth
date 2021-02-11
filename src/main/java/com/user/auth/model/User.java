@@ -22,6 +22,17 @@ public class User extends AuditingEntity{
 	@Column(name = "is_deleted")
 	private Boolean isDeleted;
 
+	public Boolean getReset() {
+		return isReset;
+	}
+
+	public void setReset(Boolean reset) {
+		isReset = reset;
+	}
+
+	@Column(name = "is_reset")
+	private Boolean isReset;
+
 	public Boolean getDeleted() {
 		return isDeleted;
 	}

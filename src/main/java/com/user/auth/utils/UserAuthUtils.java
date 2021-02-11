@@ -103,7 +103,7 @@ public class UserAuthUtils {
         return profile_path;
     }
 
-    private String getFileName(MultipartFile file, User user) {
+    public String getFileName(MultipartFile file, User user) {
         return user.getEmail().replace(".com", file.getContentType().replace("/", "."));
     }
 

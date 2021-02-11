@@ -1,4 +1,4 @@
-package com.user.auth.dto;
+package com.user.auth.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.user.auth.model.AuditingEntity;

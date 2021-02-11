@@ -37,7 +37,7 @@ import java.io.IOException;
     public ResponseEntity addUser(@RequestParam(name = "file", required = false)MultipartFile file, @RequestParam("userReqDto")String userReqDto,HttpServletRequest request){
         ResponseDto responseMessage;
         if(userService.addUser(userReqDto,file,request))
-            responseMessage = new ResponseDto(new ResponseObject(200, "User added successfully. Please check email for account activation",null),HttpStatus.OK);
+            responseMessage = new ResponseDto(new ResponseObject(200, "User added successfully. Please check users email for account activation",null),HttpStatus.OK);
         else
             responseMessage = new ResponseDto(new ResponseObject(400,"User already exists in system",null),HttpStatus.BAD_REQUEST);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);

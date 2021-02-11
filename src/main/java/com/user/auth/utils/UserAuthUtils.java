@@ -55,6 +55,11 @@ public class UserAuthUtils {
         return sb.toString();
     }
 
+    /**
+     * Get Username of Current login user
+     * @Author Akshay
+     * @return
+     */
     public String getLoggedInUserName(){
             Object userDetails = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             if (userDetails instanceof UserDetails) {
@@ -112,4 +117,23 @@ public class UserAuthUtils {
         return false;
     }
 
+    /**
+     * checks if user is Admin
+     * @param httpServletRequest
+     * @Author Akshay
+     * @return boolean
+     */
+    public boolean checkAccess(HttpServletRequest httpServletRequest) {
+        if (null == httpServletRequest) {
+            throw new RuntimeException("Request is null");
+        }
+        String token = httpServletRequest.getHeader(jwtHeader);
+        if (null == token && token.isEmpty()) {
+            throw new RuntimeException("Authorization failed");
+        }
+        List<Role> roleList =jwtProvider.getRolesfromToken(token);
+        return roleList.stream().anyMatch(role ->role.getRole().equalsIgnoreCase(com.user.auth.enums.Role.ADMIN.toString()));
+
+
+    }
 }

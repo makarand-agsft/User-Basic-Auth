@@ -10,6 +10,14 @@ import com.user.auth.enums.ErrorCodes;
 import com.user.auth.enums.TokenType;
 import com.user.auth.exception.*;
 import com.user.auth.model.*;
+import com.user.auth.model.*;
+import com.user.auth.model.Role;
+import com.user.auth.model.Token;
+import com.user.auth.model.User;
+import com.user.auth.model.UserProfile;
+import com.user.auth.exception.InvalidEmailException;
+import com.user.auth.exception.InvalidPasswordException;
+import com.user.auth.exception.UserNotFoundException;
 import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
@@ -91,7 +99,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public boolean addUser(String jsonString, MultipartFile file, HttpServletRequest request) {
-        User admin = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
+        User userLogged = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
                 ()-> new RuntimeException("Unauthorized"));
         ObjectMapper objectMapper = new ObjectMapper();
         UserDto dto = null;
@@ -101,20 +109,23 @@ public class UserServiceImpl implements UserService {
             e.printStackTrace();
         }
         Optional<User> dupUser =  userRepository.findByEmail(dto.getEmail());
-        boolean isUser = admin.getEmail().equals(dto.getEmail());
+        boolean isUser = userLogged.getEmail().equals(dto.getEmail());
+        boolean isOldUser = dupUser.isPresent() && dupUser.get().getDeleted().equals(Boolean.TRUE);
         String profile_path;
-        if(!dupUser.isPresent() || isUser){
+        if(!dupUser.isPresent() || isUser || isOldUser){
             User user = modelMapper.map(dto, User.class);
-            UserProfile userProfile = modelMapper.map(dto.getUserProfile(), UserProfile.class);
-            if(isUser){
-                user.setUserId(admin.getUserId());
-                userProfile.setId(admin.getUserProfile().getId());
+            UserProfile userProfile = modelMapper.map(dto, UserProfile.class);
+            User temp = isUser ? userLogged : (dupUser.isPresent() ? dupUser.get() : null);
+            if(isUser || isOldUser){
+                user.setUserId(temp.getUserId());
+                userProfile.setId(temp.getUserProfile().getId());
             }
             for(Address a : user.getAddresses())
                 a.setUser(user);
             userProfile.setUser(user);
             user.setUserProfile(userProfile);
-            profile_path = userAuthUtils.saveProfileImage(file, (isUser)?admin:user);
+            user.setDeleted(Boolean.FALSE);
+            profile_path = userAuthUtils.saveProfileImage(file, (isUser)? userLogged :user);
             userProfile.setProfilePicture(profile_path);
             if(!isUser){
                 userProfile.setActive(Boolean.FALSE);
@@ -146,9 +157,11 @@ public class UserServiceImpl implements UserService {
     public byte[] getUserProfileImage(HttpServletRequest request) throws IOException {
         User user = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
                 ()-> new RuntimeException("Unauthorized"));
-        if(user.getUserProfile().getProfilePicture()==null)
+        String fileName = user.getUserProfile().getProfilePicture();
+        if (fileName != null && new File(fileName).exists())
+            return Files.readAllBytes(Paths.get(user.getUserProfile().getProfilePicture()));
+        else
             return null;
-        return Files.readAllBytes(Paths.get(user.getUserProfile().getProfilePicture()));
     }
 
     @Override
@@ -386,6 +399,7 @@ public class UserServiceImpl implements UserService {
         Optional<User> user = userRepository.findById(userId);
         if (user.isPresent()) {
             user.get().setDeleted(true);
+            user.get().getUserProfile().setActive(Boolean.FALSE);
             userRepository.save(user.get());
         }else{
             throw new InvalidRequestException(ErrorCodes.USER_NOT_FOUND.getCode(),ErrorCodes.USER_NOT_FOUND.getValue());

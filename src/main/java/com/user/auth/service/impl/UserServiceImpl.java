@@ -125,9 +125,6 @@ public class UserServiceImpl implements UserService {
             userProfile.setProfilePicture(profile_path);
             if(!isUser){
                 userProfile.setActive(Boolean.FALSE);
-                String uname = admin.getUserProfile().getFirstName()+"."+admin.getUserProfile().getLastName();
-                user.setCreatedBy(uname);
-                userProfile.setCreatedBy(uname);
                 List<Role> roles = new ArrayList<>();
                 for(String r : dto.getRoles()){
                     Optional<Role> role = roleRepository.findByRole(r);

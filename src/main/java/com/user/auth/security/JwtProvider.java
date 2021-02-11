@@ -1,27 +1,32 @@
 package com.user.auth.security;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.user.auth.model.Role;
 import com.user.auth.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
+/**
+ * This class is responsible for jwt token creation/validation
+ * @author makarand 
+ */
 @Component
 public class JwtProvider {
 
 	@Value("${jwt.secret}")
 	public String secretKey;
-
 	@Value("${jwt.tokenValidity}")
 	public Long jwtTokenValidity;
+	@Autowired
+	ObjectMapper objectMapper;
 
 	private Boolean isTokenExpired(String token) {
 		final Date expiration = getExpirationDateFromToken(token);
@@ -71,6 +76,17 @@ public class JwtProvider {
 			username = null;
 		}
 		return username;
+
+	}
+
+	public List<Role> getRolesfromToken(String token) {
+		try {
+			final Claims claims = getClaimFromToken(token);
+			return  objectMapper.convertValue(claims.get("roles"), new TypeReference<ArrayList<Role>>() {});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 
 	}
 }

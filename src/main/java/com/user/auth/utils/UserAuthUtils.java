@@ -1,30 +1,31 @@
 package com.user.auth.utils;
 
-import com.user.auth.model.User;
-import com.user.auth.repository.UserRepository;
-import com.user.auth.security.JwtProvider;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+
+import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
 import com.user.auth.repository.TokenRepository;
+import com.user.auth.repository.UserRepository;
+import com.user.auth.security.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
-import java.util.Optional;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import java.util.Optional;
 
 @Component
 public class UserAuthUtils {
@@ -40,6 +41,9 @@ public class UserAuthUtils {
     private String UPLOAD_DIRECTORY ;
     @Autowired
     private TokenRepository tokenRepository;
+    @Value("${jwt.header}")
+    private String jwtHeader;
+
 
     public String generateKey(int n) {
         String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "abcdefghijklmnopqrstuvxyz";
@@ -75,18 +79,27 @@ public class UserAuthUtils {
     }
     public String saveProfileImage(MultipartFile file, User user){
         String profile_path = null;
-        if(!file.isEmpty()){
+        if(file !=null){
             try {
-                String fileName = user.getEmail();
+                String fileName = getFileName(file, user);
                 byte[] bytes = file.getBytes();
                 profile_path = UPLOAD_DIRECTORY + fileName;
+                File f = new File(UPLOAD_DIRECTORY);
+                if(!f.exists())
+                    Files.createDirectories(f.toPath());
                 Path path = Paths.get(profile_path);
                 Files.write(path, bytes);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        if(user.getUserProfile().getProfilePicture()!=null)
+            return user.getUserProfile().getProfilePicture();
         return profile_path;
+    }
+
+    private String getFileName(MultipartFile file, User user) {
+        return user.getEmail().replace(".com", file.getContentType().replace("/", "."));
     }
 
     public boolean validateEmail(String email) {
@@ -97,5 +110,20 @@ public class UserAuthUtils {
             return true;
         }
         return false;
+    }
+
+
+    public boolean checkAccess(HttpServletRequest httpServletRequest) {
+        if (null == httpServletRequest) {
+            throw new RuntimeException("Request is null");
+        }
+        String token = httpServletRequest.getHeader(jwtHeader);
+        if (null == token && token.isEmpty()) {
+            throw new RuntimeException("Authorization failed");
+        }
+        List<Role> roleList =jwtProvider.getRolesfromToken(token);
+        return roleList.stream().anyMatch(role -> role.getRole().equals(com.user.auth.enums.Role.ADMIN));
+
+
     }
 }

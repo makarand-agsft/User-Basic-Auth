@@ -11,6 +11,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * @author makarand
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -26,7 +29,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	public void configure(WebSecurity web) throws Exception {
 		web.ignoring()
 
-				.antMatchers("/swagger-ui.html", "/user/register", "/user/login","/user/forgotpassword","/user/resetpassword"
+				.antMatchers("/swagger-ui.html", "/user/login","/user/forgotpassword","/user/resetpassword"
 				,"/user/changepassword");
 
 		web.ignoring().antMatchers(HttpMethod.OPTIONS, "/**");

@@ -1,6 +1,6 @@
 package com.user.auth.exception;
 
-public class InvalidEmailException extends RuntimeException{
+public class UnAuthorisedException extends RuntimeException {
 
     int code;
 
@@ -12,9 +12,10 @@ public class InvalidEmailException extends RuntimeException{
         this.code = code;
     }
 
-    public InvalidEmailException(int code,String message) {
+    public UnAuthorisedException(int code, String message) {
 
         super(message);
-        this.code=code;
+        this.code = code;
     }
+
 }

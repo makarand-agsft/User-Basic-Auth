@@ -153,9 +153,11 @@ public class UserServiceImpl implements UserService {
     public byte[] getUserProfileImage(HttpServletRequest request) throws IOException {
         User user = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
                 ()-> new RuntimeException("Unauthorized"));
-        if(user.getUserProfile().getProfilePicture()==null)
+        String fileName = user.getUserProfile().getProfilePicture();
+        if (fileName != null && new File(fileName).exists())
+            return Files.readAllBytes(Paths.get(user.getUserProfile().getProfilePicture()));
+        else
             return null;
-        return Files.readAllBytes(Paths.get(user.getUserProfile().getProfilePicture()));
     }
 
     @Override

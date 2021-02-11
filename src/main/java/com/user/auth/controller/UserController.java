@@ -191,7 +191,7 @@ import java.io.IOException;
             UserUpdateRoleRes userUpdateRoleRes=userService.updateRole(dto);
 
             if (null !=userUpdateRoleRes )
-                responseMessage = new ResponseDto(new ResponseObject(200, "User Role changed successfully", userUpdateRoleRes),HttpStatus.OK);
+                responseMessage = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User Role changed successfully", userUpdateRoleRes),HttpStatus.OK);
             else
                 responseMessage = new ResponseDto(new ResponseObject(400, "Failed to changed the Roles", null),HttpStatus.NOT_FOUND);
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
@@ -212,7 +212,7 @@ import java.io.IOException;
     public ResponseEntity editUser(@RequestParam(name = "file", required = false)MultipartFile file, @RequestParam("userReqDto")String userReqDto,HttpServletRequest request){
         ResponseDto responseMessage;
         if(userService.addUser(userReqDto,file,request))
-            responseMessage = new ResponseDto(new ResponseObject(200, "User updated successfully.",null),HttpStatus.OK);
+            responseMessage = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User updated successfully.",null),HttpStatus.OK);
         else
             responseMessage = new ResponseDto(new ResponseObject(400,"User not updated.",null),HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
@@ -231,9 +231,17 @@ import java.io.IOException;
         ResponseDto responseDto;
         boolean deleted = userService.deleteProfileImage(request);
         if(deleted)
-            responseDto = new ResponseDto(new ResponseObject(200,"Profile picture deleted",null),HttpStatus.OK);
+            responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(),"Profile picture deleted",null),HttpStatus.OK);
         else
-            responseDto = new ResponseDto(new ResponseObject(200, "Profile picture not found",null),HttpStatus.OK);
+            responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Profile picture not found",null),HttpStatus.OK);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
+    }
+
+    @PostMapping(path = "/user/logout")
+    public ResponseEntity logout(HttpServletRequest httpServletRequest){
+        ResponseDto responseDto;
+        userService.logout(httpServletRequest);
+            responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(),"Logged out successfully",null),HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
 

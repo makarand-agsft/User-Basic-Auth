@@ -10,7 +10,6 @@ import com.user.auth.enums.ErrorCodes;
 import com.user.auth.enums.TokenType;
 import com.user.auth.exception.*;
 import com.user.auth.model.*;
-import com.user.auth.model.*;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
@@ -311,6 +310,7 @@ public class UserServiceImpl implements UserService {
                 token.setCreatedBy(user.getUserProfile().getFirstName() + "." + user.getUserProfile().getLastName());
                 token.setUsers(user);
                 token.setCreatedDate(new Date());
+                token.setExpired(false);
                 token.setExpiryDate(new Date(System.currentTimeMillis() + jwTokenExpiry * 1000));
                 tokenRepository.save(token);
                 UserDto resDto = modelMapper.map(user, UserDto.class);
@@ -386,6 +386,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * This method soft deletes user from system ( only admin can delete other users)
+     * @author makarand
      * @param userId
      * @throws Exception
      */
@@ -425,6 +426,11 @@ public class UserServiceImpl implements UserService {
         return false;
     }
 
+    /**
+     * This method returns user profile details of logged in user
+     * @author aakash rajput
+     * @return
+     */
     @Override public UserDto getUserProfile() {
         User user = userAuthUtils.getLoggedInUser();
         UserProfile userProfile = user.getUserProfile();
@@ -436,6 +442,13 @@ public class UserServiceImpl implements UserService {
         return resDto;
     }
 
+    /**
+     * This method updates the role of user
+     * @author akshay kamble
+     * @param dto
+     * @return
+     */
+    @Override
     public UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto) {
         if (null == dto.getUserId() || dto.getRoleList().isEmpty()) {
             throw new RuntimeException("Invalid Request");
@@ -460,11 +473,19 @@ public class UserServiceImpl implements UserService {
        {
            roles.add(role.getRole());
        }
-        String message = "Hello " + user.getUserProfile().getFirstName() + "Your Roles are changed "+roles.toString();
+        String message = "Hello " + user.getUserProfile().getFirstName() + "Your role is changed to : "+roles.toString();
 
         emailUtils.sendInvitationEmail(user.getEmail(), "Invitation", message, fromEmail);
         return new UserUpdateRoleRes(user.getEmail(), roles);
 
     }
 
+    @Override public void logout(HttpServletRequest request) {
+        String authToken = request.getHeader("Authorization");
+        User loggedInUser = userAuthUtils.getLoggedInUser();
+        Token token = tokenRepository.findByTokenAndUsersUserId(authToken, loggedInUser.getUserId());
+        token.setExpiryDate(null);
+        token.setExpired(true);
+        tokenRepository.save(token);
+    }
 }

@@ -3,8 +3,11 @@ package com.user.auth.security;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.user.auth.model.Role;
+import com.user.auth.model.Token;
 import com.user.auth.model.User;
+import com.user.auth.repository.TokenRepository;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,10 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-/**
- * This class is responsible for jwt token creation/validation
- * @author makarand 
- */
 @Component
 public class JwtProvider {
 
@@ -28,9 +27,21 @@ public class JwtProvider {
 	@Autowired
 	ObjectMapper objectMapper;
 
+	@Autowired
+	private TokenRepository tokenRepository;
+
 	private Boolean isTokenExpired(String token) {
-		final Date expiration = getExpirationDateFromToken(token);
-		return expiration.before(new Date());
+
+			Claims claims = getClaimFromToken(token);
+			Optional<Token> authToken = tokenRepository.findByToken(token);
+			if (authToken.isPresent()) {
+				if (authToken.get().getExpired() || authToken.get().getExpiryDate().getTime() < new Date().getTime()) {
+					throw new ExpiredJwtException(null, claims, "Session Expired,Please login again");
+				}
+			}
+			return true;
+
+
 	}
 
 	public String generateToken(User user) {

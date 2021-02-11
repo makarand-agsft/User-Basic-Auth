@@ -1,16 +1,25 @@
-package com.user.auth.dto;
+package com.user.auth.dto.response;
 
-import com.user.auth.model.Address;
-import com.user.auth.model.UserProfile;
+import com.user.auth.dto.request.AddressDto;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class UserLoginResDto {
+public class UserDto {
     private Long userId;
     private UserProfileDto userProfile;
     private String email;
     private List<AddressDto> addresses;
     private String token;
+    private List<String> roles = new ArrayList<>();
+
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
+    }
 
     public Long getUserId() {
         return userId;

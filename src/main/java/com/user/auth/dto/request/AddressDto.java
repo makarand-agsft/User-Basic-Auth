@@ -1,11 +1,8 @@
-package com.user.auth.dto;
+package com.user.auth.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.user.auth.enums.AddressType;
 import com.user.auth.model.AuditingEntity;
-import com.user.auth.model.User;
 
-import javax.persistence.*;
 public class AddressDto extends AuditingEntity {
     private Long id;
 

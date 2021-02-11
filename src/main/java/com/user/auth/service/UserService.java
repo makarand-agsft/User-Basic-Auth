@@ -1,14 +1,10 @@
 package com.user.auth.service;
 
-import com.user.auth.dto.UserLoginReqDto;
-import com.user.auth.dto.UserLoginResDto;
-import com.user.auth.dto.UserListResponseDto;
-import com.user.auth.dto.UserRegisterReqDto;
+import com.user.auth.dto.request.*;
+import com.user.auth.dto.response.UserListResponseDto;
+import com.user.auth.dto.response.UserDto;
 
-import com.user.auth.dto.*;
-import com.user.auth.dto.request.ResetPasswordReqDto;
-import com.user.auth.dto.request.UserUpdateRoleReqDto;
-import com.user.auth.model.User;
+import com.user.auth.dto.response.UserUpdateRoleRes;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,9 +14,9 @@ public interface UserService {
 
     UserListResponseDto getAllAdminUsers();
 
-    UserLoginResDto loginUser(UserLoginReqDto dto);
+    UserDto loginUser(UserLoginReqDto dto);
 
-    UserProfileResDto getUserProfile();
+    UserDto getUserProfile();
 
     boolean addUser(String userReqDto, MultipartFile file, HttpServletRequest request);
 
@@ -36,7 +32,7 @@ public interface UserService {
 
     UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto);
 
-    UserRegisterReqDto resetPassword(ResetPasswordReqDto dto);
+    UserDto resetPassword(ResetPasswordReqDto dto);
 
     void deleteUserById(Long userId) throws Exception;
 

@@ -1,4 +1,4 @@
-package com.user.auth.dto;
+package com.user.auth.dto.response;
 
 import org.springframework.http.HttpStatus;
 
@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
  */
 public class ResponseDto {
 
-    private  ResponseObject responseObject;
+    private ResponseObject responseObject;
     private HttpStatus httpStatus;
 
     public ResponseDto(ResponseObject responseObject, HttpStatus httpStatus) {

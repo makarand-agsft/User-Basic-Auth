@@ -1,4 +1,4 @@
-package com.user.auth.dto;
+package com.user.auth.dto.response;
 
 /**
  * This class is responsible for sending custom object

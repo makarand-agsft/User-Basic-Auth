@@ -1,11 +1,7 @@
 package com.user.auth.controller;
 
-import com.user.auth.dto.*;
-
-import com.user.auth.dto.UserRegisterReqDto;
-import com.user.auth.dto.request.ResetPasswordReqDto;
-import com.user.auth.dto.request.UserUpdateRoleReqDto;
-import com.user.auth.model.User;
+import com.user.auth.dto.request.*;
+import com.user.auth.dto.response.*;
 import com.user.auth.service.UserService;
 import com.user.auth.utils.UserAuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,7 +75,7 @@ import java.io.IOException;
      */
     @PostMapping(path = "/user/login") public ResponseEntity loginUser(@RequestBody UserLoginReqDto dto) {
         ResponseDto responseDto;
-        UserLoginResDto response = userService.loginUser(dto);
+        UserDto response = userService.loginUser(dto);
         if(response != null)
             responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Logged in successfully", response), HttpStatus.OK);
         else
@@ -93,8 +89,8 @@ import java.io.IOException;
      * @param dto containing user one time password and email address
      * @return Success message of user activation
      */
-    @PostMapping(path = "/user/resetPassword") public ResponseEntity registerNewUser(@RequestBody ResetPasswordReqDto dto) {
-        UserRegisterReqDto response = userService.resetPassword(dto);
+    @PostMapping(path = "/user/resetPassword") public ResponseEntity resetPassword(@RequestBody ResetPasswordReqDto dto) {
+        UserDto response = userService.resetPassword(dto);
         ResponseDto responseDto =
                 new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User is Activated and changed password successfully", response),
                         HttpStatus.OK);
@@ -145,7 +141,7 @@ import java.io.IOException;
     @GetMapping(path = "/user/getProfile")
     public ResponseEntity getUserProfile(HttpServletRequest request){
         ResponseDto responseDto;
-        UserProfileResDto resDto = userService.getUserProfile();
+        UserDto resDto = userService.getUserProfile();
         if(resDto!=null)
             responseDto = new ResponseDto(new ResponseObject(200, "User profile fetched successfully",resDto),HttpStatus.OK);
         else

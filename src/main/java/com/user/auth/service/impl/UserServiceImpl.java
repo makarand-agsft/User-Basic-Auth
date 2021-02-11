@@ -24,9 +24,9 @@ import com.user.auth.security.JwtProvider;
 import com.user.auth.service.UserService;
 import com.user.auth.utils.EmailUtils;
 import com.user.auth.utils.UserAuthUtils;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.SignatureException;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -91,42 +91,47 @@ public class UserServiceImpl implements UserService {
     @Value("${upload.directory}")
     private String UPLOAD_DIRECTORY;
 
+    @Value("${forgot.token.validity}")
+    private Long forgotTokenValidity;
+
+    Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     /**
      * This method registers new user
      * @param
      * @throws Exception
      */
     @Override
-    public boolean addUser(String jsonString, MultipartFile file, HttpServletRequest request) {
-        User userLogged = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
-                ()-> new RuntimeException("Unauthorized"));
+    public void addUser(String jsonString, MultipartFile file) {
+        User loggedInUser = authUtils.getLoggedInUser();
         ObjectMapper objectMapper = new ObjectMapper();
         UserDto dto = null;
         try {
            dto = objectMapper.readValue(jsonString, UserDto.class);
         } catch (JsonProcessingException e) {
+            log.error("Error in mapping object");
             e.printStackTrace();
         }
-        Optional<User> dupUser =  userRepository.findByEmail(dto.getEmail());
-        boolean isUser = userLogged.getEmail().equals(dto.getEmail());
-        boolean isOldUser = dupUser.isPresent() && dupUser.get().getDeleted().equals(Boolean.TRUE);
+        log.info("Saving user :"+dto.getEmail());
+        Optional<User> existingUser =  userRepository.findByEmail(dto.getEmail());
+        boolean isSelfUpdate = loggedInUser.getEmail().equals(dto.getEmail()); //admin user
+        boolean isExistingDeletedUser = existingUser.isPresent() && existingUser.get().getDeleted();
         String profile_path;
-        if(!dupUser.isPresent() || isUser || isOldUser){
+
             User user = modelMapper.map(dto, User.class);
-            UserProfile userProfile = modelMapper.map(dto, UserProfile.class);
-            User temp = isUser ? userLogged : (dupUser.isPresent() ? dupUser.get() : null);
-            if(isUser || isOldUser){
-                user.setUserId(temp.getUserId());
-                userProfile.setId(temp.getUserProfile().getId());
+            UserProfile userProfile = user.getUserProfile();
+            User isSelfUpdateOrExistingUser = isSelfUpdate ? loggedInUser : (existingUser.isPresent() ? existingUser.get() : null);
+            if(isSelfUpdate || isExistingDeletedUser){
+                user.setUserId(isSelfUpdateOrExistingUser.getUserId());
+                userProfile.setId(isSelfUpdateOrExistingUser.getUserProfile().getId());
             }
-            for(Address a : user.getAddresses())
-                a.setUser(user);
+            for(Address address : user.getAddresses())
+                address.setUser(user);
             userProfile.setUser(user);
-            user.setUserProfile(userProfile);
             user.setDeleted(Boolean.FALSE);
-            profile_path = userAuthUtils.saveProfileImage(file, (isUser)? userLogged :user);
+            user.setReset(Boolean.FALSE);
+            profile_path = userAuthUtils.saveProfileImage(file, (isSelfUpdate)? loggedInUser :user);
             userProfile.setProfilePicture(profile_path);
-            if(!isUser){
+            if(!isSelfUpdate){
                 userProfile.setActive(Boolean.FALSE);
                 List<Role> roles = new ArrayList<>();
                 for(String r : dto.getRoles()){
@@ -137,90 +142,59 @@ public class UserServiceImpl implements UserService {
                 token.setToken(userAuthUtils.generateKey(10));
                 token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);
                 token.setUsers(user);
-                token.setExpiryDate(new Date(System.currentTimeMillis()+jwTokenExpiry*1000));
+                token.setExpiryDate(new Date(System.currentTimeMillis()+resetTokenExpiry*1000));
                 user.setTokens(Collections.singletonList(token));
                 user.setRoles(roles);
-                userRepository.save(user);
-                tokenRepository.save(token);
-                //send email
+
                 String message ="Hello "+user.getUserProfile().getFirstName() +"This is your temporary password ,use this to change your password :"+token.getToken();
-                emailUtils.sendInvitationEmail(user.getEmail(),"Invitation",message,fromEmail);
+                emailUtils.sendInvitationEmail(user.getEmail(),"User-Auth Invitation",message,fromEmail);
             }else
                 userRepository.save(user);
-            return true;
-        }else
-            return false;
+            log.info("User saved successfully : "+dto.getEmail());
+
     }
 
     @Override
-    public byte[] getUserProfileImage(HttpServletRequest request) throws IOException {
-        User user = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
-                ()-> new RuntimeException("Unauthorized"));
+    public byte[] getUserProfileImage() throws IOException {
+
+        User user =userAuthUtils.getLoggedInUser();
+        log.info("Fetching profile image for user :"+user.getEmail());
         String fileName = user.getUserProfile().getProfilePicture();
-        if (fileName != null && new File(fileName).exists())
+        if (fileName != null && new File(fileName).exists()) {
+            log.info("Fetched profile image for user :" + user.getEmail());
             return Files.readAllBytes(Paths.get(user.getUserProfile().getProfilePicture()));
+        }
         else
             return null;
     }
 
-    @Override
-    public Boolean UpdateUser(String userReqDto, MultipartFile file, HttpServletRequest request) {
-        User userAuth = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
-                ()-> new RuntimeException("Unauthorized"));
-        ObjectMapper objectMapper = new ObjectMapper();
-        UserDto dto = null;
-        try {
-            dto = objectMapper.readValue(userReqDto, UserDto.class);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        if(!userAuth.getEmail().equals(dto.getEmail()))
-            return false;
-        String profile_path;
-        User user = modelMapper.map(dto, User.class);
-        user.setUserId(userAuth.getUserId());
-        UserProfile userProfile = modelMapper.map(dto, UserProfile.class);
-        userProfile.setId(userAuth.getUserProfile().getId());
-        for(Address a : user.getAddresses())
-            a.setUser(user);
-        userProfile.setUser(user);
-        user.setUserProfile(userProfile);
-        profile_path = userAuthUtils.saveProfileImage(file, userAuth);
-        userProfile.setProfilePicture(profile_path);
-        userRepository.save(user);
-        return true;
-    }
 
-    @Override
-    public boolean addProfileImage(MultipartFile file, HttpServletRequest request) {
-        User user = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
-                ()-> new RuntimeException("Unauthorized"));
+    @Override public void addProfileImage(MultipartFile file) {
+        User user = authUtils.getLoggedInUser();
+        log.info("Adding profile image for user : "+user.getEmail());
         String name = userAuthUtils.saveProfileImage(file, user);
-        if(name!=null){
-            user.getUserProfile().setProfilePicture(name);
-            userRepository.save(user);
-        return true;}
-        else
-            return false;
+        user.getUserProfile().setProfilePicture(name);
+        userRepository.save(user);
+        log.info("Profile image saved for user :"+user.getEmail());
     }
 
-    @Override public int forgotPassword(ForgotPasswordDto forgotDto) throws Exception {
-        int responseErrorCode = 0;
+    @Override public void forgotPassword(ForgotPasswordDto forgotDto) throws Exception {
+
         if (forgotDto != null && forgotDto.getEmail() != null) {
             if (userAuthUtils.validateEmail(forgotDto.getEmail())) {
+                log.info("Forgot password request received for user :"+forgotDto.getEmail());
                 Optional<User> userFromDb = userRepository.findByEmail(forgotDto.getEmail());
                 if (userFromDb.isEmpty()) {
                     throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
                 }
-                if (sendTokenMailToUser(userFromDb.get(), TokenType.FORGOT_PASSWORD_TOKEN)) {
-                    responseErrorCode = 200;
-                    userFromDb.get().setReset(false);
-                    userRepository.save(userFromDb.get());
-                } else {
-                    responseErrorCode = 400;
+                if(!sendTokenMailToUser(userFromDb.get(), TokenType.FORGOT_PASSWORD_TOKEN)){
+                    throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),"Email sending error");
                 }
-                return responseErrorCode;
+                userFromDb.get().setReset(false);
+                userRepository.save(userFromDb.get());
+                log.info("Forgot password email token sent to user :"+forgotDto.getEmail());
             } else {
+                log.info("Invalid email for forgot password request");
                 throw new InvalidEmailException(ErrorCodes.BAD_REQUEST.getCode(), ErrorCodes.BAD_REQUEST.getValue());
             }
         } else {
@@ -228,49 +202,37 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    @Override
-    public boolean changePassword(ChangePasswordDto changePasswordDto , HttpServletRequest request) {
-        if (changePasswordDto != null && changePasswordDto.getEmail() != null && changePasswordDto.getOldPassword() != null
-                && changePasswordDto.getNewPassword() != null) {
-            String header = request.getHeader("Authorization");
-            String email = null;
-            if (header != null) {
-                try {
-                    email=jwtProvider.getUsernameFromToken(header);
-                } catch (IllegalArgumentException e) {
-                   // logger.error("an error occured during getting username from token", e);
-                } catch (ExpiredJwtException e) {
-                   // logger.warn("the token is expired and not valid anymore", e);
-                } catch(SignatureException e){
-                   // logger.error("Authentication Failed. Username or Password not valid.");
-                }
-
-                if(email.equalsIgnoreCase(changePasswordDto.getEmail())) {
-
-                    Optional<User> userFromDb = userRepository.findByEmail(email);
-                    if (userFromDb.isPresent()) {
-                        // userFromDb.get().getPassword().equalsIgnoreCase(passwordEncoder.encode(changePasswordDto.getOldPassword()))
-                        if (passwordEncoder.matches(changePasswordDto.getOldPassword(),userFromDb.get().getPassword())) {
-                            userFromDb.get().setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
-                            userRepository.save(userFromDb.get());
-                            return true;
-                        } else {
-                            throw new InvalidPasswordException(101,"Your old password is incorrect...!");
-                        }
-
+    /**
+     * This method changes the password of logged in user
+     * @author Dipak Desai
+     * @param changePasswordDto
+     */
+    @Override public void changePassword(ChangePasswordDto changePasswordDto) {
+        if (changePasswordDto != null && changePasswordDto.getEmail() != null && changePasswordDto.getOldPassword() != null && changePasswordDto
+                .getNewPassword() != null) {
+            User loggedInUser = userAuthUtils.getLoggedInUser();
+            if (loggedInUser.getEmail().equalsIgnoreCase(changePasswordDto.getEmail())) {
+                log.info("Change password request received for user :"+changePasswordDto.getEmail());
+                Optional<User> userFromDb = userRepository.findByEmail(loggedInUser.getEmail());
+                if (userFromDb.isPresent()) {
+                    if (passwordEncoder.matches(changePasswordDto.getOldPassword(), userFromDb.get().getPassword())) {
+                        userFromDb.get().setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
+                        userRepository.save(userFromDb.get());
                     } else {
-                        // user not present
-                        return false;
+                        log.info("Invalid credentials provided for change password :"+changePasswordDto.getEmail());
+                        throw new InvalidPasswordException(ErrorCodes.INVALID_CREDENTIALS.getCode(), ErrorCodes.INVALID_CREDENTIALS.getValue());
                     }
-                }else{
-                    // provided email id not matched with token mail id
-                    return false;
+                } else {
+                    log.info("User not found :"+changePasswordDto.getEmail());
+                    throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
                 }
-            }else{
-                throw new RuntimeException("No token found");
+            } else {
+                log.info("Invalid email provided for change password request : "+changePasswordDto.getEmail());
+                throw new InvalidPasswordException(ErrorCodes.INVALID_CREDENTIALS.getCode(), ErrorCodes.INVALID_CREDENTIALS.getValue());
             }
+        } else {
+            throw new UnAuthorisedException(ErrorCodes.UNAUTHORIZED.getCode(), ErrorCodes.UNAUTHORIZED.getValue());
         }
-        return false;
     }
 
     private boolean sendTokenMailToUser(User user, TokenType tokenType) {
@@ -285,9 +247,14 @@ public class UserServiceImpl implements UserService {
             tokenToBeSave.setUsers(user);
             tokenToBeSave.setCreatedBy(user.getUserProfile().getFirstName()+"."+user.getUserProfile().getLastName());
             tokenToBeSave.setCreatedDate(new Date());
-            tokenToBeSave.setExpiryDate(new Date(System.currentTimeMillis() + jwTokenExpiry * 1000));
+            if (tokenType.equals(TokenType.FORGOT_PASSWORD_TOKEN)) {
+                tokenToBeSave.setExpiryDate(new Date(System.currentTimeMillis() + forgotTokenValidity * 1000));
+            } else if (tokenType.equals(TokenType.RESET_PASSWORD_TOKEN)) {
+                tokenToBeSave.setExpiryDate(new Date(System.currentTimeMillis() + resetTokenExpiry * 1000));
+            }
             tokenRepository.save(tokenToBeSave);
             emailUtils.sendInvitationEmail(user.getEmail(),subject,text,fromEmail);
+            log.info("Email sent successfully with "+tokenType+ "to :"+user.getEmail());
             return true;
         }
         return false;
@@ -295,15 +262,16 @@ public class UserServiceImpl implements UserService {
 
     /**
      * This method verifies the user credentials and logs in and sends jwt token in response
-     * @param dto
+     * @param loginDto
      * @return user information with jwt token
      */
     @Override
-    public UserDto loginUser(UserLoginReqDto dto) {
-        Optional<User> optUser = userRepository.findByEmail(dto.getEmail());
+    public UserDto loginUser(UserLoginReqDto loginDto) {
+        Optional<User> optUser = userRepository.findByEmail(loginDto.getEmail());
+
         if (optUser.isPresent()) {
             User user = optUser.get();
-            if (passwordEncoder.matches(dto.getPassword(), user.getPassword()) && user.getUserProfile().getActive().equals(Boolean.TRUE)) {
+            if (passwordEncoder.matches(loginDto.getPassword(), user.getPassword()) && user.getUserProfile().getActive().equals(Boolean.TRUE)) {
                 Token token = new Token();
                 token.setToken(jwtProvider.generateToken(user));
                 token.setTokenType(TokenType.LOGIN_TOKEN);
@@ -319,6 +287,7 @@ public class UserServiceImpl implements UserService {
                     userRoles.add(userRole.getRole());
                 }resDto.setRoles(userRoles);
                 resDto.setToken(token.getToken());
+                log.info("Login successfully :"+loginDto.getEmail());
                 return resDto;
             }
         } else {
@@ -332,6 +301,7 @@ public class UserServiceImpl implements UserService {
      * @return This method returns list of all users with role admin
      */
     @Override public UserListResponseDto getAllAdminUsers() {
+        log.info("Fetching all admin users");
         Optional<Role> role = roleRepository.findByRole("ADMIN");
         UserListResponseDto userListResponseDto = new UserListResponseDto();
         List<UserDto> userResponse = new ArrayList<>();
@@ -351,32 +321,39 @@ public class UserServiceImpl implements UserService {
                 userListResponseDto.setUserList(userResponse);
             }
         }
+        log.info("Fetched all admin users");
         return userListResponseDto;
     }
 
     /**
      * This method resets the one time password of user sent on email
-     * @param dto containing user one time password and email address
+     * @author akshay kamble
+     * @param resetPasswordReqDto containing user one time password and email address
      * @return Success message of user activation
      */
-    @Override public UserDto resetPassword(ResetPasswordReqDto dto) {
-        User user = userRepository.findByEmail(dto.getEmail()).orElse(null);
+    @Override public UserDto resetPassword(ResetPasswordReqDto resetPasswordReqDto) {
+        User user = userRepository.findByEmail(resetPasswordReqDto.getEmail()).orElse(null);
         if (null == user) {
             throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
         }
+        log.info("Resetting password for user : "+resetPasswordReqDto.getEmail());
         if(user.getReset()){
             throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),"Your profile is already active, Please login OR do forgot password");
         }
-        Token token = tokenRepository.findByTokenAndUsersUserId(dto.getToken(), user.getUserId());
+        Token token = tokenRepository.findByTokenAndUsersUserId(resetPasswordReqDto.getToken(), user.getUserId());
         if (null == token) {
             throw new UnAuthorisedException(ErrorCodes.UNAUTHORIZED.getCode(), "Either your password is already reset OR you have entered bad credentials");
         }
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        if(token.getExpiryDate().getTime() < new Date().getTime()){
+            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),"Token expired");
+        }
+        user.setPassword(passwordEncoder.encode(resetPasswordReqDto.getPassword()));
         user.setReset(true);
         user.getUserProfile().setActive(true);
         userRepository.save(user);
         UserDto userDto = modelMapper.map(user, UserDto.class);
         userDto.setRoles(user.getRoles().stream().map(x -> x.getRole()).collect(Collectors.toList()));
+        log.info("Password reset email sent :"+resetPasswordReqDto.getEmail());
         return userDto;
 
     }
@@ -399,6 +376,7 @@ public class UserServiceImpl implements UserService {
         }
         Optional<User> user = userRepository.findById(userId);
         if (user.isPresent()) {
+            log.info("Deleting user :"+user.get().getEmail());
             user.get().setDeleted(true);
             user.get().getUserProfile().setActive(Boolean.FALSE);
             userRepository.save(user.get());
@@ -407,21 +385,22 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * This method deletes user profile image
+     * @author aakash rajput
+     */
     @Override
-    public boolean deleteProfileImage(HttpServletRequest request) {
-        User user = authUtils.getUserFromToken(request.getHeader(jwtHeader)).orElseThrow(
-                ()-> new RuntimeException("Unauthorized"));
-        if (user != null) {
-            String location = user.getUserProfile().getProfilePicture();
-            if (location != null) {
-                File file = new File(location);
-                file.delete();
-                user.getUserProfile().setProfilePicture(null);
-                userRepository.save(user);
-                return true;
-            }
-       }
-        return false;
+    public void deleteProfileImage() {
+        User user = authUtils.getLoggedInUser();
+        log.info("Deleting user profile image :"+user.getEmail());
+        String fileLocation = user.getUserProfile().getProfilePicture();
+        if (fileLocation != null) {
+            File file = new File(fileLocation);
+            file.delete();
+            user.getUserProfile().setProfilePicture(null);
+            userRepository.save(user);
+        }
+        log.info("User profile image deleted successfully");
     }
 
     /**
@@ -430,33 +409,38 @@ public class UserServiceImpl implements UserService {
      * @return
      */
     @Override public UserDto getUserProfile() {
+
         User user = userAuthUtils.getLoggedInUser();
+        log.info("Fetching user profile of user :"+user.getEmail());
         UserProfile userProfile = user.getUserProfile();
         UserDto resDto = modelMapper.map(userProfile, UserDto.class);
         if (user.getAddresses() != null && !user.getAddresses().isEmpty())
             resDto.setAddresses(user.getAddresses().stream().map(x -> modelMapper.map(x, AddressDto.class)).collect(Collectors.toList()));
         resDto.setRoles(user.getRoles().stream().map(x -> x.getRole()).collect(Collectors.toList()));
         resDto.setEmail(user.getEmail());
+        log.info("Fetched user profile :"+user.getEmail());
         return resDto;
     }
 
     /**
      * This method updates the role of user
      * @author akshay kamble
-     * @param dto
+     * @param updateRoleReqDto
      * @return
      */
     @Override
-    public UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto) {
-        if (null == dto.getUserId() || dto.getRoleList().isEmpty()) {
+    public UserUpdateRoleRes updateRole(UserUpdateRoleReqDto updateRoleReqDto) {
+
+        if (null == updateRoleReqDto.getUserId() || updateRoleReqDto.getRoleList().isEmpty()) {
             throw new RuntimeException("Invalid Request");
         }
-        User user = userRepository.findById(dto.getUserId()).orElse(null);
+        User user = userRepository.findById(updateRoleReqDto.getUserId()).orElse(null);
         if (null == user) {
             throw new RuntimeException("User Not Found");
         }
+        log.info("Updating user role for user :"+updateRoleReqDto.getUserId());
         List<Role> roleList = new ArrayList<>();
-        for (Role role : dto.getRoleList()) {
+        for (Role role : updateRoleReqDto.getRoleList()) {
             role = roleRepository.findById(role.getRoleId()).orElse(null);
             if (null != role) {
                 roleList.add(role);
@@ -464,7 +448,7 @@ public class UserServiceImpl implements UserService {
         }
         user.setRoles(roleList);
         userRepository.save(user);
-
+        log.info("User role updated successfully :"+user.getEmail());
 
         List<String> roles =new ArrayList<>();
        for(Role role:user.getRoles())
@@ -473,17 +457,24 @@ public class UserServiceImpl implements UserService {
        }
         String message = "Hello " + user.getUserProfile().getFirstName() + "Your role is changed to : "+roles.toString();
 
-        emailUtils.sendInvitationEmail(user.getEmail(), "Invitation", message, fromEmail);
+        emailUtils.sendInvitationEmail(user.getEmail(), "Role Updation", message, fromEmail);
         return new UserUpdateRoleRes(user.getEmail(), roles);
 
     }
 
+    /**
+     * This method logs out the user
+     * @author makarand
+     * @param request
+     */
     @Override public void logout(HttpServletRequest request) {
         String authToken = request.getHeader("Authorization");
         User loggedInUser = userAuthUtils.getLoggedInUser();
+        log.info("Logging out user :"+loggedInUser.getEmail());
         Token token = tokenRepository.findByTokenAndUsersUserId(authToken, loggedInUser.getUserId());
         token.setExpiryDate(null);
         token.setExpired(true);
         tokenRepository.save(token);
+        log.info("Logged out user :"+loggedInUser.getEmail());
     }
 }

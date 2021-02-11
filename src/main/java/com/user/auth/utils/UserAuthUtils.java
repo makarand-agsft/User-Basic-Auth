@@ -112,18 +112,4 @@ public class UserAuthUtils {
         return false;
     }
 
-
-    public boolean checkAccess(HttpServletRequest httpServletRequest) {
-        if (null == httpServletRequest) {
-            throw new RuntimeException("Request is null");
-        }
-        String token = httpServletRequest.getHeader(jwtHeader);
-        if (null == token && token.isEmpty()) {
-            throw new RuntimeException("Authorization failed");
-        }
-        List<Role> roleList =jwtProvider.getRolesfromToken(token);
-        return roleList.stream().anyMatch(role -> role.getRole().equals(com.user.auth.enums.Role.ADMIN));
-
-
-    }
 }

@@ -18,17 +18,15 @@ public interface UserService {
 
     UserDto getUserProfile();
 
-    boolean addUser(String userReqDto, MultipartFile file, HttpServletRequest request);
+    void addUser(String userReqDto, MultipartFile file);
 
-    byte[] getUserProfileImage(HttpServletRequest request) throws IOException;
+    byte[] getUserProfileImage() throws IOException;
 
-    Boolean UpdateUser(String userReqDto, MultipartFile file, HttpServletRequest request);
+    void addProfileImage(MultipartFile file);
 
-    boolean addProfileImage(MultipartFile file, HttpServletRequest request);
+    void forgotPassword(ForgotPasswordDto forgotDto) throws Exception;
 
-    int forgotPassword(ForgotPasswordDto forgotDto) throws Exception;
-
-    boolean changePassword(ChangePasswordDto changePasswordDto, HttpServletRequest request);
+    void changePassword(ChangePasswordDto changePasswordDto);
 
     UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto);
 
@@ -36,7 +34,7 @@ public interface UserService {
 
     void deleteUserById(Long userId) throws Exception;
 
-    boolean deleteProfileImage(HttpServletRequest request);
+    void deleteProfileImage();
 
     void logout(HttpServletRequest request);
 }

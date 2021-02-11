@@ -76,9 +76,12 @@ import java.io.IOException;
      * @date 09/02/2021
      */
     @PostMapping(path = "/user/login") public ResponseEntity loginUser(@RequestBody UserLoginReqDto dto) {
-        ResponseObject responseMessage;
+        ResponseDto responseDto;
         UserLoginResDto response = userService.loginUser(dto);
-        ResponseDto responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Logged in successfully", response), HttpStatus.OK);
+        if(response != null)
+            responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Logged in successfully", response), HttpStatus.OK);
+        else
+            responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Bad credentials", null),HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
 

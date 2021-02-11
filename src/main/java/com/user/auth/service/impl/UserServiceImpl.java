@@ -2,7 +2,6 @@ package com.user.auth.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
 import com.user.auth.dto.request.UserUpdateRoleReqDto;

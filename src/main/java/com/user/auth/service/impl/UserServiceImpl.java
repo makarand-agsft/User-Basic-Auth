@@ -346,6 +346,7 @@ public class UserServiceImpl implements UserService {
                     }
                     UserDto userRegisterReqDto=modelMapper.map(user, UserDto.class);
                     userRegisterReqDto.setRoles(userRoles);
+
                     userResponse.add(userRegisterReqDto);
                 }
                 userListResponseDto.setUserList(userResponse);
@@ -359,7 +360,8 @@ public class UserServiceImpl implements UserService {
      * @param dto containing user one time password and email address
      * @return Success message of user activation
      */
-    @Override public UserDto resetPassword(ResetPasswordReqDto dto) {
+    @Override
+    public UserDto resetPassword(ResetPasswordReqDto dto) {
         User user = userRepository.findByEmail(dto.getEmail()).orElse(null);
         if (null == user) {
             throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
@@ -386,7 +388,6 @@ public class UserServiceImpl implements UserService {
 
     /**
      * This method soft deletes user from system ( only admin can delete other users)
-     * @author makarand
      * @param userId
      * @throws Exception
      */
@@ -443,19 +444,19 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * This method updates the role of user
-     * @author akshay kamble
+     * This method is used to change the roles of users
+     * @Author Akshay
      * @param dto
-     * @return
+     * @return UserUpdateRoleRes
+     * @Date 09-02-2021
      */
-    @Override
     public UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto) {
         if (null == dto.getUserId() || dto.getRoleList().isEmpty()) {
-            throw new RuntimeException("Invalid Request");
+            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),ErrorCodes.BAD_REQUEST.getValue());
         }
         User user = userRepository.findById(dto.getUserId()).orElse(null);
         if (null == user) {
-            throw new RuntimeException("User Not Found");
+            throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
         }
         List<Role> roleList = new ArrayList<>();
         for (Role role : dto.getRoleList()) {

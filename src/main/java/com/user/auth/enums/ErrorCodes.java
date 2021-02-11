@@ -8,6 +8,7 @@ public enum ErrorCodes {
     INVALID_CREDENTIALS(400,"Invalid credentials provided"),
     INVALID_TOKEN(400,"Please provide valid token");
 
+
     private  String value;
 
     private  Integer code;

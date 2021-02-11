@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -78,18 +79,27 @@ public class UserAuthUtils {
     }
     public String saveProfileImage(MultipartFile file, User user){
         String profile_path = null;
-        if(!file.isEmpty()){
+        if(file !=null){
             try {
-                String fileName = user.getEmail();
+                String fileName = getFileName(file, user);
                 byte[] bytes = file.getBytes();
                 profile_path = UPLOAD_DIRECTORY + fileName;
+                File f = new File(UPLOAD_DIRECTORY);
+                if(!f.exists())
+                    Files.createDirectories(f.toPath());
                 Path path = Paths.get(profile_path);
                 Files.write(path, bytes);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        if(user.getUserProfile().getProfilePicture()!=null)
+            return user.getUserProfile().getProfilePicture();
         return profile_path;
+    }
+
+    private String getFileName(MultipartFile file, User user) {
+        return user.getEmail().replace(".com", file.getContentType().replace("/", "."));
     }
 
     public boolean validateEmail(String email) {

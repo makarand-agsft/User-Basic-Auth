@@ -136,7 +136,7 @@ import java.io.IOException;
     @GetMapping(path = "/user/getprofile")
     public ResponseEntity getUserProfile(HttpServletRequest request){
         ResponseDto responseDto;
-        UserProfileResDto resDto = userService.getUserProfile(request);
+        UserProfileResDto resDto = userService.getUserProfile();
         if(resDto!=null)
             responseDto = new ResponseDto(new ResponseObject(200, "User profile fetched successfully",resDto),HttpStatus.OK);
         else

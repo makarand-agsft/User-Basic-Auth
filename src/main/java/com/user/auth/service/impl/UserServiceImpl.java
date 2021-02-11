@@ -2,11 +2,17 @@ package com.user.auth.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.user.auth.dto.*;
 import com.user.auth.dto.request.ResetPasswordReqDto;
+import com.user.auth.enums.ErrorCodes;
 import com.user.auth.dto.request.UserUpdateRoleReqDto;
 import com.user.auth.enums.TokenType;
+import com.user.auth.exception.*;
+import com.user.auth.model.*;
+import com.user.auth.model.Role;
+import com.user.auth.model.Token;
+import com.user.auth.model.User;
+import com.user.auth.model.UserProfile;
 import com.user.auth.exception.InvalidEmailException;
 import com.user.auth.exception.InvalidPasswordException;
 import com.user.auth.exception.UserNotFoundException;
@@ -196,26 +202,25 @@ public class UserServiceImpl implements UserService {
             return false;
     }
 
-    @Override
-    public int forgotPassword(ForgotPasswordDto forgotDto) throws Exception {
-        if(forgotDto!=null && forgotDto.getEmail()!=null){
-            int responseErrorCode;
-            if(userAuthUtils.validateEmail(forgotDto.getEmail())){
-                Optional<User> userFromDb=userRepository.findByEmail(forgotDto.getEmail());
-                if(!userFromDb.isPresent()) {
-                    throw new UserNotFoundException();
+    @Override public int forgotPassword(ForgotPasswordDto forgotDto) throws Exception {
+        int responseErrorCode = 0;
+        if (forgotDto != null && forgotDto.getEmail() != null) {
+            if (userAuthUtils.validateEmail(forgotDto.getEmail())) {
+                Optional<User> userFromDb = userRepository.findByEmail(forgotDto.getEmail());
+                if (userFromDb.isEmpty()) {
+                    throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
                 }
-                if(sendTokenMailToUser(userFromDb.get())){
-                    responseErrorCode=200;
-                }else{
-                    responseErrorCode=400;
+                if (sendTokenMailToUser(userFromDb.get(), TokenType.FORGOT_PASSWORD_TOKEN)) {
+                    responseErrorCode = 200;
+                } else {
+                    responseErrorCode = 400;
                 }
                 return responseErrorCode;
-            }else{
-                throw new InvalidEmailException();
+            } else {
+                throw new InvalidEmailException(ErrorCodes.BAD_REQUEST.getCode(), ErrorCodes.BAD_REQUEST.getValue());
             }
-        }else{
-            throw new InvalidEmailException();
+        } else {
+            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(), ErrorCodes.BAD_REQUEST.getValue());
         }
     }
 
@@ -264,7 +269,7 @@ public class UserServiceImpl implements UserService {
         return false;
     }
 
-    private boolean sendTokenMailToUser(User user) {
+    private boolean sendTokenMailToUser(User user, TokenType tokenType) {
         if(user.getEmail()!=null ){
             String token=userAuthUtils.generateKey(10);
             String subject="Forgot password auto generated mail.";
@@ -272,7 +277,7 @@ public class UserServiceImpl implements UserService {
 
             Token tokenToBeSave= new Token();
             tokenToBeSave.setToken(token);
-            tokenToBeSave.setTokenType(TokenType.FORGOT_PASSWORD_TOKEN);
+            tokenToBeSave.setTokenType(tokenType);
             tokenToBeSave.setUsers(user);
             tokenToBeSave.setCreatedBy(user.getUserProfile().getFirstName()+"."+user.getUserProfile().getLastName());
             tokenToBeSave.setCreatedDate(new Date());
@@ -307,6 +312,8 @@ public class UserServiceImpl implements UserService {
                 resDto.setToken(token.getToken());
                 return resDto;
             }
+        } else {
+            throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
         }
         return null;
     }
@@ -347,12 +354,12 @@ public class UserServiceImpl implements UserService {
     public UserRegisterReqDto resetPassword(ResetPasswordReqDto dto) {
         User user = userRepository.findByEmail(dto.getEmail()).orElse(null);
         if (null == user) {
-            throw new RuntimeException("User Not found");
+            throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(),ErrorCodes.USER_NOT_FOUND.getValue());
         }
 
         Token token = tokenRepository.findByTokenAndTokenTypeOrTokenTypeAndUsersUserId(dto.getToken(), TokenType.RESET_PASSWORD_TOKEN,TokenType.FORGOT_PASSWORD_TOKEN, user.getUserId());
         if (null == token) {
-            throw new RuntimeException("Authentication Failed");
+            throw new UnAuthorisedException(ErrorCodes.UNAUTHORIZED.getCode(),ErrorCodes.UNAUTHORIZED.getValue());
         }
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.getUserProfile().setActive(true);
@@ -371,15 +378,17 @@ public class UserServiceImpl implements UserService {
 
         User loggedInUser = userAuthUtils.getLoggedInUser();
         if (loggedInUser.getRoles().stream().noneMatch(x -> x.getRole().equalsIgnoreCase(com.user.auth.enums.Role.ADMIN.name()))) {
-            throw new Exception("Unauthorised");
+            throw new UnAuthorisedException(ErrorCodes.UNAUTHORIZED.getCode(),ErrorCodes.UNAUTHORIZED.getValue());
         }
         if (userId == null) {
-            throw new Exception("Error");
+            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),ErrorCodes.BAD_REQUEST.getValue());
         }
         Optional<User> user = userRepository.findById(userId);
         if (user.isPresent()) {
             user.get().setDeleted(true);
             userRepository.save(user.get());
+        }else{
+            throw new InvalidRequestException(ErrorCodes.USER_NOT_FOUND.getCode(),ErrorCodes.USER_NOT_FOUND.getValue());
         }
     }
 
@@ -402,9 +411,8 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public UserProfileResDto getUserProfile(HttpServletRequest request) {
-        String token = request.getHeader(jwtHeader);
-        User user = authUtils.getUserFromToken(token).orElseThrow(()-> new RuntimeException("Unauthorized"));
+    public UserProfileResDto getUserProfile() {
+        User user = userAuthUtils.getLoggedInUser();
         UserProfile userProfile = user.getUserProfile();
         UserProfileResDto resDto = modelMapper.map(userProfile, UserProfileResDto.class);
         resDto.setAddresses(user.getAddresses());

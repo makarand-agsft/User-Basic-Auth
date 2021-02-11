@@ -37,6 +37,7 @@ import java.io.IOException;
      * @throws Exception
      */
     @PostMapping(path = "/user/add")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public ResponseEntity addUser(@RequestParam(name = "file", required = false)MultipartFile file, @RequestParam("userReqDto")String userReqDto,HttpServletRequest request){
         ResponseDto responseMessage;
         if(userService.addUser(userReqDto,file,request))
@@ -45,7 +46,7 @@ import java.io.IOException;
             responseMessage = new ResponseDto(new ResponseObject(400,"User already exists in system",null),HttpStatus.BAD_REQUEST);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
     }
-    @PostMapping(path = "user/forgotpassword")
+    @PostMapping(path = "user/forgotPassword")
     public ResponseEntity forgotPassword(@RequestBody ForgotPasswordDto forgotDto) throws Exception {
         ResponseDto responseDto = null;
         int message=userService.forgotPassword(forgotDto);
@@ -57,7 +58,8 @@ import java.io.IOException;
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
 
-    @PostMapping(path = "/user/changepassword")
+    @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
+    @PostMapping(path = "/user/changePassword")
     public ResponseEntity changePassword(@RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request){
         ResponseDto responseDto;
         if(userService.changePassword(changePasswordDto,request)){
@@ -91,7 +93,7 @@ import java.io.IOException;
      * @param dto containing user one time password and email address
      * @return Success message of user activation
      */
-    @PostMapping(path = "/user/resetpassword") public ResponseEntity registerNewUser(@RequestBody ResetPasswordReqDto dto) {
+    @PostMapping(path = "/user/resetPassword") public ResponseEntity registerNewUser(@RequestBody ResetPasswordReqDto dto) {
         UserRegisterReqDto response = userService.resetPassword(dto);
         ResponseDto responseDto =
                 new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User is Activated and changed password successfully", response),
@@ -106,7 +108,8 @@ import java.io.IOException;
      * @return profile photo added message
      * @throws Exception
      */
-    @PostMapping(path = "/user/add/profileimg")
+    @PreAuthorize("hasAnyAuthority('ADMIN','User)")
+    @PostMapping(path = "/user/add/profileImage")
     public ResponseEntity addProfileImage(@RequestParam(name = "file", required = false)MultipartFile file,HttpServletRequest request){
         ResponseDto responseMessage;
         if(userService.addProfileImage(file,request))
@@ -118,9 +121,11 @@ import java.io.IOException;
 
     /**
      * This method fetches all list of 'ADMIN' users
-     *
+     * @author makarand
+     * @date 10/02/21
      * @return
      */
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping(value = "/user/getAllAdminUsers") @ResponseBody public ResponseEntity getAllAdminUsers() {
         UserListResponseDto userListResponseDto = userService.getAllAdminUsers();
         ResponseDto responseDto =
@@ -136,10 +141,11 @@ import java.io.IOException;
      * @return user's profile details
      * @throws Exception
      */
-    @GetMapping(path = "/user/getprofile")
+    @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
+    @GetMapping(path = "/user/getProfile")
     public ResponseEntity getUserProfile(HttpServletRequest request){
         ResponseDto responseDto;
-        UserProfileResDto resDto = userService.getUserProfile(request);
+        UserProfileResDto resDto = userService.getUserProfile();
         if(resDto!=null)
             responseDto = new ResponseDto(new ResponseObject(200, "User profile fetched successfully",resDto),HttpStatus.OK);
         else
@@ -155,7 +161,8 @@ import java.io.IOException;
      * @return profile photo
      * @throws Exception
      */
-    @PostMapping(path = "/user/get/profileimg", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
+    @PostMapping(path = "/user/get/profileImage", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getUserProfileImage(HttpServletRequest request) throws IOException {
         byte[] image = userService.getUserProfileImage(request);
         if (image != null) {
@@ -170,14 +177,15 @@ import java.io.IOException;
      * @return
      * @throws Exception
      */
-    @PostMapping(value = "user/deleteByEmail") public ResponseEntity deleteUserById(@RequestParam(value = "userId", required = true) Long userId)
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PostMapping(value = "user/deleteUserById") public ResponseEntity deleteUserById(@RequestParam(value = "userId", required = true) Long userId)
             throws Exception {
         userService.deleteUserById(userId);
         ResponseDto responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User deleted successfully", null), HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
 
-    @PostMapping(path = "/user/updaterole")
+    @PostMapping(path = "/user/updateRole")
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     public ResponseEntity updateUserRole(HttpServletRequest httpServletRequest, @RequestBody UserUpdateRoleReqDto dto){
 
@@ -222,7 +230,7 @@ import java.io.IOException;
      * @return Photo deleted message
      * @throws Exception
      */
-    @DeleteMapping(path = "/user/delete/profileImg")
+    @DeleteMapping(path = "/user/delete/profileImage")
     public ResponseEntity deleteProfileImage(HttpServletRequest request){
         ResponseDto responseDto;
         boolean deleted = userService.deleteProfileImage(request);

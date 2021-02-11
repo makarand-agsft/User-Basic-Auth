@@ -20,7 +20,7 @@ public interface UserService {
 
     UserLoginResDto loginUser(UserLoginReqDto dto);
 
-    UserProfileResDto getUserProfile(HttpServletRequest request);
+    UserProfileResDto getUserProfile();
 
     boolean addUser(String userReqDto, MultipartFile file, HttpServletRequest request);
 
@@ -33,7 +33,6 @@ public interface UserService {
     int forgotPassword(ForgotPasswordDto forgotDto) throws Exception;
 
     boolean changePassword(ChangePasswordDto changePasswordDto, HttpServletRequest request);
-
 
     UserUpdateRoleRes updateRole(UserUpdateRoleReqDto dto);
 

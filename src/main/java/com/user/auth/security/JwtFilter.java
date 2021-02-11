@@ -18,6 +18,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+/**
+ * This class represents jwt token filter process
+ * @author makarand
+ */
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 

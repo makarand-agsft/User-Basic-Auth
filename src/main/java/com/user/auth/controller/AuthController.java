@@ -26,7 +26,13 @@ public class AuthController {
    private UserAuthUtils userAuthUtils;
 
 
-
+    /**
+     * This method is used for reset forgotten password.
+     * @param forgotDto
+     * @return send password token to registered user
+     * @author dipak
+     * @date 09/02/2021
+     */
     @PostMapping(path = "user/forgotPassword")
     public ResponseEntity forgotPassword(@RequestBody ForgotPasswordDto forgotDto) throws Exception {
         userService.forgotPassword(forgotDto);
@@ -36,9 +42,16 @@ public class AuthController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
 
+    /**
+     * This method is used for changing password.
+     * @param changePasswordDto
+     * @return success message of changed password
+     * @author dipak
+     * @date 09/02/2021
+     */
     @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
     @PostMapping(path = "/user/changePassword")
-    public ResponseEntity changePassword(@RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request) {
+    public ResponseEntity changePassword(@RequestBody ChangePasswordDto changePasswordDto) {
         userService.changePassword(changePasswordDto);
         ResponseDto responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Password changed successfully..!", null), HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);

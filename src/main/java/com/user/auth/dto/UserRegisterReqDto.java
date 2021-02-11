@@ -16,15 +16,15 @@ public class UserRegisterReqDto {
 	
 	private Long mobileNumber;
 	
-	private List<Address> addresses;
+	private List<AddressDto> addresses;
 
 	private List<String> roles = new ArrayList<>();
 
-	public List<Address> getAddresses() {
+	public List<AddressDto> getAddresses() {
 		return addresses;
 	}
 
-	public void setAddresses(List<Address> addresses) {
+	public void setAddresses(List<AddressDto> addresses) {
 		this.addresses = addresses;
 	}
 

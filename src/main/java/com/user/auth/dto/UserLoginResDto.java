@@ -1,12 +1,15 @@
 package com.user.auth.dto;
 
+import com.user.auth.model.Address;
+import com.user.auth.model.UserProfile;
+
+import java.util.List;
+
 public class UserLoginResDto {
     private Long userId;
-    private String firstName;
-    private String lastName;
+    private UserProfile userProfile;
     private String email;
-    private String address;
-    private Long mobileNumber;
+    private List<Address> addresses;
     private String token;
 
     public Long getUserId() {
@@ -17,44 +20,28 @@ public class UserLoginResDto {
         this.userId = userId;
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
     public String getEmail() {
         return email;
+    }
+
+    public UserProfile getUserProfile() {
+        return userProfile;
+    }
+
+    public void setUserProfile(UserProfile userProfile) {
+        this.userProfile = userProfile;
     }
 
     public void setEmail(String email) {
         this.email = email;
     }
 
-    public String getAddress() {
-        return address;
+    public List<Address> getAddresses() {
+        return addresses;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public Long getMobileNumber() {
-        return mobileNumber;
-    }
-
-    public void setMobileNumber(Long mobileNumber) {
-        this.mobileNumber = mobileNumber;
+    public void setAddresses(List<Address> addresses) {
+        this.addresses = addresses;
     }
 
     public String getToken() {

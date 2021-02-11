@@ -1,5 +1,7 @@
 package com.user.auth.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 
 @Entity
@@ -26,6 +28,7 @@ public class UserProfile extends AuditingEntity{
 
     @OneToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     public String getProfilePicture() {

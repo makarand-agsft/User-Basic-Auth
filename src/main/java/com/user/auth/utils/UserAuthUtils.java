@@ -107,6 +107,12 @@ public class UserAuthUtils {
         return user.getEmail().replace(".com", file.getContentType().replace("/", "."));
     }
 
+    /**
+     * checks if email is valid or not
+     * @param email
+     * @Author dipak
+     * @return true if email is valid
+     */
     public boolean validateEmail(String email) {
         String regex = "^(.+)@(.+)$";
         Pattern pattern = Pattern.compile(regex);

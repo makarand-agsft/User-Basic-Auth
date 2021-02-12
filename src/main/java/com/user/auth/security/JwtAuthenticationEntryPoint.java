@@ -29,7 +29,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         ResponseDto resp =
                 new ResponseDto(new ResponseObject(HttpStatus.UNAUTHORIZED.value(),
-                        "Unauthorized! The session token is expired or invalid.", null),HttpStatus.OK);
+                        "Unauthorzied Access to API", null),HttpStatus.OK);
         OutputStream outStream = httpServletResponse.getOutputStream();
         outStream.write(new ObjectMapper().writeValueAsString(resp).getBytes());
         outStream.flush();

@@ -56,16 +56,13 @@ public class JwtUser implements UserDetails {
         return fullname;
     }
 
-    @JsonIgnore
-    @Override
-    public String getPassword() {
-        //This should be refactored out of the code as we don't use passwords
-        return "123deleteMe";
-    }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
+    }
+
+    @Override public String getPassword() {
+        return null;
     }
 
     @Override

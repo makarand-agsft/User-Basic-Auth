@@ -115,10 +115,14 @@ public class ProfileServiceImpl implements ProfileService {
         if(!existingUser.isPresent() || isDeletedUser) {
             User mappedUser = modelMapper.map(dto, User.class);
             mappedUser.setDeleted(Boolean.FALSE);
-            User profileSet = isDeletedUser ? existingUser.get() : mappedUser;
-            profile_path = userAuthUtils.saveProfileImage(file, profileSet);
-            profileSet.getUserProfile().setProfilePicture(profile_path);
-            profileSet.getUserProfile().setActive(Boolean.FALSE);
+            User user = isDeletedUser ? existingUser.get() : mappedUser;
+            profile_path = userAuthUtils.saveProfileImage(file, user);
+            user.getUserProfile().setProfilePicture(profile_path);
+            user.getUserProfile().setActive(Boolean.FALSE);
+            user.getUserProfile().setUser(user);
+            user.getAddresses().forEach(x->{
+                x.setUser(user);
+            });
             if(!isDeletedUser){
                 List<Role> roles = new ArrayList<>();
                 for (String r : dto.getRoles()) {

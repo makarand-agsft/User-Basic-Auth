@@ -88,7 +88,6 @@ public class UserAuthUtils {
         if(file !=null){
             try {
                 String fileName = getFileName(file, user);
-                byte[] bytes = file.getBytes();
                 profile_path = UPLOAD_DIRECTORY + fileName;
                 File f = new File(UPLOAD_DIRECTORY);
                 if(!f.exists())

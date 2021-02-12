@@ -156,7 +156,8 @@ public class ProfileServiceImpl implements ProfileService {
             log.error("Error in mapping object");
             e.printStackTrace();
         }
-        if(!loggedUser.getEmail().equals(userDto.getEmail()) || !loggedUser.getUserId().equals(userDto.getUserId()))
+        if(!loggedUser.getEmail().equals(userDto.getEmail()) || !loggedUser.getUserId().equals(userDto.getUserId()) ||
+        !loggedUser.getUserProfile().getId().equals(userDto.getUserProfile().getId()))
             throw new  InvalidRequestException(ErrorCodes.UNAUTHORIZED.getCode(),ErrorCodes.UNAUTHORIZED.getValue());
         String profile_path;
         User mappedUser = convertUserDtoToUser(userDto, loggedUser);

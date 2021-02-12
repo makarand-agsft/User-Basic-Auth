@@ -96,7 +96,11 @@ public class AuthServiceImpl implements AuthService {
 
     Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
-
+    /**
+     * This method helps to reset password of the user
+     * @author Dipak Desai
+     * @param forgotDto
+     */
     @Override public void forgotPassword(ForgotPasswordDto forgotDto) throws Exception {
 
         if (forgotDto != null && forgotDto.getEmail() != null) {
@@ -153,6 +157,11 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    /**
+     * This method send change_password token to registered user via mail
+     * @author Dipak Desai
+     * @param user & tokenType
+     */
     private boolean sendTokenMailToUser(User user, TokenType tokenType) {
         if(user.getEmail()!=null ){
             String token=userAuthUtils.generateKey(10);

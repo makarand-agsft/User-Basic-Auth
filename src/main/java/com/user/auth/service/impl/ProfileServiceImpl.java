@@ -146,7 +146,7 @@ public class ProfileServiceImpl implements ProfileService {
         }
     }
     @Override
-    public Boolean UpdateUser(String jsonString, MultipartFile file, HttpServletRequest request) {
+    public Boolean updateUser(String jsonString, MultipartFile file) {
         User loggedUser = userAuthUtils.getLoggedInUser();
         ObjectMapper objectMapper = new ObjectMapper();
         UserDto userDto = null;
@@ -156,7 +156,7 @@ public class ProfileServiceImpl implements ProfileService {
             log.error("Error in mapping object");
             e.printStackTrace();
         }
-        if(!loggedUser.getEmail().equals(userDto.getEmail()))
+        if(!loggedUser.getEmail().equals(userDto.getEmail()) || !loggedUser.getUserId().equals(userDto.getUserId()))
             throw new  InvalidRequestException(ErrorCodes.UNAUTHORIZED.getCode(),ErrorCodes.UNAUTHORIZED.getValue());
         String profile_path;
         User mappedUser = convertUserDtoToUser(userDto, loggedUser);

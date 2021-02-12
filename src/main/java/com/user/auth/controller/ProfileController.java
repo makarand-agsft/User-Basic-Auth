@@ -50,7 +50,7 @@ public class ProfileController {
      * @return profile photo added message
      * @throws Exception
      */
-    @PreAuthorize("hasAnyAuthority('ADMIN','User)")
+    @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
     @PostMapping(path = "/user/add/profileImage") public ResponseEntity addProfileImage(
             @RequestParam(name = "file", required = false) MultipartFile file, HttpServletRequest request) {
         ResponseDto responseMessage;

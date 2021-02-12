@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Date;
 
 import java.util.List;
@@ -87,13 +88,12 @@ public class UserAuthUtils {
         if(file !=null){
             try {
                 String fileName = getFileName(file, user);
-                byte[] bytes = file.getBytes();
                 profile_path = UPLOAD_DIRECTORY + fileName;
                 File f = new File(UPLOAD_DIRECTORY);
                 if(!f.exists())
                     Files.createDirectories(f.toPath());
                 Path path = Paths.get(profile_path);
-                Files.write(path, bytes);
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 e.printStackTrace();
             }

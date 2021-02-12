@@ -7,7 +7,8 @@ public enum ErrorCodes {
     UNAUTHORIZED(401,"You are not authorise to access this resource"),
     INVALID_CREDENTIALS(400,"Invalid credentials provided"),
     INVALID_TOKEN(400,"Please provide valid token"),
-    FILE_NOT_FOUND(404,"Profile image not found");
+    FILE_NOT_FOUND(404,"Profile image not found"),
+    EMAIL_ALREADY_EXISTS(406, "Email already exists");
 
 
     private  String value;

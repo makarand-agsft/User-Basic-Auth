@@ -39,4 +39,11 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
                 HttpStatus.OK);
         return new ResponseEntity<>(responseDto,HttpStatus.OK);
     }
+
+    @ExceptionHandler(UnAuthorisedException.class)
+    public ResponseEntity<Object> invalidRequest(UnAuthorisedException unAuthorisedException){
+        ResponseDto responseDto= new ResponseDto(new ResponseObject(unAuthorisedException.getCode(),unAuthorisedException.getMessage(),null),
+                HttpStatus.OK);
+        return new ResponseEntity<>(responseDto,HttpStatus.OK);
+    }
 }

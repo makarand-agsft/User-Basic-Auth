@@ -2,7 +2,7 @@ package com.user.auth.controller;
 
 import com.user.auth.dto.request.*;
 import com.user.auth.dto.response.*;
-import com.user.auth.service.UserService;
+import com.user.auth.service.AuthService;
 import com.user.auth.utils.UserAuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 public class AuthController {
 
     @Autowired
-    private UserService userService;
+    private AuthService authService;
 
     @Autowired
    private UserAuthUtils userAuthUtils;
@@ -35,7 +35,7 @@ public class AuthController {
      */
     @PostMapping(path = "user/forgotPassword")
     public ResponseEntity forgotPassword(@RequestBody ForgotPasswordDto forgotDto) throws Exception {
-        userService.forgotPassword(forgotDto);
+        authService.forgotPassword(forgotDto);
         ResponseDto responseDto =
                 new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Your password token is sent to your registered email id.", null),
                         HttpStatus.OK);
@@ -52,7 +52,7 @@ public class AuthController {
     @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
     @PostMapping(path = "/user/changePassword")
     public ResponseEntity changePassword(@RequestBody ChangePasswordDto changePasswordDto) {
-        userService.changePassword(changePasswordDto);
+        authService.changePassword(changePasswordDto);
         ResponseDto responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Password changed successfully..!", null), HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
@@ -66,7 +66,7 @@ public class AuthController {
      */
     @PostMapping(path = "/user/login")
     public ResponseEntity loginUser(@RequestBody UserLoginReqDto dto) {
-        UserDto response = userService.loginUser(dto);
+        UserDto response = authService.loginUser(dto);
         ResponseDto responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Logged in successfully", response), HttpStatus.OK);
 
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
@@ -80,7 +80,7 @@ public class AuthController {
      */
     @PostMapping(path = "/user/resetPassword")
     public ResponseEntity resetPassword(@RequestBody ResetPasswordReqDto dto) {
-        UserDto response = userService.resetPassword(dto);
+        UserDto response = authService.resetPassword(dto);
         ResponseDto responseDto =
                 new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User is Activated and changed password successfully", response),
                         HttpStatus.OK);
@@ -90,7 +90,7 @@ public class AuthController {
     @PostMapping(path = "/user/logout")
     public ResponseEntity logout(HttpServletRequest httpServletRequest){
         ResponseDto responseDto;
-        userService.logout(httpServletRequest);
+        authService.logout(httpServletRequest);
             responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(),"Logged out successfully",null),HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }

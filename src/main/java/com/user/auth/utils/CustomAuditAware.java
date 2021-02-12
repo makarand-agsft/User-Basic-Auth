@@ -1,9 +1,6 @@
 package com.user.auth.utils;
 
-
-import com.user.auth.model.User;
 import com.user.auth.security.JwtUser;
-import com.user.auth.service.UserService;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

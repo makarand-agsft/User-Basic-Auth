@@ -116,25 +116,25 @@ public class UserServiceImpl implements UserService {
         boolean isSelfUpdate = loggedInUser.getEmail().equals(dto.getEmail()); //admin user
         boolean isExistingDeletedUser = existingUser.isPresent() && existingUser.get().getDeleted();
         String profile_path;
-
+        if(!existingUser.isPresent() || isExistingDeletedUser || isSelfUpdate) {
             User user = modelMapper.map(dto, User.class);
             UserProfile userProfile = user.getUserProfile();
             User isSelfUpdateOrExistingUser = isSelfUpdate ? loggedInUser : (existingUser.isPresent() ? existingUser.get() : null);
-            if(isSelfUpdate || isExistingDeletedUser){
+            if (isSelfUpdate || isExistingDeletedUser) {
                 user.setUserId(isSelfUpdateOrExistingUser.getUserId());
                 userProfile.setId(isSelfUpdateOrExistingUser.getUserProfile().getId());
             }
-            for(Address address : user.getAddresses())
+            for (Address address : user.getAddresses())
                 address.setUser(user);
             userProfile.setUser(user);
             user.setDeleted(Boolean.FALSE);
             user.setReset(Boolean.FALSE);
-            profile_path = userAuthUtils.saveProfileImage(file, (isSelfUpdate)? loggedInUser :user);
+            profile_path = userAuthUtils.saveProfileImage(file, (isSelfUpdate) ? loggedInUser : user);
             userProfile.setProfilePicture(profile_path);
-            if(!isSelfUpdate){
+            if (!isSelfUpdate) {
                 userProfile.setActive(Boolean.FALSE);
                 List<Role> roles = new ArrayList<>();
-                for(String r : dto.getRoles()){
+                for (String r : dto.getRoles()) {
                     Optional<Role> role = roleRepository.findByRole(r);
                     role.ifPresent(roles::add);
                 }
@@ -142,16 +142,17 @@ public class UserServiceImpl implements UserService {
                 token.setToken(userAuthUtils.generateKey(10));
                 token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);
                 token.setUsers(user);
-                token.setExpiryDate(new Date(System.currentTimeMillis()+resetTokenExpiry*1000));
+                token.setExpiryDate(new Date(System.currentTimeMillis() + resetTokenExpiry * 1000));
                 user.setTokens(Collections.singletonList(token));
                 user.setRoles(roles);
-
-                String message ="Hello "+user.getUserProfile().getFirstName() +"This is your temporary password ,use this to change your password :"+token.getToken();
-                emailUtils.sendInvitationEmail(user.getEmail(),"User-Auth Invitation",message,fromEmail);
-            }else
                 userRepository.save(user);
-            log.info("User saved successfully : "+dto.getEmail());
-
+                tokenRepository.save(token);
+                String message = "Hello " + user.getUserProfile().getFirstName() + "This is your temporary password ,use this to change your password :" + token.getToken();
+                emailUtils.sendInvitationEmail(user.getEmail(), "User-Auth Invitation", message, fromEmail);
+            } else
+                userRepository.save(user);
+            log.info("User saved successfully : " + dto.getEmail());
+        }
     }
 
     @Override
@@ -290,10 +291,7 @@ public class UserServiceImpl implements UserService {
                 log.info("Login successfully :"+loginDto.getEmail());
                 return resDto;
             }
-        } else {
-            throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
-        }
-        return null;
+        }   throw new UserNotFoundException(ErrorCodes.INVALID_CREDENTIALS.getCode(), ErrorCodes.INVALID_CREDENTIALS.getValue());
     }
 
     /**
@@ -399,7 +397,8 @@ public class UserServiceImpl implements UserService {
             file.delete();
             user.getUserProfile().setProfilePicture(null);
             userRepository.save(user);
-        }
+        }else
+            throw new InvalidRequestException(ErrorCodes.FILE_NOT_FOUND.getCode(),ErrorCodes.FILE_NOT_FOUND.getValue());
         log.info("User profile image deleted successfully");
     }
 

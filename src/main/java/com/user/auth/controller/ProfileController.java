@@ -2,7 +2,7 @@ package com.user.auth.controller;
 
 import com.user.auth.dto.request.UserUpdateRoleReqDto;
 import com.user.auth.dto.response.*;
-import com.user.auth.service.UserService;
+import com.user.auth.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,7 +21,8 @@ import java.io.IOException;
 public class ProfileController {
 
     @Autowired
-    private UserService userService;
+    private ProfileService profileService;
+   
     /**
      * This method registers new user in system
      * @param
@@ -36,7 +37,7 @@ public class ProfileController {
             @RequestParam(name = "file", required = false) MultipartFile file, @RequestParam("userReqDto") String userReqDto,
             HttpServletRequest request) {
         ResponseDto responseDto;
-        userService.addUser(userReqDto, file);
+        profileService.addUser(userReqDto, file);
         responseDto =
                 new ResponseDto(new ResponseObject(200, "User added successfully. Please check email for account activation", null), HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
@@ -54,7 +55,7 @@ public class ProfileController {
     @PostMapping(path = "/user/add/profileImage") public ResponseEntity addProfileImage(
             @RequestParam(name = "file", required = false) MultipartFile file, HttpServletRequest request) {
         ResponseDto responseMessage;
-        userService.addProfileImage(file);
+        profileService.addProfileImage(file);
         responseMessage = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Profile image added successfully", null), HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
     }
@@ -67,7 +68,7 @@ public class ProfileController {
      */
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping(value = "/user/getAllAdminUsers") @ResponseBody public ResponseEntity getAllAdminUsers() {
-        UserListResponseDto userListResponseDto = userService.getAllAdminUsers();
+        UserListResponseDto userListResponseDto = profileService.getAllUsers();
         ResponseDto responseDto =
                 new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Admin users fetched successfully", userListResponseDto),
                         HttpStatus.OK);
@@ -84,7 +85,7 @@ public class ProfileController {
     @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
     @GetMapping(path = "/user/getProfile") public ResponseEntity getUserProfile(
             HttpServletRequest request) {
-        UserDto resDto = userService.getUserProfile();
+        UserDto resDto = profileService.getUserProfile();
         ResponseDto responseDto =
                 new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User profile fetched successfully", resDto), HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
@@ -101,7 +102,7 @@ public class ProfileController {
     @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
     @PostMapping(path = "/user/get/profileImage", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getUserProfileImage(HttpServletRequest request) throws IOException {
-        byte[] image = userService.getUserProfileImage();
+        byte[] image = profileService.getUserProfileImage();
         if (image != null) {
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(image);
         }
@@ -117,7 +118,7 @@ public class ProfileController {
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping(value = "user/deleteUserById") public ResponseEntity deleteUserById(@RequestParam(value = "userId", required = true) Long userId)
             throws Exception {
-        userService.deleteUserById(userId);
+        profileService.deleteUserById(userId);
         ResponseDto responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User deleted successfully", null), HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
@@ -126,7 +127,7 @@ public class ProfileController {
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     public ResponseEntity updateUserRole(HttpServletRequest httpServletRequest, @RequestBody UserUpdateRoleReqDto dto) {
         ResponseDto responseMessage;
-        UserUpdateRoleRes userUpdateRoleRes = userService.updateRole(dto);
+        UserUpdateRoleRes userUpdateRoleRes = profileService.updateRole(dto);
         responseMessage =
                 new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User Role updated successfully", userUpdateRoleRes), HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
@@ -143,7 +144,7 @@ public class ProfileController {
     @PostMapping(path = "/user/update")
     public ResponseEntity editUser(@RequestParam(name = "file", required = false) MultipartFile file, @RequestParam("userReqDto") String userReqDto){
         ResponseDto responseMessage;
-        userService.addUser(userReqDto,file);
+        profileService.addUser(userReqDto,file);
         responseMessage = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User updated successfully.",null),HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
     }
@@ -159,7 +160,7 @@ public class ProfileController {
     @DeleteMapping(path = "/user/delete/profileImage")
     public ResponseEntity deleteProfileImage(HttpServletRequest request) {
         ResponseDto responseDto;
-        userService.deleteProfileImage();
+        profileService.deleteProfileImage();
         responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Profile picture deleted", null), HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }

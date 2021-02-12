@@ -14,7 +14,6 @@ import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
 import com.user.auth.security.JwtProvider;
-import com.user.auth.service.AuthService;
 import com.user.auth.service.ProfileService;
 import com.user.auth.utils.EmailUtils;
 import com.user.auth.utils.UserAuthUtils;
@@ -89,6 +88,9 @@ public class ProfileServiceImpl implements ProfileService {
     @Value("${forgot.token.validity}")
     private Long forgotTokenValidity;
 
+    @Value("${reset.otp.size}")
+    private int otpSize;
+
     Logger log = LoggerFactory.getLogger(ProfileServiceImpl.class);
     /**
      * This method registers new user
@@ -97,7 +99,7 @@ public class ProfileServiceImpl implements ProfileService {
      */
     @Override
     public void addUser(String jsonString, MultipartFile file) {
-        User loggedInUser = authUtils.getLoggedInUser();
+       // User loggedInUser = authUtils.getLoggedInUser();
         ObjectMapper objectMapper = new ObjectMapper();
         UserDto dto = null;
         try {
@@ -108,45 +110,65 @@ public class ProfileServiceImpl implements ProfileService {
         }
         log.info("Saving user :"+dto.getEmail());
         Optional<User> existingUser =  userRepository.findByEmail(dto.getEmail());
-        boolean isSelfUpdate = loggedInUser.getEmail().equals(dto.getEmail()); //admin user
-        boolean isExistingDeletedUser = existingUser.isPresent() && existingUser.get().getDeleted();
+        boolean isDeletedUser = existingUser.isPresent() && existingUser.get().getDeleted();
         String profile_path;
-        if(!existingUser.isPresent() || isExistingDeletedUser || isSelfUpdate) {
-            User user = modelMapper.map(dto, User.class);
-            UserProfile userProfile = user.getUserProfile();
-            User isSelfUpdateOrExistingUser = isSelfUpdate ? loggedInUser : (existingUser.isPresent() ? existingUser.get() : null);
-            if (isSelfUpdate || isExistingDeletedUser) {
-                user.setUserId(isSelfUpdateOrExistingUser.getUserId());
-                userProfile.setId(isSelfUpdateOrExistingUser.getUserProfile().getId());
-            }
-            for (Address address : user.getAddresses())
-                address.setUser(user);
-            userProfile.setUser(user);
-            user.setDeleted(Boolean.FALSE);
-            profile_path = userAuthUtils.saveProfileImage(file, (isSelfUpdate) ? loggedInUser : user);
-            userProfile.setProfilePicture(profile_path);
-            if (!isSelfUpdate) {
-                userProfile.setActive(Boolean.FALSE);
+        if(!existingUser.isPresent() || isDeletedUser) {
+            User mappedUser = modelMapper.map(dto, User.class);
+            mappedUser.setDeleted(Boolean.FALSE);
+            User profileSet = isDeletedUser ? existingUser.get() : mappedUser;
+            profile_path = userAuthUtils.saveProfileImage(file, profileSet);
+            profileSet.getUserProfile().setProfilePicture(profile_path);
+            profileSet.getUserProfile().setActive(Boolean.FALSE);
+            if(!isDeletedUser){
                 List<Role> roles = new ArrayList<>();
                 for (String r : dto.getRoles()) {
                     Optional<Role> role = roleRepository.findByRole(r);
                     role.ifPresent(roles::add);
                 }
                 Token token = new Token();
-                token.setToken(userAuthUtils.generateKey(10));
+                token.setToken(userAuthUtils.generateKey(otpSize));
                 token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);
-                token.setUsers(user);
+                token.setUsers(mappedUser);
                 token.setExpiryDate(new Date(System.currentTimeMillis() + resetTokenExpiry * 1000));
-                user.setTokens(Collections.singletonList(token));
-                user.setRoles(roles);
-                userRepository.save(user);
+                mappedUser.setTokens(Collections.singletonList(token));
+                mappedUser.setRoles(roles);
+                userRepository.save(mappedUser);
                 tokenRepository.save(token);
-                String message = "Hello " + user.getUserProfile().getFirstName() + "This is your temporary password ,use this to change your password :" + token.getToken();
-                emailUtils.sendInvitationEmail(user.getEmail(), "User-Auth Invitation", message, fromEmail);
-            } else
-                userRepository.save(user);
+                String message = "Hello " + mappedUser.getUserProfile().getFirstName() + "This is your temporary password ,use this to change your password :" + token.getToken();
+                emailUtils.sendInvitationEmail(mappedUser.getEmail(), "User-Auth Invitation", message, fromEmail);
+            }else
+                throw new InvalidEmailException(ErrorCodes.EMAIL_ALREADY_EXISTS.getCode(), ErrorCodes.EMAIL_ALREADY_EXISTS.getValue());
             log.info("User saved successfully : " + dto.getEmail());
         }
+    }
+    @Override
+    public Boolean UpdateUser(String jsonString, MultipartFile file, HttpServletRequest request) {
+        User loggedUser = userAuthUtils.getLoggedInUser();
+        ObjectMapper objectMapper = new ObjectMapper();
+        UserDto userDto = null;
+        try {
+            userDto = objectMapper.readValue(jsonString, UserDto.class);
+        } catch (JsonProcessingException e) {
+            log.error("Error in mapping object");
+            e.printStackTrace();
+        }
+        if(!loggedUser.getEmail().equals(userDto.getEmail()))
+            throw new  InvalidRequestException(ErrorCodes.UNAUTHORIZED.getCode(),ErrorCodes.UNAUTHORIZED.getValue());
+        String profile_path;
+        User mappedUser = convertUserDtoToUser(userDto, loggedUser);
+        profile_path = userAuthUtils.saveProfileImage(file, loggedUser);
+        mappedUser.getUserProfile().setProfilePicture(profile_path);
+        userRepository.save(mappedUser);
+        return true;
+    }
+
+    private User convertUserDtoToUser(UserDto userDto, User loggedUser) {
+        User user = modelMapper.map(userDto, User.class);
+        user.setDeleted(Boolean.FALSE);
+        user.setRoles(loggedUser.getRoles());
+        user.setPassword(loggedUser.getPassword());
+        user.getUserProfile().setActive(Boolean.TRUE);
+        return user;
     }
 
     @Override

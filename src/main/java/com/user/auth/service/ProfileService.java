@@ -13,6 +13,8 @@ public interface ProfileService {
 
     void addUser(String userReqDto, MultipartFile file);
 
+    Boolean UpdateUser(String userReqDto, MultipartFile file, HttpServletRequest request);
+
     byte[] getUserProfileImage() throws IOException;
 
     void addProfileImage(MultipartFile file);

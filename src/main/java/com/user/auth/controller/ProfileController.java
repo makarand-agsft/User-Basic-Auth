@@ -144,7 +144,7 @@ public class ProfileController {
     @PostMapping(path = "/user/update")
     public ResponseEntity editUser(@RequestParam(name = "file", required = false) MultipartFile file, @RequestParam("userReqDto") String userReqDto){
         ResponseDto responseMessage;
-        profileService.addUser(userReqDto,file);
+        profileService.updateUser(userReqDto,file);
         responseMessage = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "User updated successfully.",null),HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseMessage);
     }

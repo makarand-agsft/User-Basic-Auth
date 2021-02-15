@@ -193,14 +193,14 @@ public class AuthServiceImpl implements AuthService {
      * @return user information with jwt token
      */
     @Override
-    public UserDto loginUser(UserLoginReqDto loginDto) {
+    public UserDto loginUser(UserLoginReqDto loginDto,HttpServletRequest httpServletRequest) {
         Optional<User> optUser = userRepository.findByEmail(loginDto.getEmail());
 
         if (optUser.isPresent()) {
             User user = optUser.get();
             if (passwordEncoder.matches(loginDto.getPassword(), user.getPassword()) && user.getUserProfile().getActive().equals(Boolean.TRUE)) {
                 Token token = new Token();
-                token.setToken(jwtProvider.generateToken(user));
+                token.setToken(jwtProvider.generateToken(user,httpServletRequest));
                 token.setTokenType(TokenType.LOGIN_TOKEN);
                 token.setCreatedBy(user.getUserProfile().getFirstName() + "." + user.getUserProfile().getLastName());
                 token.setUsers(user);

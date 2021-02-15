@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 
 public interface AuthService {
 
-    UserDto loginUser(UserLoginReqDto dto);
+    UserDto loginUser(UserLoginReqDto dto,HttpServletRequest httpServletRequest);
 
     void forgotPassword(ForgotPasswordDto forgotDto) throws Exception;
 

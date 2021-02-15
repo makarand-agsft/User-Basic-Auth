@@ -65,8 +65,8 @@ public class AuthController {
      * @date 09/02/2021
      */
     @PostMapping(path = "/user/login")
-    public ResponseEntity loginUser(@RequestBody UserLoginReqDto dto) {
-        UserDto response = authService.loginUser(dto);
+    public ResponseEntity loginUser(@RequestBody UserLoginReqDto dto,HttpServletRequest servletRequest) {
+        UserDto response = authService.loginUser(dto,servletRequest);
         ResponseDto responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Logged in successfully", response), HttpStatus.OK);
 
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);

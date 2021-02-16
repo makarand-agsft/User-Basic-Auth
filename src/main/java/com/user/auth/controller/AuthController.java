@@ -4,6 +4,8 @@ import com.user.auth.dto.request.*;
 import com.user.auth.dto.response.*;
 import com.user.auth.service.AuthService;
 import com.user.auth.utils.UserAuthUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,7 +27,7 @@ public class AuthController {
     @Autowired
    private UserAuthUtils userAuthUtils;
 
-
+    Logger logger= LoggerFactory.getLogger(AuthController.class);
     /**
      * This method is used for reset forgotten password.
      * @param forgotDto
@@ -34,7 +36,9 @@ public class AuthController {
      * @date 09/02/2021
      */
     @PostMapping(path = "user/forgotPassword")
-    public ResponseEntity forgotPassword(@RequestBody ForgotPasswordDto forgotDto) throws Exception {
+    public ResponseEntity forgotPassword(@RequestBody ForgotPasswordDto forgotDto , HttpServletRequest request) throws Exception {
+        String userAgent= request.getHeader("User-Agent");
+        logger.info("User agent info is {}"+userAgent);
         authService.forgotPassword(forgotDto);
         ResponseDto responseDto =
                 new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Your password token is sent to your registered email id.", null),

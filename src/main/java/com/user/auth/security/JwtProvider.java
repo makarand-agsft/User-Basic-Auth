@@ -6,15 +6,19 @@ import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
 import com.user.auth.repository.TokenRepository;
+import com.user.auth.service.impl.AuthServiceImpl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 @Component
@@ -26,6 +30,8 @@ public class JwtProvider {
 	public Long jwtTokenValidity;
 	@Autowired
 	ObjectMapper objectMapper;
+
+	Logger log = LoggerFactory.getLogger(JwtProvider.class);
 
 	@Autowired
 	private TokenRepository tokenRepository;
@@ -44,13 +50,21 @@ public class JwtProvider {
 
 	}
 
-	public String generateToken(User user) {
+	public String generateToken(User user, HttpServletRequest httpServletRequest) {
 
 		Map<String, Object> claims = new HashMap<>();
 		claims.put("roles", user.getRoles());
 		claims.put("userName", user.getEmail());
 		claims.put("firstName", user.getUserProfile().getFirstName());
 		claims.put("lastName", user.getUserProfile().getLastName());
+		if (httpServletRequest.getHeader("User-Agent").contains("Mobi")) {
+			claims.put("source", "mobile");
+			log.info("Device MOBILE");
+		} else {
+			claims.put("source", "desktop");
+			log.info("Device DESKTOP");
+
+		}
 		return Jwts.builder().setClaims(claims).setIssuedAt(new Date(System.currentTimeMillis()))
 				.setExpiration(new Date(System.currentTimeMillis() + jwtTokenValidity * 1000))
 				.signWith(SignatureAlgorithm.HS256, secretKey).compact();

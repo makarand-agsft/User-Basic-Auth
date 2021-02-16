@@ -23,8 +23,13 @@ public class Swagger2Config {
             aParameterBuilder.name("Authorization")                 // name of header
                     .modelRef(new ModelRef("string"))
                     .parameterType("header");
+            ParameterBuilder aParameterBuilder1 = new ParameterBuilder();
+            aParameterBuilder1.name("api-key")                 // name of header
+                    .modelRef(new ModelRef("string"))
+                    .parameterType("header");
             java.util.List<Parameter> aParameters = new ArrayList<>();
             aParameters.add(aParameterBuilder.build());
+            aParameters.add(aParameterBuilder1.build());
             return new Docket(DocumentationType.SWAGGER_2)  
               .select()                                  
               .apis(RequestHandlerSelectors.basePackage("com.user.auth.controller"))

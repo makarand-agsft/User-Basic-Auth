@@ -19,17 +19,22 @@ import java.util.Arrays;
 public class Swagger2Config {
         @Bean
         public Docket api() {
-            ParameterBuilder aParameterBuilder = new ParameterBuilder();
-            aParameterBuilder.name("Authorization")                 // name of header
+            ParameterBuilder jwtAuthToken = new ParameterBuilder();
+            jwtAuthToken.name("Authorization")
                     .modelRef(new ModelRef("string"))
                     .parameterType("header");
-            ParameterBuilder aParameterBuilder1 = new ParameterBuilder();
-            aParameterBuilder1.name("api-key")                 // name of header
+            ParameterBuilder apiKeyParam = new ParameterBuilder();
+            apiKeyParam.name("api-key")
+                    .modelRef(new ModelRef("string"))
+                    .parameterType("header");
+            ParameterBuilder t = new ParameterBuilder();
+            t.name("tenant")
                     .modelRef(new ModelRef("string"))
                     .parameterType("header");
             java.util.List<Parameter> aParameters = new ArrayList<>();
-            aParameters.add(aParameterBuilder.build());
-            aParameters.add(aParameterBuilder1.build());
+            aParameters.add(jwtAuthToken.build());
+            aParameters.add(apiKeyParam.build());
+            aParameters.add(t.build());
             return new Docket(DocumentationType.SWAGGER_2)  
               .select()                                  
               .apis(RequestHandlerSelectors.basePackage("com.user.auth.controller"))

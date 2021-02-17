@@ -1,16 +1,13 @@
 package com.user.auth.service;
 
-import com.user.auth.dto.request.ChangePasswordDto;
-import com.user.auth.dto.request.ForgotPasswordDto;
-import com.user.auth.dto.request.ResetPasswordReqDto;
-import com.user.auth.dto.request.UserLoginReqDto;
+import com.user.auth.dto.request.*;
 import com.user.auth.dto.response.UserDto;
 
 import javax.servlet.http.HttpServletRequest;
 
 public interface AuthService {
 
-    UserDto loginUser(UserLoginReqDto dto,HttpServletRequest httpServletRequest);
+    UserDto loginUser(UserLoginReqDto dto,HttpServletRequest httpServletRequest) ;
 
     void forgotPassword(ForgotPasswordDto forgotDto) throws Exception;
 
@@ -19,4 +16,6 @@ public interface AuthService {
     UserDto resetPassword(ResetPasswordReqDto dto);
 
     void logout(HttpServletRequest request);
+
+    MasterUserDto addTenant(MasterUserDto masterUserDto);
 }

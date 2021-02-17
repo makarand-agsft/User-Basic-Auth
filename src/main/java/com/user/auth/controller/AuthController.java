@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.sql.SQLException;
 
 /**
  * This class represents an endpoint of user authentication services
@@ -99,4 +100,12 @@ public class AuthController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
 
+    @PostMapping(path = "/user/add/tenant")
+    public ResponseEntity addTenant(@RequestBody MasterUserDto userDto){
+        ResponseDto responseDto;
+        authService.addTenant(userDto);
+
+        responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(),"Logged out successfully",null),HttpStatus.OK);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
+    }
 }

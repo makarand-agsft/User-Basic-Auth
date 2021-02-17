@@ -1,11 +1,7 @@
 package com.user.auth.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.user.auth.dto.response.UserUpdateRoleRes;
 import com.user.auth.dto.request.*;
 import com.user.auth.dto.response.UserDto;
-import com.user.auth.dto.response.UserListResponseDto;
 import com.user.auth.enums.ErrorCodes;
 import com.user.auth.enums.TokenType;
 import com.user.auth.exception.*;
@@ -13,10 +9,11 @@ import com.user.auth.model.*;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
-import com.user.auth.model.UserProfile;
 import com.user.auth.exception.InvalidEmailException;
 import com.user.auth.exception.InvalidPasswordException;
 import com.user.auth.exception.UserNotFoundException;
+
+import com.user.auth.repository.MasterUserRepository;
 import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
@@ -31,14 +28,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,7 +40,7 @@ import java.util.stream.Collectors;
  * This class is responsible for handling user authentication
  */
 @Service
-@Transactional
+@Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
 public class AuthServiceImpl implements AuthService {
 
     @Autowired
@@ -81,6 +75,8 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private JwtProvider jwtProvider;
 
+    @Autowired
+    private MasterUserRepository masterUserRepository;
 
     @Value("${jwt.header}")
     private String jwtHeader;
@@ -193,7 +189,7 @@ public class AuthServiceImpl implements AuthService {
      * @return user information with jwt token
      */
     @Override
-    public UserDto loginUser(UserLoginReqDto loginDto,HttpServletRequest httpServletRequest) {
+    public UserDto loginUser(UserLoginReqDto loginDto,HttpServletRequest httpServletRequest){
         Optional<User> optUser = userRepository.findByEmail(loginDto.getEmail());
 
         if (optUser.isPresent()) {
@@ -265,5 +261,15 @@ public class AuthServiceImpl implements AuthService {
         token.setExpired(true);
         tokenRepository.save(token);
         log.info("Logged out user :"+loggedInUser.getEmail());
+    }
+
+    @Override public MasterUserDto addTenant(MasterUserDto masterUserDto) {
+
+        if(masterUserDto.getName() == null || masterUserDto.getEmail() == null){
+            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),ErrorCodes.BAD_REQUEST.getValue());
+        }
+          MasterUser user= masterUserRepository.save(modelMapper.map(masterUserDto,MasterUser.class));
+          MasterUserDto response = modelMapper.map(user,MasterUserDto.class);
+          return response;
     }
 }

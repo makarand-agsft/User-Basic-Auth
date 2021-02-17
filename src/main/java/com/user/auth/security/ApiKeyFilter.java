@@ -1,7 +1,5 @@
 package com.user.auth.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.user.auth.model.APIKey;
-import com.user.auth.repository.ApiKeyRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +26,6 @@ public class ApiKeyFilter extends GenericFilterBean {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApiKeyFilter.class);
 
-    @Autowired
-    private ApiKeyRepository apiKeyRepository;
 
 
     @Value("${x-api-key}")
@@ -56,12 +52,9 @@ public class ApiKeyFilter extends GenericFilterBean {
             } else {
                 HttpServletResponse resp = (HttpServletResponse) response;
                 String error = "Invalid API KEY";
+                OutputStream outStream = resp.getOutputStream();
+                outStream.write(new ObjectMapper().writeValueAsString(error).getBytes());
 
-                resp.reset();
-                resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentLength(error.length());
-                OutputStream outStream = response.getOutputStream();
-                outStream.write(new ObjectMapper().writeValueAsString(resp).getBytes());
                 outStream.flush();
             }
         }catch (AuthenticationException e){

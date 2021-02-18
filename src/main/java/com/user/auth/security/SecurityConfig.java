@@ -1,5 +1,6 @@
 package com.user.auth.security;
 
+import com.user.auth.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -25,6 +26,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	private JwtProvider jwtProvider;
 
 	@Autowired UserDetailsService userDetailsService;
+
+	@Autowired
+	private AccountRepository accountRepository;
+
 	@Override
 	public void configure(WebSecurity web) throws Exception {
 		web.ignoring()

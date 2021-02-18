@@ -44,6 +44,8 @@ public class UserAuthApplication {
 	public AuditorAware<String> auditorAware(){
 		return new CustomAuditAware();
 	}
+
+
 }
 
 

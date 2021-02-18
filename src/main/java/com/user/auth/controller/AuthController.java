@@ -14,6 +14,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.SQLException;
 
 /**
@@ -98,14 +100,17 @@ public class AuthController {
         authService.logout(httpServletRequest);
             responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(),"Logged out successfully",null),HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
+
     }
 
+    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
     @PostMapping(path = "/user/add/tenant")
-    public ResponseEntity addTenant(@RequestBody MasterUserDto userDto){
+    public ResponseEntity addTenant(@RequestBody TenantDto userDto) throws SQLException, IOException {
         ResponseDto responseDto;
         authService.addTenant(userDto);
 
         responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(),"Logged out successfully",null),HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
+
 }

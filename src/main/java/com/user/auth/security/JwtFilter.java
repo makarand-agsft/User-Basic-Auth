@@ -1,9 +1,13 @@
 package com.user.auth.security;
 
+import com.user.auth.model.Account;
+import com.user.auth.multitenancy.TenantContext;
+import com.user.auth.repository.AccountRepository;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,16 +27,25 @@ import java.io.IOException;
  * @author makarand
  */
 @Component
+@Order(2)
 public class JwtFilter extends OncePerRequestFilter {
 
 
     private JwtProvider jwtProvider;
 
     private UserDetailsService userDetailsService;
-    public JwtFilter(JwtProvider jwtProvider,UserDetailsService userDetailsService) {
+
+    private AccountRepository accountRepository;
+
+    public JwtFilter(JwtProvider jwtProvider,UserDetailsService userDetailsService
+//            AccountRepository accountRepository
+    ) {
         this.jwtProvider = jwtProvider;
         this.userDetailsService = userDetailsService;
+//        this.accountRepository =accountRepository;
     }
+
+
 
     Logger logger = LoggerFactory.getLogger(JwtFilter.class);
     @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -43,6 +56,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String username = null;
         if (header != null) {
             try {
+
                 username = jwtProvider.getUsernameFromToken(header);
 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

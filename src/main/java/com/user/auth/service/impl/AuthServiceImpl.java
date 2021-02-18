@@ -5,15 +5,14 @@ import com.user.auth.dto.response.UserDto;
 import com.user.auth.enums.ErrorCodes;
 import com.user.auth.enums.TokenType;
 import com.user.auth.exception.*;
-import com.user.auth.model.*;
+import com.user.auth.model.Account;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
-import com.user.auth.exception.InvalidEmailException;
-import com.user.auth.exception.InvalidPasswordException;
-import com.user.auth.exception.UserNotFoundException;
 
-import com.user.auth.repository.MasterUserRepository;
+import com.user.auth.multitenancy.MultiTenantDataSourceConfig;
+import com.user.auth.multitenancy.TenantContext;
+import com.user.auth.repository.AccountRepository;
 import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
@@ -21,11 +20,13 @@ import com.user.auth.security.JwtProvider;
 import com.user.auth.service.AuthService;
 import com.user.auth.utils.EmailUtils;
 import com.user.auth.utils.UserAuthUtils;
+import org.apache.ibatis.jdbc.ScriptRunner;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -33,7 +34,14 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import javax.sql.DataSource;
+import java.io.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -75,9 +83,6 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private JwtProvider jwtProvider;
 
-    @Autowired
-    private MasterUserRepository masterUserRepository;
-
     @Value("${jwt.header}")
     private String jwtHeader;
 
@@ -90,6 +95,10 @@ public class AuthServiceImpl implements AuthService {
     @Value("${forgot.token.validity}")
     private Long forgotTokenValidity;
 
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired MultiTenantDataSourceConfig multiTenantDataSourceConfig;
     Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     /**
@@ -263,13 +272,25 @@ public class AuthServiceImpl implements AuthService {
         log.info("Logged out user :"+loggedInUser.getEmail());
     }
 
-    @Override public MasterUserDto addTenant(MasterUserDto masterUserDto) {
+    @Override public void addTenant(TenantDto tenantDto) throws SQLException, IOException {
 
-        if(masterUserDto.getName() == null || masterUserDto.getEmail() == null){
+        if (tenantDto.getName() == null) {
+            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(), ErrorCodes.BAD_REQUEST.getValue());
+        }
+        Account existingTenant =accountRepository.findByName(tenantDto.getName());
+        if(existingTenant!=null){
             throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),ErrorCodes.BAD_REQUEST.getValue());
         }
-          MasterUser user= masterUserRepository.save(modelMapper.map(masterUserDto,MasterUser.class));
-          MasterUserDto response = modelMapper.map(user,MasterUserDto.class);
-          return response;
+        Account tenant = modelMapper.map(tenantDto, Account.class);
+        accountRepository.save(tenant);
+        Connection connection = multiTenantDataSourceConfig.getAnyConnection();
+       connection.createStatement().execute("CREATE DATABASE "+tenant.getName());
+        connection.createStatement().execute("USE "+tenant.getName());
+        ScriptRunner scriptRunner = new ScriptRunner(connection);
+        ClassPathResource c = new ClassPathResource("db/tenant1.sql");
+        Reader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
+        scriptRunner.runScript(reader);
+
     }
+
 }

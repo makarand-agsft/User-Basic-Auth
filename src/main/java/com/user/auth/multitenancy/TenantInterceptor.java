@@ -3,6 +3,7 @@ package com.user.auth.multitenancy;
 import com.user.auth.model.Account;
 import com.user.auth.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -12,7 +13,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@Component public class TenantInterceptor extends OncePerRequestFilter {
+
+@Component
+@Order(1)
+public class TenantInterceptor extends OncePerRequestFilter {
 
 
     @Autowired AccountRepository accountRepository;

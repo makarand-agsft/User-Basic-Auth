@@ -27,7 +27,7 @@ import java.io.IOException;
  * @author makarand
  */
 @Component
-@Order(2)
+
 public class JwtFilter extends OncePerRequestFilter {
 
 
@@ -70,6 +70,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }
+
             }
         catch (IllegalArgumentException e) {
             logger.error("an error occured during getting username from token", e);

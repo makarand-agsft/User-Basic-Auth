@@ -1,5 +1,6 @@
 package com.user.auth.security;
 
+import com.user.auth.multitenancy.TenantInterceptor;
 import com.user.auth.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -30,6 +31,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	private AccountRepository accountRepository;
 
+	@Autowired
+	private TenantInterceptor tenantInterceptor;
 	@Override
 	public void configure(WebSecurity web) throws Exception {
 		web.ignoring()
@@ -49,7 +52,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.permitAll().anyRequest().authenticated().and().exceptionHandling()
 				.authenticationEntryPoint(authenticationEntryPoint).and().sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-		http.addFilterBefore(new JwtFilter(jwtProvider,userDetailsService), UsernamePasswordAuthenticationFilter.class);
+		http.addFilterBefore(tenantInterceptor, UsernamePasswordAuthenticationFilter.class);
 	}
 
 }

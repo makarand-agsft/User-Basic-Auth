@@ -290,6 +290,7 @@ public class AuthServiceImpl implements AuthService {
         ClassPathResource c = new ClassPathResource("db/tenant1.sql");
         Reader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
         scriptRunner.runScript(reader);
+        connection.close();
 
     }
 

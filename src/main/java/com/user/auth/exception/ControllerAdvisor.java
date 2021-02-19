@@ -53,4 +53,12 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
                 new ResponseDto(new ResponseObject(invalidTenantException.getCode(), invalidTenantException.getMessage(), null), HttpStatus.OK);
         return new ResponseEntity<>(responseDto, HttpStatus.OK);
     }
+
+
+    @ExceptionHandler(InvalidApiKeyException.class)
+    public ResponseEntity<Object> invalidApiKey(InvalidApiKeyException invalidApiKeyException) {
+        ResponseDto responseDto =
+                new ResponseDto(new ResponseObject(invalidApiKeyException.getCode(), invalidApiKeyException.getMessage(), null), HttpStatus.OK);
+        return new ResponseEntity<>(responseDto, HttpStatus.OK);
+    }
 }

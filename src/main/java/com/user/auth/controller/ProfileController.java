@@ -67,10 +67,10 @@ public class ProfileController {
      * @return
      */
     @PreAuthorize("hasAnyAuthority('ADMIN')")
-    @GetMapping(value = "/user/getAllAdminUsers") @ResponseBody public ResponseEntity getAllAdminUsers() {
+    @GetMapping(value = "/user/getAllUsers") @ResponseBody public ResponseEntity getAllAdminUsers() {
         UserListResponseDto userListResponseDto = profileService.getAllUsers();
         ResponseDto responseDto =
-                new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Admin users fetched successfully", userListResponseDto),
+                new ResponseDto(new ResponseObject(HttpStatus.OK.value(), "Users fetched successfully", userListResponseDto),
                         HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }

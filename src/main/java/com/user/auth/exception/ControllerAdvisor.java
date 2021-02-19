@@ -46,4 +46,11 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
                 HttpStatus.OK);
         return new ResponseEntity<>(responseDto,HttpStatus.OK);
     }
+
+    @ExceptionHandler(InvalidTenantException.class)
+    public ResponseEntity<Object> invalidTenant(InvalidTenantException invalidTenantException) {
+        ResponseDto responseDto =
+                new ResponseDto(new ResponseObject(invalidTenantException.getCode(), invalidTenantException.getMessage(), null), HttpStatus.OK);
+        return new ResponseEntity<>(responseDto, HttpStatus.OK);
+    }
 }

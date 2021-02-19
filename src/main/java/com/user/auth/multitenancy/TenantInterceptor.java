@@ -1,5 +1,7 @@
 package com.user.auth.multitenancy;
 
+import com.user.auth.enums.ErrorCodes;
+import com.user.auth.exception.InvalidTenantException;
 import com.user.auth.model.Account;
 import com.user.auth.repository.AccountRepository;
 import com.user.auth.security.JwtProvider;
@@ -43,7 +45,7 @@ public class TenantInterceptor extends OncePerRequestFilter {
             Account account = accountRepository.findByName(tenant);
             try {
                 if (account == null) {
-                    throw new Exception("Invalid tenant");
+                    throw new InvalidTenantException(ErrorCodes.BAD_REQUEST.getCode(),"Invalid tenant");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -70,9 +72,9 @@ public class TenantInterceptor extends OncePerRequestFilter {
 
                 }
             } catch (IllegalArgumentException e) {
-                logger.error("an error occured during getting username from token", e);
+                logger.error("An error occurred during getting username from token", e);
             } catch (ExpiredJwtException e) {
-                logger.warn("the token is expired and not valid anymore", e);
+                logger.warn("The token is expired and not valid anymore", e);
             } catch (SignatureException e) {
                 logger.error("Authentication Failed. Username or Password not valid.");
             }

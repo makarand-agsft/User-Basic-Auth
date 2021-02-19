@@ -252,7 +252,7 @@ public class AuthServiceImpl implements AuthService {
         log.info("Reset Token deleted for user :"+resetPasswordReqDto.getEmail());
         UserDto userDto = modelMapper.map(user, UserDto.class);
         userDto.setRoles(user.getRoles().stream().map(x -> x.getRole()).collect(Collectors.toList()));
-        log.info("Password reset email sent :"+resetPasswordReqDto.getEmail());
+        log.info("Password reset successful for user :"+resetPasswordReqDto.getEmail());
         return userDto;
 
     }

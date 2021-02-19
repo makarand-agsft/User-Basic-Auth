@@ -109,7 +109,7 @@ public class AuthController {
         ResponseDto responseDto;
         authService.addTenant(userDto);
 
-        responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(),"Logged out successfully",null),HttpStatus.OK);
+        responseDto = new ResponseDto(new ResponseObject(HttpStatus.OK.value(),"Tenant added successfully",null),HttpStatus.OK);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
 

@@ -1,5 +1,6 @@
 package com.user.auth.dto.response;
 
+import com.user.auth.constants.ApiStatus;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -9,11 +10,19 @@ import org.springframework.http.HttpStatus;
 public class ResponseDto {
 
     private ResponseObject responseObject;
-    private HttpStatus httpStatus;
+    private ApiStatus apiStatus;
 
-    public ResponseDto(ResponseObject responseObject, HttpStatus httpStatus) {
+    public ResponseDto(ResponseObject responseObject, ApiStatus apiStatus) {
         this.responseObject = responseObject;
-        this.httpStatus = httpStatus;
+        this.apiStatus = apiStatus;
+    }
+
+    public ApiStatus getApiStatus() {
+        return apiStatus;
+    }
+
+    public void setApiStatus(ApiStatus apiStatus) {
+        this.apiStatus = apiStatus;
     }
 
     public ResponseObject getResponseObject() {

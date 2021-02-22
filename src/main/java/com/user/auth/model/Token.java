@@ -1,6 +1,6 @@
 package com.user.auth.model;
 
-import com.user.auth.enums.TokenType;
+import com.user.auth.constants.TokenType;
 
 import javax.persistence.*;
 import java.util.Date;

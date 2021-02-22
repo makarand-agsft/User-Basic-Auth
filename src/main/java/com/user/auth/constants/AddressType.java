@@ -1,4 +1,4 @@
-package com.user.auth.enums;
+package com.user.auth.constants;
 
 public enum AddressType {
     OFFICE,

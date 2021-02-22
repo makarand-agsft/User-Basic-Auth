@@ -1,17 +1,14 @@
 package com.user.auth.service.impl;
 
+import com.user.auth.constants.TokenType;
 import com.user.auth.dto.request.*;
 import com.user.auth.dto.response.UserDto;
-import com.user.auth.enums.ErrorCodes;
-import com.user.auth.enums.TokenType;
 import com.user.auth.exception.*;
 import com.user.auth.model.Account;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
-
 import com.user.auth.multitenancy.MultiTenantDataSourceConfig;
-import com.user.auth.multitenancy.TenantContext;
 import com.user.auth.repository.AccountRepository;
 import com.user.auth.repository.RoleRepository;
 import com.user.auth.repository.TokenRepository;
@@ -21,11 +18,13 @@ import com.user.auth.service.AuthService;
 import com.user.auth.utils.EmailUtils;
 import com.user.auth.utils.UserAuthUtils;
 import org.apache.ibatis.jdbc.ScriptRunner;
+import org.apache.tomcat.jni.Local;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,14 +33,13 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.sql.DataSource;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -99,6 +97,9 @@ public class AuthServiceImpl implements AuthService {
     private AccountRepository accountRepository;
 
     @Autowired MultiTenantDataSourceConfig multiTenantDataSourceConfig;
+
+    @Autowired
+    MessageSource messageSource;
     Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     /**
@@ -113,19 +114,20 @@ public class AuthServiceImpl implements AuthService {
                 log.info("Forgot password request received for user :"+forgotDto.getEmail());
                 Optional<User> userFromDb = userRepository.findByEmail(forgotDto.getEmail());
                 if (userFromDb.isEmpty()) {
-                    throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
+                    throw new UserNotFoundException(messageSource.getMessage("user.not.found",null, Locale.ENGLISH));
                 }
                 if(!sendTokenMailToUser(userFromDb.get(), TokenType.FORGOT_PASSWORD_TOKEN)){
-                    throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),"Email sending error");
+                    throw new InvalidRequestException(messageSource.getMessage("error.sending.email", null,
+                            Locale.ENGLISH));
                 }
                 userRepository.save(userFromDb.get());
                 log.info("Forgot password email token sent to user :"+forgotDto.getEmail());
             } else {
                 log.info("Invalid email for forgot password request");
-                throw new InvalidEmailException(ErrorCodes.BAD_REQUEST.getCode(), ErrorCodes.BAD_REQUEST.getValue());
+                throw new InvalidEmailException(messageSource.getMessage("invalid.email",null, Locale.ENGLISH));
             }
         } else {
-            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(), ErrorCodes.BAD_REQUEST.getValue());
+            throw new InvalidRequestException(messageSource.getMessage("invalid.request",null,Locale.ENGLISH));
         }
     }
 
@@ -134,31 +136,32 @@ public class AuthServiceImpl implements AuthService {
      * @author Dipak Desai
      * @param changePasswordDto
      */
-    @Override public void changePassword(ChangePasswordDto changePasswordDto) {
+    @Override
+    public void changePassword(ChangePasswordDto changePasswordDto) {
         if (changePasswordDto != null && changePasswordDto.getEmail() != null && changePasswordDto.getOldPassword() != null && changePasswordDto
                 .getNewPassword() != null) {
             User loggedInUser = userAuthUtils.getLoggedInUser();
             if (loggedInUser.getEmail().equalsIgnoreCase(changePasswordDto.getEmail())) {
-                log.info("Change password request received for user :"+changePasswordDto.getEmail());
+                log.info("Change password request received for user :" + changePasswordDto.getEmail());
                 Optional<User> userFromDb = userRepository.findByEmail(loggedInUser.getEmail());
                 if (userFromDb.isPresent()) {
                     if (passwordEncoder.matches(changePasswordDto.getOldPassword(), userFromDb.get().getPassword())) {
                         userFromDb.get().setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
                         userRepository.save(userFromDb.get());
                     } else {
-                        log.info("Invalid credentials provided for change password :"+changePasswordDto.getEmail());
-                        throw new InvalidPasswordException(ErrorCodes.INVALID_CREDENTIALS.getCode(), ErrorCodes.INVALID_CREDENTIALS.getValue());
+                        log.info("Invalid credentials provided for change password :" + changePasswordDto.getEmail());
+                        throw new InvalidPasswordException();
                     }
                 } else {
-                    log.info("User not found :"+changePasswordDto.getEmail());
-                    throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
+                    log.info("User not found :" + changePasswordDto.getEmail());
+                    throw new UserNotFoundException(messageSource.getMessage("user.not.found", null, Locale.ENGLISH));
                 }
             } else {
-                log.info("Invalid email provided for change password request : "+changePasswordDto.getEmail());
-                throw new InvalidPasswordException(ErrorCodes.INVALID_CREDENTIALS.getCode(), ErrorCodes.INVALID_CREDENTIALS.getValue());
+                log.info("Invalid email provided for change password request : " + changePasswordDto.getEmail());
+                throw new InvalidPasswordException(messageSource.getMessage("invalid.password", null, Locale.ENGLISH));
             }
         } else {
-            throw new UnAuthorisedException(ErrorCodes.UNAUTHORIZED.getCode(), ErrorCodes.UNAUTHORIZED.getValue());
+            throw new UnAuthorisedException(messageSource.getMessage("unauthorized.access", null, Locale.ENGLISH));
         }
     }
 
@@ -222,7 +225,7 @@ public class AuthServiceImpl implements AuthService {
                 log.info("Login successfully :"+loginDto.getEmail());
                 return resDto;
             }
-        }   throw new UserNotFoundException(ErrorCodes.INVALID_CREDENTIALS.getCode(), ErrorCodes.INVALID_CREDENTIALS.getValue());
+        }   throw new UserNotFoundException();
     }
 
 
@@ -235,15 +238,15 @@ public class AuthServiceImpl implements AuthService {
     @Override public UserDto resetPassword(ResetPasswordReqDto resetPasswordReqDto) {
         User user = userRepository.findByEmail(resetPasswordReqDto.getEmail()).orElse(null);
         if (null == user) {
-            throw new UserNotFoundException(ErrorCodes.USER_NOT_FOUND.getCode(), ErrorCodes.USER_NOT_FOUND.getValue());
+            throw new UserNotFoundException();
         }
         log.info("Resetting password for user : "+resetPasswordReqDto.getEmail());
         Token token = tokenRepository.findByTokenAndUsersUserId(resetPasswordReqDto.getToken(), user.getUserId());
         if (null == token) {
-            throw new UnAuthorisedException(ErrorCodes.UNAUTHORIZED.getCode(), "Either your password is already reset OR you have entered bad credentials");
+            throw new UnAuthorisedException("Either your password is already reset OR you have entered bad credentials");
         }
         if(token.getExpiryDate().getTime() < new Date().getTime()){
-            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),"Token expired");
+            throw new InvalidRequestException("Token expired");
         }
         user.setPassword(passwordEncoder.encode(resetPasswordReqDto.getPassword()));
         user.getUserProfile().setActive(true);
@@ -275,11 +278,11 @@ public class AuthServiceImpl implements AuthService {
     @Override public void addTenant(TenantDto tenantDto) throws SQLException, IOException {
 
         if (tenantDto.getName() == null) {
-            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(), ErrorCodes.BAD_REQUEST.getValue());
+            throw new InvalidRequestException();
         }
         Account existingTenant =accountRepository.findByName(tenantDto.getName());
         if(existingTenant!=null){
-            throw new InvalidRequestException(ErrorCodes.BAD_REQUEST.getCode(),ErrorCodes.BAD_REQUEST.getValue());
+            throw new InvalidRequestException();
         }
         Account tenant = modelMapper.map(tenantDto, Account.class);
         accountRepository.save(tenant);

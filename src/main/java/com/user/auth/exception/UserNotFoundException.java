@@ -2,20 +2,11 @@ package com.user.auth.exception;
 
 public class UserNotFoundException extends RuntimeException {
 
-    int code;
-
-    public int getCode() {
-        return code;
+    public UserNotFoundException() {
     }
 
-    public void setCode(int code) {
-        this.code = code;
-    }
-
-    public UserNotFoundException(int code, String message) {
-
+    public UserNotFoundException(String message) {
         super(message);
-        this.code = code;
     }
 
 }

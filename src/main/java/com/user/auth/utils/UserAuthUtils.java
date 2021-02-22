@@ -138,7 +138,7 @@ public class UserAuthUtils {
             throw new RuntimeException("Authorization failed");
         }
         List<Role> roleList =jwtProvider.getRolesfromToken(token);
-        return roleList.stream().anyMatch(role ->role.getRole().equalsIgnoreCase(com.user.auth.enums.Role.ADMIN.toString()));
+        return roleList.stream().anyMatch(role ->role.getRole().equalsIgnoreCase(com.user.auth.constants.Role.ADMIN.toString()));
 
 
     }

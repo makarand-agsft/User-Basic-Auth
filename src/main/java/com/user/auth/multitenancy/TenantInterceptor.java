@@ -1,6 +1,6 @@
 package com.user.auth.multitenancy;
 
-import com.user.auth.enums.ErrorCodes;
+import com.user.auth.constants.ErrorCodes;
 import com.user.auth.exception.InvalidTenantException;
 import com.user.auth.model.Account;
 import com.user.auth.repository.AccountRepository;
@@ -8,7 +8,6 @@ import com.user.auth.security.JwtProvider;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,7 +44,7 @@ public class TenantInterceptor extends OncePerRequestFilter {
             Account account = accountRepository.findByName(tenant);
             try {
                 if (account == null) {
-                    throw new InvalidTenantException(ErrorCodes.BAD_REQUEST.getCode(),"Invalid tenant");
+                    throw new InvalidTenantException();
                 }
             } catch (Exception e) {
                 e.printStackTrace();

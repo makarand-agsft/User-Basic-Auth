@@ -1,7 +1,7 @@
 package com.user.auth.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.user.auth.enums.AddressType;
+import com.user.auth.constants.AddressType;
 
 import javax.persistence.*;
 

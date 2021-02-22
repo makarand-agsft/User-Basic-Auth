@@ -1,6 +1,7 @@
 package com.user.auth.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.user.auth.constants.ApiStatus;
 import com.user.auth.dto.response.ResponseDto;
 import com.user.auth.dto.response.ResponseObject;
 import org.springframework.http.HttpStatus;
@@ -29,7 +30,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         ResponseDto resp =
                 new ResponseDto(new ResponseObject(HttpStatus.UNAUTHORIZED.value(),
-                        "Unauthorzied Access to API", null),HttpStatus.OK);
+                        "Unauthorzied Access to API", null), ApiStatus.SUCCESS);
         OutputStream outStream = httpServletResponse.getOutputStream();
         outStream.write(new ObjectMapper().writeValueAsString(resp).getBytes());
         outStream.flush();

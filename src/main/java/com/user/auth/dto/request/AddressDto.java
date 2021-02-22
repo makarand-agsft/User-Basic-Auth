@@ -1,6 +1,6 @@
 package com.user.auth.dto.request;
 
-import com.user.auth.enums.AddressType;
+import com.user.auth.constants.AddressType;
 import com.user.auth.model.AuditingEntity;
 
 public class AddressDto extends AuditingEntity {

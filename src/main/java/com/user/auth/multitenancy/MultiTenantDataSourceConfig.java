@@ -1,5 +1,7 @@
 package com.user.auth.multitenancy;
 
+import com.user.auth.model.Account;
+import com.user.auth.repository.AccountRepository;
 import org.hibernate.engine.jdbc.connections.spi.AbstractDataSourceBasedMultiTenantConnectionProviderImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -11,6 +13,7 @@ import java.sql.SQLException;
 public class MultiTenantDataSourceConfig extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl {
 
     @Autowired private DataSource dataSource;
+
 
     private String DEFAULT_TENANT = "master";
 
@@ -31,6 +34,7 @@ public class MultiTenantDataSourceConfig extends AbstractDataSourceBasedMultiTen
         connection.close();
 
     }
+
 
     @Override public Connection getConnection(String tenantIdentifier) throws SQLException {
         tenantIdentifier = TenantContext.getCurrentTenant();

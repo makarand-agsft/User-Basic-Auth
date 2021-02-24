@@ -1,6 +1,6 @@
 package com.user.auth.dto.request;
 
-public class ResetPasswordReqDto {
+public class ActivateUserDto {
 
     private String email;
     private String token;

@@ -1,14 +1,26 @@
 package com.user.auth.dto.request;
 
+import com.user.auth.dto.response.UserDto;
+
 public class TenantDto {
 
-    private String name;
+    private String tenantName;
 
-    public String getName() {
-        return name;
+    public String getTenantName() {
+        return tenantName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setTenantName(String tenantName) {
+        this.tenantName = tenantName;
+    }
+
+    private UserDto userDto;
+
+    public UserDto getUserDto() {
+        return userDto;
+    }
+
+    public void setUserDto(UserDto userDto) {
+        this.userDto = userDto;
     }
 }

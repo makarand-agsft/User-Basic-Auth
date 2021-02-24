@@ -18,8 +18,6 @@ public class AddressDto extends AuditingEntity {
 
     private Long pincode;
 
-
-
     public Long getId() {
         return id;
     }

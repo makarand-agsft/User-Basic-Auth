@@ -4,7 +4,6 @@ import com.user.auth.dto.request.*;
 import com.user.auth.dto.response.UserDto;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -16,9 +15,9 @@ public interface AuthService {
 
     void changePassword(ChangePasswordDto changePasswordDto);
 
-    UserDto resetPassword(ResetPasswordReqDto dto);
+    UserDto activateUser(ActivateUserDto dto);
 
     void logout(HttpServletRequest request);
 
-    void addTenant(TenantDto tenantDto) throws SQLException, IOException;
+    void addTenant(TenantDto tenantDto) throws IOException, SQLException;
 }

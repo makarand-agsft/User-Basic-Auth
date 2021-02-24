@@ -20,7 +20,15 @@ public class Role extends AuditingEntity {
 
 	@Column(name = "role")
 	private String role;
-	
+
+	public Role(String role) {
+		this.role = role;
+	}
+
+	Role(){
+
+	}
+
 	public Long getRoleId() {
 		return roleId;
 	}

@@ -1,12 +1,24 @@
 package com.user.auth.dto.response;
 
 import com.user.auth.dto.request.AddressDto;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDto {
+    private MultipartFile multipartFile;
+
     private Long userId;
+
+    public MultipartFile getMultipartFile() {
+        return multipartFile;
+    }
+
+    public void setMultipartFile(MultipartFile multipartFile) {
+        this.multipartFile = multipartFile;
+    }
+
     private UserProfileDto userProfile;
     private String email;
     private List<AddressDto> addresses;

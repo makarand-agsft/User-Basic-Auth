@@ -6,12 +6,15 @@ import org.springframework.stereotype.Component;
 
 public class TenantContext {
 
+    final public static String DEFAULT_TENANT = "master";
 
-    private static ThreadLocal<String> currentTenant = new ThreadLocal<>();
+    private static ThreadLocal<String> currentTenant = new ThreadLocal<String>() {
+        @Override
+        protected String initialValue() {
+            return DEFAULT_TENANT;
+        }
+    };
 
-    static {
-        currentTenant.set("master");
-    }
     public  static String getCurrentTenant() {
         return currentTenant.get();
     }

@@ -38,7 +38,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		web.ignoring()
 
 				.antMatchers("/swagger-ui.html", "/auth/login","/auth/forgot-password","/auth/activate-user"
-				,"/user/changePassword");
+				,"/user/changePassword","/hello");
 
 		web.ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
 	}

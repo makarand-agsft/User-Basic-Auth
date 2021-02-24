@@ -6,7 +6,6 @@ import com.user.auth.dto.response.*;
 import com.user.auth.exception.*;
 import com.user.auth.service.AuthService;
 import com.user.auth.utils.UserAuthUtils;
-import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Locale;
 
 /**
@@ -116,10 +113,10 @@ public class AuthController {
      * @return Success message of user activation
      */
     @PostMapping(path = "/activate-user")
-    public ResponseEntity activateUser(@RequestBody ActivateUserDto dto) {
+    public ResponseEntity activateUser(@RequestParam("email") String email,@RequestParam("token") String token,@RequestBody ActivateUserDto dto) {
         ResponseDto responseDto = null;
         try {
-            UserDto response = authService.activateUser(dto);
+            UserDto response = authService.activateUser(dto,email,token );
             responseDto =
                     new ResponseDto(new ResponseObject(200, "User is Activated and changed password successfully", response),
                             ApiStatus.SUCCESS);
@@ -144,19 +141,5 @@ public class AuthController {
 
     }
 
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
-    @PostMapping(path = "/add/tenant")
-    public ResponseEntity addTenant(@RequestBody TenantDto userDto) throws IOException, SQLException {
-
-        ResponseDto responseDto;
-        try {
-            authService.addTenant(userDto);
-            responseDto = new ResponseDto(new ResponseObject(200, "Tenant added successfully", null), ApiStatus.SUCCESS);
-        } catch (InvalidRequestException exception) {
-            authService.addTenant(userDto);
-            responseDto = new ResponseDto(new ResponseObject(201, exception.getMessage(), null), ApiStatus.FAILURE);
-        }
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
-    }
 
 }

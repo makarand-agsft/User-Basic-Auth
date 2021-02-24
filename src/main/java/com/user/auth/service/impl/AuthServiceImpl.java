@@ -11,26 +11,16 @@ import com.user.auth.security.JwtProvider;
 import com.user.auth.service.AuthService;
 import com.user.auth.utils.EmailUtils;
 import com.user.auth.utils.UserAuthUtils;
-import org.apache.ibatis.jdbc.ScriptRunner;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -158,7 +148,7 @@ public class AuthServiceImpl implements AuthService {
                         userRepository.save(userFromDb.get());
                     } else {
                         log.info("Invalid credentials provided for change password :" + changePasswordDto.getEmail());
-                        throw new InvalidPasswordException(messageSource.getMessage("invalid.password",null,Locale.ENGLISH));
+                        throw new InvalidPasswordException(messageSource.getMessage("invalid.password", null, Locale.ENGLISH));
                     }
                 } else {
                     log.info("User not found :" + changePasswordDto.getEmail());
@@ -197,7 +187,7 @@ public class AuthServiceImpl implements AuthService {
                 tokenToBeSave.setExpiryDate(new Date(System.currentTimeMillis() + resetTokenExpiry * 1000));
             }
             tokenRepository.save(tokenToBeSave);
-            emailUtils.sendInvitationEmail(user.getEmail(), subject, text, fromEmail);
+            emailUtils.sendInvitationEmail(user.getEmail(), subject, text, fromEmail,"");
             log.info("Email sent successfully with " + tokenType + "to :" + user.getEmail());
             return true;
         }
@@ -237,39 +227,41 @@ public class AuthServiceImpl implements AuthService {
                 return resDto;
             }
         }
-        throw new UserNotFoundException(messageSource.getMessage("user.not.found",null,Locale.ENGLISH));
+        throw new UserNotFoundException(messageSource.getMessage("user.not.found", null, Locale.ENGLISH));
     }
 
 
     /**
      * This method resets the one time password of user sent on email
      *
-     * @param resetPasswordReqDto containing user one time password and email address
+     * @param activateUserDto containing user one time password and email address
+     * @param email
+     * @param userToken
      * @return Success message of user activation
      * @author akshay kamble
      */
     @Override
-    public UserDto activateUser(ActivateUserDto resetPasswordReqDto) {
-        User user = userRepository.findByEmail(resetPasswordReqDto.getEmail()).orElse(null);
+    public UserDto activateUser(ActivateUserDto activateUserDto, String email, String userToken) {
+        User user = userRepository.findByEmail(email).orElse(null);
         if (null == user) {
-            throw new UserNotFoundException(messageSource.getMessage("user.not.found",null,Locale.ENGLISH));
+            throw new UserNotFoundException(messageSource.getMessage("user.not.found", null, Locale.ENGLISH));
         }
-        log.info("Resetting password for user : " + resetPasswordReqDto.getEmail());
-        Token token = tokenRepository.findByTokenAndUsersUserId(resetPasswordReqDto.getToken(), user.getUserId());
+        log.info("Resetting password for user : " + email);
+        Token token = tokenRepository.findByTokenAndUsersUserId(userToken, user.getUserId());
         if (null == token) {
-            throw new UnAuthorisedException(messageSource.getMessage("already.reset.password",null,Locale.ENGLISH));
+            throw new UnAuthorisedException(messageSource.getMessage("already.reset.password", null, Locale.ENGLISH));
         }
         if (token.getExpiryDate().getTime() < new Date().getTime()) {
-            throw new InvalidRequestException(messageSource.getMessage("token.expired",null,Locale.ENGLISH));
+            throw new InvalidRequestException(messageSource.getMessage("token.expired", null, Locale.ENGLISH));
         }
-        user.setPassword(passwordEncoder.encode(resetPasswordReqDto.getPassword()));
+        user.setPassword(passwordEncoder.encode(activateUserDto.getPassword()));
         user.getUserProfile().setActive(true);
         userRepository.save(user);
         tokenRepository.delete(token);
-        log.info("Reset Token deleted for user :" + resetPasswordReqDto.getEmail());
+        log.info("Reset Token deleted for user :" + email);
         UserDto userDto = modelMapper.map(user, UserDto.class);
         userDto.setRoles(user.getRoles().stream().map(x -> x.getRole()).collect(Collectors.toList()));
-        log.info("Password reset successful for user :" + resetPasswordReqDto.getEmail());
+        log.info("Password reset successful for user :" + email);
         return userDto;
 
     }
@@ -296,103 +288,4 @@ public class AuthServiceImpl implements AuthService {
         log.info("Logged out user :" + loggedInUser.getEmail());
     }
 
-    @Override
-    public void addTenant(TenantDto tenantDto) throws SQLException, IOException {
-
-        if (tenantDto.getTenantName() == null) {
-            throw new InvalidRequestException(messageSource.getMessage("invalid.request",null,Locale.ENGLISH));
-        }
-        Account existingTenant = accountRepository.findByName(tenantDto.getTenantName());
-        if (existingTenant != null) {
-            throw new InvalidRequestException(messageSource.getMessage("tenant.already.exist",null,Locale.ENGLISH));
-        }
-        Account tenant = modelMapper.map(tenantDto, Account.class);
-        Account savedTenant = accountRepository.save(tenant);
-        Connection connection = multiTenantDataSourceConfig.getAnyConnection();
-        connection.createStatement().execute("CREATE DATABASE " + tenant.getName());
-        connection.createStatement().execute("USE " + tenant.getName());
-        ScriptRunner scriptRunner = new ScriptRunner(connection);
-        ClassPathResource c = new ClassPathResource("db/tenant1.sql");
-        Reader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
-        scriptRunner.runScript(reader);
-        addTenantAdmin(tenantDto);
-        TenantInfo tenantInfo = new TenantInfo();
-        tenantInfo.setAddedBy(userAuthUtils.getLoggedInUserName());
-        tenantInfo.setTenantId(savedTenant.getId());
-        tenantInfo.setActive(Boolean.TRUE);
-        tenantInfoRepository.save(tenantInfo);
-        connection.close();
-
-    }
-
-    private void addTenantAdmin(TenantDto tenantDto) throws SQLException {
-
-        Connection connection = null;
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + tenantDto.getTenantName(), userName, password);
-            PreparedStatement adminRoleInsert = connection.prepareStatement("insert into role(role) values (?)");
-            adminRoleInsert.setString(1, com.user.auth.constants.Role.ADMIN.name());
-            PreparedStatement userRoleInsert = connection.prepareStatement("insert into role(role) values (?)");
-            userRoleInsert.setString(1, com.user.auth.constants.Role.USER.name());
-            PreparedStatement userInsert = connection.prepareStatement("insert into user(id,email, is_deleted) values (?,?,?)");
-            userInsert.setInt(1, 1);
-            userInsert.setString(2, tenantDto.getUserDto().getEmail());
-            userInsert.setBoolean(3, false);
-
-            PreparedStatement userProfileInsert = connection.prepareStatement
-                    ("insert into user_profile(id,created_by,created_date, first_name, is_active, last_name, mobile, user_id) values (?,?,?,?,?,?,?,?)");
-            userProfileInsert.setInt(1, 1);
-            userProfileInsert.setString(2, "");
-            userProfileInsert.setDate(3, null);
-            userProfileInsert.setString(4, tenantDto.getUserDto().getUserProfile().getFirstName());
-            userProfileInsert.setString(6, tenantDto.getUserDto().getUserProfile().getLastName());
-            userProfileInsert.setBoolean(5, true);
-            userProfileInsert.setLong(7, tenantDto.getUserDto().getUserProfile().getMobileNumber());
-            userProfileInsert.setInt(8, 1);
-
-            PreparedStatement userRolesInsert = connection.prepareStatement
-                    ("insert into user_roles(user_id, role_id) values (?,?)");
-            userRolesInsert.setInt(1, 1);
-            userRolesInsert.setInt(2, 1);
-
-            userInsert.executeUpdate();
-            adminRoleInsert.executeUpdate();
-            userRoleInsert.executeUpdate();
-            userProfileInsert.executeUpdate();
-            userRolesInsert.executeUpdate();
-            for (AddressDto addressDto : tenantDto.getUserDto().getAddresses()) {
-                PreparedStatement addressInsert = connection.prepareStatement
-                        ("insert into address(address_string, address_type, city, country, pincode, state, user_id) values(?,?,?,?,?,?,?)");
-
-                addressInsert.setString(1, addressDto.getAddressString());
-                addressInsert.setString(2, addressDto.getAddressType().name());
-                addressInsert.setString(3, addressDto.getCity());
-                addressInsert.setString(4, addressDto.getCountry());
-                addressInsert.setLong(5, addressDto.getPincode());
-                addressInsert.setString(6, addressDto.getState());
-                addressInsert.setLong(7, 1);
-                addressInsert.executeUpdate();
-            }
-            //send activation email to tenant user
-            String resetToken = userAuthUtils.generateKey(otpSize);
-            PreparedStatement tokenInsert = connection.prepareStatement
-                    ("insert into token(expiry_date, is_expired, token, token_type,user_id) values(?,?,?,?,?)");
-            tokenInsert.setDate(1, new java.sql.Date(new Date(System.currentTimeMillis() + resetTokenExpiry * 1000).getTime()));
-            tokenInsert.setBoolean(2, Boolean.TRUE);
-            tokenInsert.setString(3, resetToken);
-            tokenInsert.setString(4, TokenType.RESET_PASSWORD_TOKEN.name());
-            tokenInsert.setLong(5, 1);
-            tokenInsert.executeUpdate();
-            String message = "Hello " + tenantDto.getUserDto().getUserProfile().getFirstName() +
-                    "This is your temporary token ,use this to change your password :" + resetToken;
-            emailUtils.sendInvitationEmail(tenantDto.getUserDto().getEmail(), "User-Auth Invitation", message, fromEmail);
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        } finally {
-            connection.close();
-        }
-        log.info("tenant admin saved successfully");
-
-    }
 }

@@ -11,6 +11,7 @@ import com.user.auth.dto.response.UserUpdateRoleRes;
 import com.user.auth.exception.InvalidEmailException;
 import com.user.auth.exception.InvalidRequestException;
 import com.user.auth.exception.UnAuthorisedException;
+import com.user.auth.exception.UserNotFoundException;
 import com.user.auth.model.Role;
 import com.user.auth.model.Token;
 import com.user.auth.model.User;
@@ -27,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -95,23 +98,32 @@ public class ProfileServiceImpl implements ProfileService {
     @Value("${reset.otp.size}")
     private int otpSize;
 
+    @Value("${mail.activate-user-url}")
+    private String activateUserApiUrl;
+
+    @Value("${mail.profile.activation.subject}")
+    private String activationEmailSubject;
+    @Autowired
+     private MessageSource messageSource;
     Logger log = LoggerFactory.getLogger(ProfileServiceImpl.class);
     /**
      * This method registers new user
      * @param
-     * @param dto
+     * @param jsonString
+     * @param file
      * @throws Exception
      */
    @Override
-    public void addUser(UserDto dto) {
-       // User loggedInUser = authUtils.getLoggedInUser();
+    public void addUser(String jsonString, MultipartFile file) throws UnsupportedEncodingException {
+        User loggedInUser = authUtils.getLoggedInUser();
         ObjectMapper objectMapper = new ObjectMapper();
-//        try {
-//           dto = objectMapper.readValue(jsonString, UserDto.class);
-//        } catch (JsonProcessingException e) {
-//            log.error("Error in mapping object");
-//            e.printStackTrace();
-//        }
+       UserDto dto = null;
+        try {
+           dto = objectMapper.readValue(jsonString, UserDto.class);
+        } catch (JsonProcessingException e) {
+            log.error("Error in mapping object");
+            e.printStackTrace();
+        }
 
         log.info("Saving user :"+dto.getEmail());
         Optional<User> existingUser =  userRepository.findByEmail(dto.getEmail());
@@ -141,12 +153,15 @@ public class ProfileServiceImpl implements ProfileService {
                 token.setExpiryDate(new Date(System.currentTimeMillis() + resetTokenExpiry * 1000));
                 mappedUser.setTokens(Collections.singletonList(token));
                 mappedUser.setRoles(roles);
+                mappedUser.setPassword(passwordEncoder.encode(token.getToken()));
                 userRepository.save(mappedUser);
                 tokenRepository.save(token);
-                String message = "Hello " + mappedUser.getUserProfile().getFirstName() + "This is your temporary password ,use this to change your password :" + token.getToken();
-                emailUtils.sendInvitationEmail(mappedUser.getEmail(), "User-Auth Invitation", message, fromEmail);
+                String message = "Hello " + mappedUser.getUserProfile().getFirstName() + "Please activate your account by clicking this link." +
+                        "This is your temporary password use this to reset your password, " + token.getToken();
+                String activationUrl = emailUtils.buildUrl(token.getToken(),activateUserApiUrl,user.getEmail());
+                emailUtils.sendInvitationEmail(mappedUser.getEmail(), activationEmailSubject, message, fromEmail,activationUrl);
             }else
-                throw new InvalidEmailException();
+                throw new InvalidEmailException(messageSource.getMessage("invalid.email",null,Locale.ENGLISH));
             log.info("User saved successfully : " + dto.getEmail());
         }
     }
@@ -186,6 +201,9 @@ public class ProfileServiceImpl implements ProfileService {
     public byte[] getUserProfileImage() throws IOException {
 
         User user =userAuthUtils.getLoggedInUser();
+        if(user == null){
+            throw new UserNotFoundException(messageSource.getMessage("user.not.found",null,Locale.ENGLISH));
+        }
         log.info("Fetching profile image for user :"+user.getEmail());
         String fileName = user.getUserProfile().getProfilePicture();
         if (fileName != null && new File(fileName).exists()) {
@@ -199,6 +217,9 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public void addProfileImage(MultipartFile file) {
         User user = authUtils.getLoggedInUser();
+        if (user == null) {
+            throw new UserNotFoundException(messageSource.getMessage("user.not.found",null,Locale.ENGLISH));
+        }
         log.info("Adding profile image for user : "+user.getEmail());
         String name = userAuthUtils.saveProfileImage(file, user);
         user.getUserProfile().setProfilePicture(name);
@@ -232,6 +253,9 @@ public class ProfileServiceImpl implements ProfileService {
                 userListResponseDto.setUserList(userResponse);
             }
         }
+        else{
+            throw new InvalidRequestException(messageSource.getMessage("role.not.found",null,Locale.ENGLISH));
+        }
         log.info("Fetched all admin users");
         return userListResponseDto;
     }
@@ -260,7 +284,7 @@ public class ProfileServiceImpl implements ProfileService {
             user.get().getUserProfile().setActive(Boolean.FALSE);
             userRepository.save(user.get());
         }else{
-            throw new InvalidRequestException();
+            throw new InvalidRequestException(messageSource.getMessage("invalid.request",null,Locale.ENGLISH));
         }
     }
 
@@ -292,6 +316,9 @@ public class ProfileServiceImpl implements ProfileService {
     public UserDto getUserProfile() {
 
         User user = userAuthUtils.getLoggedInUser();
+        if (user == null ){
+            throw new UserNotFoundException(messageSource.getMessage("user.not.found",null,Locale.ENGLISH));
+        }
         log.info("Fetching user profile of user :"+user.getEmail());
         UserProfile userProfile = user.getUserProfile();
         UserDto resDto = modelMapper.map(userProfile, UserDto.class);
@@ -338,7 +365,7 @@ public class ProfileServiceImpl implements ProfileService {
        }
         String message = "Hello " + user.getUserProfile().getFirstName() + "Your role is changed to : "+roles.toString();
 
-        emailUtils.sendInvitationEmail(user.getEmail(), "Role Updation", message, fromEmail);
+        emailUtils.sendInvitationEmail(user.getEmail(), "Role Updation", message, fromEmail,"");
         return new UserUpdateRoleRes(user.getEmail(), roles);
 
     }

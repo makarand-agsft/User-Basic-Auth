@@ -4,8 +4,6 @@ import com.user.auth.dto.request.*;
 import com.user.auth.dto.response.UserDto;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.sql.SQLException;
 
 public interface AuthService {
 
@@ -15,9 +13,8 @@ public interface AuthService {
 
     void changePassword(ChangePasswordDto changePasswordDto);
 
-    UserDto activateUser(ActivateUserDto dto);
+    UserDto activateUser(ActivateUserDto dto, String email, String userToken);
 
     void logout(HttpServletRequest request);
 
-    void addTenant(TenantDto tenantDto) throws IOException, SQLException;
 }

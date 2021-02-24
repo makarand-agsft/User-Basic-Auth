@@ -7,10 +7,11 @@ import com.user.auth.dto.response.UserUpdateRoleRes;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 public interface ProfileService {
 
-    void addUser(UserDto userReqDto);
+    void addUser(String userReqDto, MultipartFile file) throws UnsupportedEncodingException;
 
     Boolean updateUser(String userReqDto, MultipartFile file);
 

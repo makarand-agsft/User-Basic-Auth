@@ -2,6 +2,10 @@ package com.user.auth.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.PdfWriter;
+
 import com.user.auth.constants.TokenType;
 import com.user.auth.dto.request.AddressDto;
 import com.user.auth.dto.request.UserUpdateRoleReqDto;
@@ -31,13 +35,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,7 +50,7 @@ import java.util.stream.Collectors;
  * This class is responsible for handling user authentication
  */
 @Service
-@Transactional
+@Transactional(propagation = Propagation.REQUIRES_NEW,rollbackFor = Exception.class)
 public class ProfileServiceImpl implements ProfileService {
 
     @Autowired
@@ -105,6 +109,8 @@ public class ProfileServiceImpl implements ProfileService {
     private String activationEmailSubject;
     @Autowired
      private MessageSource messageSource;
+
+
     Logger log = LoggerFactory.getLogger(ProfileServiceImpl.class);
     /**
      * This method registers new user
@@ -114,8 +120,7 @@ public class ProfileServiceImpl implements ProfileService {
      * @throws Exception
      */
    @Override
-    public void addUser(String jsonString, MultipartFile file) throws UnsupportedEncodingException {
-        User loggedInUser = authUtils.getLoggedInUser();
+    public void addUser(String jsonString, MultipartFile file) throws IOException, DocumentException {
         ObjectMapper objectMapper = new ObjectMapper();
        UserDto dto = null;
         try {
@@ -147,7 +152,7 @@ public class ProfileServiceImpl implements ProfileService {
                     role.ifPresent(roles::add);
                 }
                 Token token = new Token();
-                token.setToken(userAuthUtils.generateKey(otpSize));
+                token.setToken(jwtProvider.generateToken(user,null));
                 token.setTokenType(TokenType.RESET_PASSWORD_TOKEN);
                 token.setUsers(mappedUser);
                 token.setExpiryDate(new Date(System.currentTimeMillis() + resetTokenExpiry * 1000));
@@ -156,13 +161,18 @@ public class ProfileServiceImpl implements ProfileService {
                 mappedUser.setPassword(passwordEncoder.encode(token.getToken()));
                 userRepository.save(mappedUser);
                 tokenRepository.save(token);
-                String message = "Hello " + mappedUser.getUserProfile().getFirstName() + "Please activate your account by clicking this link." +
-                        "This is your temporary password use this to reset your password, " + token.getToken();
-                String activationUrl = emailUtils.buildUrl(token.getToken(),activateUserApiUrl,user.getEmail());
+                HashMap<String,Object> props = new HashMap<>();
+                props.put("firstName",user.getUserProfile().getFirstName());
+                String content =userAuthUtils.getTemplatetoText("templates/User-Invitation.vm",props);
+
+                String message = "Hello \t\t" + mappedUser.getUserProfile().getFirstName() + "Please activate your account by clicking this link.";
+                String activationUrl = emailUtils.buildUrl(token.getToken(),activateUserApiUrl);
                 emailUtils.sendInvitationEmail(mappedUser.getEmail(), activationEmailSubject, message, fromEmail,activationUrl);
             }else
                 throw new InvalidEmailException(messageSource.getMessage("invalid.email",null,Locale.ENGLISH));
             log.info("User saved successfully : " + dto.getEmail());
+        }else{
+            throw new InvalidRequestException(messageSource.getMessage("user.already.exist",null,Locale.ENGLISH));
         }
     }
     @Override
@@ -363,8 +373,7 @@ public class ProfileServiceImpl implements ProfileService {
        {
            roles.add(role.getRole());
        }
-        String message = "Hello " + user.getUserProfile().getFirstName() + "Your role is changed to : "+roles.toString();
-
+        String message = "Hello \t" + user.getUserProfile().getFirstName() + "Your role is changed to : "+roles.toString();
         emailUtils.sendInvitationEmail(user.getEmail(), "Role Updation", message, fromEmail,"");
         return new UserUpdateRoleRes(user.getEmail(), roles);
 

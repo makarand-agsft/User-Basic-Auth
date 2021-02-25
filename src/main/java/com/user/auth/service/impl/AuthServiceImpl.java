@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
  * This class is responsible for handling user authentication
  */
 @Service
+@Transactional(propagation = Propagation.REQUIRES_NEW,rollbackFor = Exception.class)
 public class AuthServiceImpl implements AuthService {
 
     @Autowired
@@ -235,18 +238,24 @@ public class AuthServiceImpl implements AuthService {
      * This method resets the one time password of user sent on email
      *
      * @param activateUserDto containing user one time password and email address
-     * @param email
      * @param userToken
+     * @param httpServletRequest
      * @return Success message of user activation
      * @author akshay kamble
      */
     @Override
-    public UserDto activateUser(ActivateUserDto activateUserDto, String email, String userToken) {
-        User user = userRepository.findByEmail(email).orElse(null);
+    public UserDto activateUser(ActivateUserDto activateUserDto, String userToken, HttpServletRequest httpServletRequest) {
+        String resetToken = httpServletRequest.getParameter("token");
+        if( resetToken == null){
+            throw new InvalidRequestException(messageSource.getMessage("invalid.request",null,Locale.ENGLISH));
+        }
+        String userEmail = jwtProvider.getUsernameFromToken(resetToken);
+
+        User user = userRepository.findByEmail(userEmail).orElse(null);
         if (null == user) {
             throw new UserNotFoundException(messageSource.getMessage("user.not.found", null, Locale.ENGLISH));
         }
-        log.info("Resetting password for user : " + email);
+        log.info("Resetting password for user : " + userEmail);
         Token token = tokenRepository.findByTokenAndUsersUserId(userToken, user.getUserId());
         if (null == token) {
             throw new UnAuthorisedException(messageSource.getMessage("already.reset.password", null, Locale.ENGLISH));
@@ -258,10 +267,10 @@ public class AuthServiceImpl implements AuthService {
         user.getUserProfile().setActive(true);
         userRepository.save(user);
         tokenRepository.delete(token);
-        log.info("Reset Token deleted for user :" + email);
+        log.info("Reset Token deleted for user :" + userEmail);
         UserDto userDto = modelMapper.map(user, UserDto.class);
         userDto.setRoles(user.getRoles().stream().map(x -> x.getRole()).collect(Collectors.toList()));
-        log.info("Password reset successful for user :" + email);
+        log.info("Password reset successful for user :" + userEmail);
         return userDto;
 
     }

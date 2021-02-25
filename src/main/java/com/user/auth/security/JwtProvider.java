@@ -57,13 +57,15 @@ public class JwtProvider {
 		claims.put("userName", user.getEmail());
 		claims.put("firstName", user.getUserProfile().getFirstName());
 		claims.put("lastName", user.getUserProfile().getLastName());
-		if (httpServletRequest.getHeader("User-Agent").contains("Mobi")) {
-			claims.put("source", "mobile");
-			log.info("Device MOBILE");
-		} else {
-			claims.put("source", "desktop");
-			log.info("Device DESKTOP");
+		if(httpServletRequest!=null) {
+			if (httpServletRequest.getHeader("User-Agent").contains("Mobi")) {
+				claims.put("source", "mobile");
+				log.info("Device MOBILE");
+			} else {
+				claims.put("source", "desktop");
+				log.info("Device DESKTOP");
 
+			}
 		}
 		return Jwts.builder().setClaims(claims).setIssuedAt(new Date(System.currentTimeMillis()))
 				.setExpiration(new Date(System.currentTimeMillis() + jwtTokenValidity * 1000))

@@ -7,6 +7,8 @@ import com.user.auth.model.User;
 import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
 import com.user.auth.security.JwtProvider;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,6 +27,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Date;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,11 +44,15 @@ public class UserAuthUtils {
 
     @Value("${upload.directory}")
     private String UPLOAD_DIRECTORY ;
+
     @Autowired
     private TokenRepository tokenRepository;
+
     @Value("${jwt.header}")
     private String jwtHeader;
 
+    @Autowired
+    private VelocityEngine velocityEngine;
 
     public String generateKey(int n) {
         String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "abcdefghijklmnopqrstuvxyz";
@@ -141,5 +149,11 @@ public class UserAuthUtils {
         return roleList.stream().anyMatch(role ->role.getRole().equalsIgnoreCase(com.user.auth.constants.Role.ADMIN.toString()));
 
 
+    }
+
+    public String getTemplatetoText(String templateName, Map<String, Object> props) {
+        StringWriter stringWriter = new StringWriter();
+        velocityEngine.mergeTemplate(templateName, "UTF-8", new VelocityContext(props), stringWriter);
+        return stringWriter.toString();
     }
 }

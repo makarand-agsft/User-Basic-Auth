@@ -1,14 +1,17 @@
 package com.user.auth.service.impl;
 
+import com.user.auth.constants.Role;
 import com.user.auth.constants.TokenType;
 import com.user.auth.dto.request.AddressDto;
 import com.user.auth.dto.request.TenantDto;
 import com.user.auth.exception.InvalidRequestException;
 import com.user.auth.model.Account;
 import com.user.auth.model.TenantInfo;
+import com.user.auth.model.User;
 import com.user.auth.multitenancy.MultiTenantDataSourceConfig;
 import com.user.auth.repository.AccountRepository;
 import com.user.auth.repository.TenantInfoRepository;
+import com.user.auth.security.JwtProvider;
 import com.user.auth.service.TenantService;
 import com.user.auth.utils.EmailUtils;
 import com.user.auth.utils.UserAuthUtils;
@@ -20,7 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,6 +40,7 @@ import java.util.Date;
 import java.util.Locale;
 
 @Service
+@Transactional(propagation = Propagation.REQUIRES_NEW,rollbackFor = Exception.class)
 public class TenantServiceImpl implements TenantService {
 
     @Autowired
@@ -79,14 +86,22 @@ public class TenantServiceImpl implements TenantService {
     @Value("${mail.profile.activation.subject}")
     private String activationEmailSubject;
 
+    @Autowired
+            private JwtProvider jwtProvider;
     Logger log = LoggerFactory.getLogger(TenantServiceImpl.class);
 
+    public static final String USER_PROFILE_INSERT ="insert into user_profile(id,created_by,created_date, first_name, is_active, last_name, mobile, user_id) values (?,?,?,?,?,?,?,?)";
+    public static final String USER_ROLE_INSERT = "insert into user_roles(user_id, role_id) values (?,?)";
+    public static final String USER_INSERT = "insert into user(id,email, is_deleted) values (?,?,?)";
+    public static final String ADDRESS_INSERT="insert into address(address_string, address_type, city, country, pincode, state, user_id) values(?,?,?,?,?,?,?)";
+    public static final String USER_TOKEN_INSERT="insert into token(expiry_date, is_expired, token, token_type,user_id) values(?,?,?,?,?)";
     @Override
     public void addTenant(TenantDto tenantDto) throws SQLException, IOException {
 
-        if (tenantDto.getTenantName() == null) {
+        if (tenantDto.getTenantName() == null || tenantDto.getTenantName().contains(" ") || tenantDto.getTenantName().contains("-")) {
             throw new InvalidRequestException(messageSource.getMessage("invalid.request", null, Locale.ENGLISH));
         }
+
         Account existingTenant = accountRepository.findByName(tenantDto.getTenantName());
         if (existingTenant != null) {
             throw new InvalidRequestException(messageSource.getMessage("tenant.already.exist", null, Locale.ENGLISH));
@@ -110,23 +125,20 @@ public class TenantServiceImpl implements TenantService {
 
     }
 
+    @Async
     private void addTenantAdmin(TenantDto tenantDto) throws SQLException {
 
         Connection connection = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + tenantDto.getTenantName(), userName, password);
-            PreparedStatement adminRoleInsert = connection.prepareStatement("insert into role(role) values (?)");
-            adminRoleInsert.setString(1, com.user.auth.constants.Role.ADMIN.name());
-            PreparedStatement userRoleInsert = connection.prepareStatement("insert into role(role) values (?)");
-            userRoleInsert.setString(1, com.user.auth.constants.Role.USER.name());
-            PreparedStatement userInsert = connection.prepareStatement("insert into user(id,email, is_deleted) values (?,?,?)");
+            PreparedStatement userInsert = connection.prepareStatement(USER_INSERT);
             userInsert.setInt(1, 1);
             userInsert.setString(2, tenantDto.getUserDto().getEmail());
             userInsert.setBoolean(3, false);
 
             PreparedStatement userProfileInsert = connection.prepareStatement
-                    ("insert into user_profile(id,created_by,created_date, first_name, is_active, last_name, mobile, user_id) values (?,?,?,?,?,?,?,?)");
+                    (USER_PROFILE_INSERT);
             userProfileInsert.setInt(1, 1);
             userProfileInsert.setString(2, "");
             userProfileInsert.setDate(3, null);
@@ -137,18 +149,16 @@ public class TenantServiceImpl implements TenantService {
             userProfileInsert.setInt(8, 1);
 
             PreparedStatement userRolesInsert = connection.prepareStatement
-                    ("insert into user_roles(user_id, role_id) values (?,?)");
-            userRolesInsert.setInt(1, 1);
-            userRolesInsert.setInt(2, 1);
+                    (USER_ROLE_INSERT);
+            userRolesInsert.setLong(1, Role.ADMIN.getId());
+            userRolesInsert.setLong(2, Role.ADMIN.getId());
 
             userInsert.executeUpdate();
-            adminRoleInsert.executeUpdate();
-            userRoleInsert.executeUpdate();
             userProfileInsert.executeUpdate();
             userRolesInsert.executeUpdate();
             for (AddressDto addressDto : tenantDto.getUserDto().getAddresses()) {
                 PreparedStatement addressInsert = connection.prepareStatement
-                        ("insert into address(address_string, address_type, city, country, pincode, state, user_id) values(?,?,?,?,?,?,?)");
+                        (ADDRESS_INSERT);
 
                 addressInsert.setString(1, addressDto.getAddressString());
                 addressInsert.setString(2, addressDto.getAddressType().name());
@@ -160,20 +170,20 @@ public class TenantServiceImpl implements TenantService {
                 addressInsert.executeUpdate();
             }
             //send activation email to tenant user
-            String resetToken = userAuthUtils.generateKey(otpSize);
+            String resetToken = jwtProvider.generateToken(modelMapper.map(tenantDto.getUserDto(),User.class),null);
             PreparedStatement tokenInsert = connection.prepareStatement
-                    ("insert into token(expiry_date, is_expired, token, token_type,user_id) values(?,?,?,?,?)");
+                    (USER_TOKEN_INSERT);
             tokenInsert.setDate(1, new java.sql.Date(new Date(System.currentTimeMillis() + resetTokenExpiry * 1000).getTime()));
             tokenInsert.setBoolean(2, Boolean.TRUE);
             tokenInsert.setString(3, resetToken);
             tokenInsert.setString(4, TokenType.RESET_PASSWORD_TOKEN.name());
             tokenInsert.setLong(5, 1);
             tokenInsert.executeUpdate();
-            String message = "Hello " + tenantDto.getUserDto().getUserProfile().getFirstName() + "Please activate your account by clicking this link." +
-                    "This is your temporary password use this to reset your password, " + resetToken;
-            String activationUrl = emailUtils.buildUrl(resetToken,activateUserApiUrl,tenantDto.getUserDto().getEmail());
+            String message = "Hello " + tenantDto.getUserDto().getUserProfile().getFirstName() + "Please activate your account by clicking this link";
+            String activationUrl = emailUtils.buildUrl(resetToken,activateUserApiUrl);
             emailUtils.sendInvitationEmail(tenantDto.getUserDto().getEmail(), activationEmailSubject, message, fromEmail,activationUrl);
         } catch (Exception exception) {
+            connection.rollback();
             exception.printStackTrace();
         } finally {
             connection.close();

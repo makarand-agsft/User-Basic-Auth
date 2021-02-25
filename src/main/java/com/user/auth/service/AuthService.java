@@ -13,7 +13,7 @@ public interface AuthService {
 
     void changePassword(ChangePasswordDto changePasswordDto);
 
-    UserDto activateUser(ActivateUserDto dto, String email, String userToken);
+    UserDto activateUser(ActivateUserDto dto, String userToken, HttpServletRequest httpServletRequest);
 
     void logout(HttpServletRequest request);
 

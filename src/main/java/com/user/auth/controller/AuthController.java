@@ -113,10 +113,10 @@ public class AuthController {
      * @return Success message of user activation
      */
     @PostMapping(path = "/activate-user")
-    public ResponseEntity activateUser(@RequestParam("email") String email,@RequestParam("token") String token,@RequestBody ActivateUserDto dto) {
+    public ResponseEntity activateUser(@RequestParam("token") String token,@RequestBody ActivateUserDto dto,HttpServletRequest httpServletRequest) {
         ResponseDto responseDto = null;
         try {
-            UserDto response = authService.activateUser(dto,email,token );
+            UserDto response = authService.activateUser(dto, token, httpServletRequest);
             responseDto =
                     new ResponseDto(new ResponseObject(200, "User is Activated and changed password successfully", response),
                             ApiStatus.SUCCESS);

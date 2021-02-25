@@ -155,3 +155,6 @@ CREATE TABLE `user_roles` (
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2021-02-18 16:20:30
+
+INSERT into role(role) values('ADMIN');
+INSERT into role(role) values('USER');

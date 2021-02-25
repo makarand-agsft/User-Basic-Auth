@@ -1,6 +1,7 @@
 package com.user.auth;
 
 import com.user.auth.utils.CustomAuditAware;
+import org.apache.velocity.app.VelocityEngine;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -53,6 +54,15 @@ public class UserAuthApplication {
 		messageSource.setBasename("classpath:message");
 		messageSource.setCacheSeconds(10); //reload messages every 10 seconds
 		return messageSource;
+	}
+
+	@Bean
+	public VelocityEngine getVelocityEngine() {
+		VelocityEngine ve = new VelocityEngine();
+		ve.setProperty("resource.loader", "classpath");
+		ve.setProperty("classpath.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+		ve.init();
+		return ve;
 	}
 
 }

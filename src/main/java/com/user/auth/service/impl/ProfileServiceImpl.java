@@ -2,10 +2,6 @@ package com.user.auth.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.pdf.PdfWriter;
-
 import com.user.auth.constants.TokenType;
 import com.user.auth.dto.request.AddressDto;
 import com.user.auth.dto.request.UserUpdateRoleReqDto;
@@ -39,9 +35,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -50,7 +46,7 @@ import java.util.stream.Collectors;
  * This class is responsible for handling user authentication
  */
 @Service
-@Transactional(propagation = Propagation.REQUIRES_NEW,rollbackFor = Exception.class)
+@Transactional(propagation = Propagation.REQUIRES_NEW,rollbackFor = {Exception.class,RuntimeException.class})
 public class ProfileServiceImpl implements ProfileService {
 
     @Autowired
@@ -120,7 +116,7 @@ public class ProfileServiceImpl implements ProfileService {
      * @throws Exception
      */
    @Override
-    public void addUser(String jsonString, MultipartFile file) throws IOException, DocumentException {
+    public void addUser(String jsonString, MultipartFile file) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
        UserDto dto = null;
         try {
@@ -129,7 +125,9 @@ public class ProfileServiceImpl implements ProfileService {
             log.error("Error in mapping object");
             e.printStackTrace();
         }
-
+        if(!userAuthUtils.validateEmail(dto.getEmail()) || !userAuthUtils.validateMobileNumber(dto.getUserProfile().getMobileNumber())){
+                throw new InvalidRequestException(messageSource.getMessage("invalid.request",null,Locale.ENGLISH));
+       }
         log.info("Saving user :"+dto.getEmail());
         Optional<User> existingUser =  userRepository.findByEmail(dto.getEmail());
         boolean isDeletedUser = existingUser.isPresent() && existingUser.get().getDeleted();
@@ -163,7 +161,6 @@ public class ProfileServiceImpl implements ProfileService {
                 tokenRepository.save(token);
                 HashMap<String,Object> props = new HashMap<>();
                 props.put("firstName",user.getUserProfile().getFirstName());
-                String content =userAuthUtils.getTemplatetoText("templates/User-Invitation.vm",props);
 
                 String message = "Hello \t\t" + mappedUser.getUserProfile().getFirstName() + "Please activate your account by clicking this link.";
                 String activationUrl = emailUtils.buildUrl(token.getToken(),activateUserApiUrl);

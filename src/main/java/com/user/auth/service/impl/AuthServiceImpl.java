@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * This class is responsible for handling user authentication
  */
 @Service
-@Transactional(propagation = Propagation.REQUIRES_NEW,rollbackFor = Exception.class)
+@Transactional(propagation = Propagation.REQUIRES_NEW,rollbackFor = {Exception.class,RuntimeException.class})
 public class AuthServiceImpl implements AuthService {
 
     @Autowired

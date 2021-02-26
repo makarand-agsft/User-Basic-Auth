@@ -8,7 +8,6 @@ import com.user.auth.repository.TokenRepository;
 import com.user.auth.repository.UserRepository;
 import com.user.auth.security.JwtProvider;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,13 +24,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import org.apache.velocity.app.VelocityEngine;
 @Component
 public class UserAuthUtils {
 
@@ -52,7 +50,7 @@ public class UserAuthUtils {
     private String jwtHeader;
 
     @Autowired
-    private VelocityEngine velocityEngine;
+    private  VelocityEngine velocityEngine;
 
     public String generateKey(int n) {
         String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "abcdefghijklmnopqrstuvxyz";
@@ -122,15 +120,16 @@ public class UserAuthUtils {
      * @return true if email is valid
      */
     public boolean validateEmail(String email) {
-        String regex = "^(.+)@(.+)$";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(email);
-        if(matcher.matches()){
-            return true;
-        }
-        return false;
+
+        Matcher matcher = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE).matcher(email);
+        return email==null?false:matcher.find();
     }
 
+    public boolean validateMobileNumber(Long mobile){
+        if(mobile.toString().length()!=10)
+            return false;
+        return true;
+    }
     /**
      * checks if user is Admin
      * @param httpServletRequest

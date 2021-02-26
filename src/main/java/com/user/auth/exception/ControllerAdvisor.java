@@ -14,41 +14,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 public class ControllerAdvisor extends ResponseEntityExceptionHandler {
 
-//    @ExceptionHandler(UserNotFoundException.class)
-//    public ResponseEntity<Object> handleUserNotFoundException(UserNotFoundException userNotFoundException) {
-//        ResponseDto responseDto =
-//                new ResponseDto(new ResponseObject(userNotFoundException.getCode(), userNotFoundException.getMessage(), null), ApiStatus.FAILURE);
-//        return new ResponseEntity<>(responseDto, HttpStatus.OK);
-//    }
-
-//    @ExceptionHandler(InvalidEmailException.class)
-//    public ResponseEntity<Object> handleInvalidEmailException(InvalidEmailException invalidEmailException, WebRequest webRequest) {
-//        ResponseDto responseDto =
-//                new ResponseDto(new ResponseObject(invalidEmailException.getCode(), invalidEmailException.getMessage(), null), ApiStatus.FAILURE);
-//        return new ResponseEntity<>(responseDto, HttpStatus.OK);
-//    }
-
-//    @ExceptionHandler(InvalidPasswordException.class)
-//    public ResponseEntity<Object> handleInvalidOldPasswordException(InvalidPasswordException invalidPasswordException){
-//        ResponseDto responseDto= new ResponseDto(new ResponseObject(invalidPasswordException.getCode(),invalidPasswordException.getMessage(),null),
-//                ApiStatus.FAILURE);
-//        return new ResponseEntity<>(responseDto,HttpStatus.OK);
-//    }
-
-//    @ExceptionHandler(InvalidRequestException.class)
-//    public ResponseEntity<Object> invalidRequest(InvalidRequestException invalidRequest){
-//        ResponseDto responseDto= new ResponseDto(new ResponseObject(invalidRequest.getCode(),invalidRequest.getMessage(),null),
-//                ApiStatus.FAILURE);
-//        return new ResponseEntity<>(responseDto,HttpStatus.OK);
-//    }
-
-//    @ExceptionHandler(UnAuthorisedException.class)
-//    public ResponseEntity<Object> invalidRequest(UnAuthorisedException unAuthorisedException){
-//        ResponseDto responseDto= new ResponseDto(new ResponseObject(401,unAuthorisedException.getMessage(),null),
-//                ApiStatus.FAILURE);
-//        return new ResponseEntity<>(responseDto,HttpStatus.OK);
-//    }
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> genericException(Exception exception) {
         ResponseDto responseDto =
@@ -56,11 +21,5 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(responseDto, HttpStatus.OK);
     }
 
-//
-//    @ExceptionHandler(InvalidApiKeyException.class)
-//    public ResponseEntity<Object> invalidApiKey(InvalidApiKeyException invalidApiKeyException) {
-//        ResponseDto responseDto =
-//                new ResponseDto(new ResponseObject(invalidApiKeyException.getCode(), invalidApiKeyException.getMessage(), null), ApiStatus.FAILURE);
-//        return new ResponseEntity<>(responseDto, HttpStatus.OK);
-//    }
+
 }

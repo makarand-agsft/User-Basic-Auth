@@ -1,5 +1,10 @@
 package com.user.auth.service.impl;
 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.tool.xml.XMLWorkerHelper;
 import com.user.auth.constants.Role;
 import com.user.auth.constants.TokenType;
 import com.user.auth.dto.request.AddressDto;
@@ -16,6 +21,7 @@ import com.user.auth.service.TenantService;
 import com.user.auth.utils.EmailUtils;
 import com.user.auth.utils.UserAuthUtils;
 import org.apache.ibatis.jdbc.ScriptRunner;
+import org.docx4j.org.xhtmlrenderer.pdf.ITextRenderer;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,24 +29,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 
 @Service
-@Transactional(propagation = Propagation.REQUIRES_NEW,rollbackFor = Exception.class)
+@Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = {Exception.class, RuntimeException.class})
 public class TenantServiceImpl implements TenantService {
 
     @Autowired
@@ -87,16 +96,17 @@ public class TenantServiceImpl implements TenantService {
     private String activationEmailSubject;
 
     @Autowired
-            private JwtProvider jwtProvider;
+    private JwtProvider jwtProvider;
     Logger log = LoggerFactory.getLogger(TenantServiceImpl.class);
 
-    public static final String USER_PROFILE_INSERT ="insert into user_profile(id,created_by,created_date, first_name, is_active, last_name, mobile, user_id) values (?,?,?,?,?,?,?,?)";
+    public static final String USER_PROFILE_INSERT = "insert into user_profile(id,created_by,created_date, first_name, is_active, last_name, mobile, user_id) values (?,?,?,?,?,?,?,?)";
     public static final String USER_ROLE_INSERT = "insert into user_roles(user_id, role_id) values (?,?)";
     public static final String USER_INSERT = "insert into user(id,email, is_deleted) values (?,?,?)";
-    public static final String ADDRESS_INSERT="insert into address(address_string, address_type, city, country, pincode, state, user_id) values(?,?,?,?,?,?,?)";
-    public static final String USER_TOKEN_INSERT="insert into token(expiry_date, is_expired, token, token_type,user_id) values(?,?,?,?,?)";
+    public static final String ADDRESS_INSERT = "insert into address(address_string, address_type, city, country, pincode, state, user_id) values(?,?,?,?,?,?,?)";
+    public static final String USER_TOKEN_INSERT = "insert into token(expiry_date, is_expired, token, token_type,user_id) values(?,?,?,?,?)";
+
     @Override
-    public void addTenant(TenantDto tenantDto) throws SQLException, IOException {
+    public void addTenant(TenantDto tenantDto) throws SQLException, IOException, InvalidRequestException {
 
         if (tenantDto.getTenantName() == null || tenantDto.getTenantName().contains(" ") || tenantDto.getTenantName().contains("-")) {
             throw new InvalidRequestException(messageSource.getMessage("invalid.request", null, Locale.ENGLISH));
@@ -109,8 +119,8 @@ public class TenantServiceImpl implements TenantService {
         Account tenant = modelMapper.map(tenantDto, Account.class);
         Account savedTenant = accountRepository.save(tenant);
         Connection connection = multiTenantDataSourceConfig.getAnyConnection();
-        connection.createStatement().execute("CREATE DATABASE " + tenant.getName());
-        connection.createStatement().execute("USE " + tenant.getName());
+        connection.createStatement().execute("CREATE DATABASE " + tenantDto.getTenantName());
+        connection.createStatement().execute("USE " + tenantDto.getTenantName());
         ScriptRunner scriptRunner = new ScriptRunner(connection);
         ClassPathResource c = new ClassPathResource("db/tenant1.sql");
         Reader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
@@ -126,8 +136,12 @@ public class TenantServiceImpl implements TenantService {
     }
 
     @Async
-    private void addTenantAdmin(TenantDto tenantDto) throws SQLException {
+    private void addTenantAdmin(TenantDto tenantDto) throws SQLException, InvalidRequestException {
 
+        if (!userAuthUtils.validateEmail(tenantDto.getUserDto().getEmail()) || !userAuthUtils.validateMobileNumber(tenantDto.getUserDto().getUserProfile().getMobileNumber())
+        ) {
+            throw new InvalidRequestException(messageSource.getMessage("invalid.request", null, Locale.ENGLISH));
+        }
         Connection connection = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -150,7 +164,7 @@ public class TenantServiceImpl implements TenantService {
 
             PreparedStatement userRolesInsert = connection.prepareStatement
                     (USER_ROLE_INSERT);
-            userRolesInsert.setLong(1, Role.ADMIN.getId());
+            userRolesInsert.setLong(1, 1);
             userRolesInsert.setLong(2, Role.ADMIN.getId());
 
             userInsert.executeUpdate();
@@ -170,7 +184,7 @@ public class TenantServiceImpl implements TenantService {
                 addressInsert.executeUpdate();
             }
             //send activation email to tenant user
-            String resetToken = jwtProvider.generateToken(modelMapper.map(tenantDto.getUserDto(),User.class),null);
+            String resetToken = jwtProvider.generateToken(modelMapper.map(tenantDto.getUserDto(), User.class), null);
             PreparedStatement tokenInsert = connection.prepareStatement
                     (USER_TOKEN_INSERT);
             tokenInsert.setDate(1, new java.sql.Date(new Date(System.currentTimeMillis() + resetTokenExpiry * 1000).getTime()));
@@ -180,15 +194,36 @@ public class TenantServiceImpl implements TenantService {
             tokenInsert.setLong(5, 1);
             tokenInsert.executeUpdate();
             String message = "Hello " + tenantDto.getUserDto().getUserProfile().getFirstName() + "Please activate your account by clicking this link";
-            String activationUrl = emailUtils.buildUrl(resetToken,activateUserApiUrl);
-            emailUtils.sendInvitationEmail(tenantDto.getUserDto().getEmail(), activationEmailSubject, message, fromEmail,activationUrl);
+            String activationUrl = emailUtils.buildUrl(resetToken, activateUserApiUrl);
+            emailUtils.sendInvitationEmail(tenantDto.getUserDto().getEmail(), activationEmailSubject, message, fromEmail, activationUrl);
         } catch (Exception exception) {
-            connection.rollback();
             exception.printStackTrace();
         } finally {
             connection.close();
         }
         log.info("Tenant admin saved successfully");
 
+    }
+
+
+    @Override
+    public String convert() throws IOException, DocumentException, com.lowagie.text.DocumentException {
+        HashMap<String, Object> props = new HashMap<>();
+        props.put("firstName", "Makarand");
+
+        String html = userAuthUtils.getTemplatetoText("/templates/User-Invitation.vm", props);
+        byte[] temp = new String(html.getBytes(), Charset.defaultCharset().name()).getBytes();
+
+        ByteArrayInputStream templateInputStream = new ByteArrayInputStream(temp);
+
+        Document document = new Document(PageSize.A4.rotate());
+        Resource r = new ClassPathResource("/templates/ab.pdf");
+
+        FileOutputStream fos = new FileOutputStream(r.getFile());
+        PdfWriter writer = PdfWriter.getInstance(document, fos);
+        document.open();
+        XMLWorkerHelper.getInstance().parseXHtml(writer, document, templateInputStream, XMLWorkerHelper.class.getResourceAsStream("/default.css"));
+        document.close();
+        return "";
     }
 }

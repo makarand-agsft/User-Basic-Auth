@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="debug">
+    <Appenders>
+        <RollingFile name="RollingFileAppender"
+                     fileName="logs/app.log"
+                     filePattern="logs/$${date:yyyy-MM-dd}/app-%d{MM-dd-yyyy HH:mm}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [tenant=%X{tenant}] [%level] [%t] - %c.%M():%L - %m%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <OnStartupTriggeringPolicy />
+                <TimeBasedTriggeringPolicy interval="60" />
+                <SizeBasedTriggeringPolicy size="51200KB" />
+            </Policies>
+            <DefaultRolloverStrategy max="20" />
+        </RollingFile>
+        <Console name="LogToConsole" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [tenant=%X{tenant}] [%level] - %c.%M():%L - %m%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="RollingFileAppender" />
+            <AppenderRef ref="LogToConsole" />
+        </Root>
+    </Loggers>
+</Configuration>

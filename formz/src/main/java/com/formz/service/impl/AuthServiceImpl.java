@@ -69,8 +69,11 @@ public class AuthServiceImpl implements AuthService {
             tokenRepository.save(token);
 
             resDto = modelMapper.map(user.get(), UserDto.class);
+            resDto.setRoles(user.get().getRoles().stream().map(x->x.getRole()).collect(Collectors.toList()));
             resDto.setToken(token.getToken());
 
+        }else{
+            throw new BadRequestException("Invalid Credentials");
         }
         return resDto;
     }

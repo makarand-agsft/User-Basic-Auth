@@ -5,7 +5,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "form")
-public class Form {
+public class Form extends AuditingEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,15 +18,53 @@ public class Form {
     @Column(name = "label")
     private String label;
 
+    @Column(name = "version")
+    private Double version;
+
     @Column(name = "template_name")
     private String templateName;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinTable(name = "form_field",
-            joinColumns = {@JoinColumn(name = "form_id", referencedColumnName = "id")},
-            inverseJoinColumns = {@JoinColumn(name = "field_id", referencedColumnName = "id")}
-    )
-    private List<Field> fields;
+    @OneToMany(mappedBy = "form")
+    private List<FormField> formFields;
+
+    @OneToMany(mappedBy = "form")
+    private List<FormPage> formPage;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public Double getVersion() {
+        return version;
+    }
+
+    public void setVersion(Double version) {
+        this.version = version;
+    }
+
+    public List<FormPage> getFormPage() {
+        return formPage;
+    }
+
+    public void setFormPage(List<FormPage> formPage) {
+        this.formPage = formPage;
+    }
+
+    public List<FormField> getFormFields() {
+        return formFields;
+    }
+
+    public void setFormFields(List<FormField> formFields) {
+        this.formFields = formFields;
+    }
 
     public Long getId() {
         return id;
@@ -58,13 +96,5 @@ public class Form {
 
     public void setTemplateName(String templateName) {
         this.templateName = templateName;
-    }
-
-    public List<Field> getFields() {
-        return fields;
-    }
-
-    public void setFields(List<Field> fields) {
-        this.fields = fields;
     }
 }

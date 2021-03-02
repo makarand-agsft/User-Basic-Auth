@@ -1,6 +1,7 @@
 package com.formz.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.envers.Audited;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -24,6 +25,7 @@ public class AuditingEntity {
     private String createdBy;
 
     @CreatedDate
+    @ColumnDefault(value = "CURRENT_TIMESTAMP")
     @Column(name = "created_at")
     @JsonIgnore
     private Date createdDate = new Date();
@@ -34,6 +36,7 @@ public class AuditingEntity {
     private String lastModifiedBy;
 
     @LastModifiedDate
+    @ColumnDefault(value = "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     @Column(name = "updated_at")
     @JsonIgnore
     private Date lastModifiedDate = new Date();

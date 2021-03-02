@@ -1,10 +1,11 @@
 package com.formz.model;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
-@Table(name = "field")
-public class Field {
+@Table(name = "fields")
+public class Field extends AuditingEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,8 +21,16 @@ public class Field {
     @Column(name = "type")
     private String type;
 
-    @Column(name = "required")
-    private Boolean isRequired;
+    @OneToMany(mappedBy = "field")
+    private List<FormField> formFields;
+
+    public List<FormField> getFormFields() {
+        return formFields;
+    }
+
+    public void setFormFields(List<FormField> formFields) {
+        this.formFields = formFields;
+    }
 
     public Long getId() {
         return id;
@@ -55,11 +64,4 @@ public class Field {
         this.type = type;
     }
 
-    public Boolean getRequired() {
-        return isRequired;
-    }
-
-    public void setRequired(Boolean required) {
-        isRequired = required;
-    }
 }

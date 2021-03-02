@@ -69,13 +69,16 @@ public class TenantServiceImpl implements TenantService {
 
     private static final Logger log = LogManager.getLogger(TenantServiceImpl.class);
     public static final String USER_ROLE_INSERT = "insert into user_role(user_id, role_id) values (?,?)";
-    public static final String USER_INSERT = "insert into user(id,email, is_delete) values (?,?,?)";
+    public static final String USER_INSERT = "insert into user(id,email, is_delete,name) values (?,?,?,?)";
     public static final String USER_TOKEN_INSERT = "insert into token(expiry_date, is_expired, token, token_type,user_id) values(?,?,?,?,?)";
 
     @Override
     public void addTenant(TenantDto tenantDto) throws SQLException, IOException {
         if (tenantDto == null || tenantDto.getTenant() == null) {
             throw new BadRequestException("Invalid request");
+        }
+        if(tenantDto.getTenant().contains(" ") || tenantDto.getTenant().contains("-")){
+            throw new BadRequestException("Tenant name should not contain space or hyphen");
         }
         Account account = modelMapper.map(tenantDto, Account.class);
         Account existingTenant = accountRepository.findByTenant(tenantDto.getTenant());
@@ -93,6 +96,7 @@ public class TenantServiceImpl implements TenantService {
         scriptRunner.runScript(reader);
         addTenantAdmin(tenantDto);
         connection.close();
+
     }
 
     @Async
@@ -106,6 +110,7 @@ public class TenantServiceImpl implements TenantService {
             userInsert.setInt(1, 1);
             userInsert.setString(2, tenantDto.getUserDto().getEmail());
             userInsert.setBoolean(3, false);
+            userInsert.setString(4,tenantDto.getUserDto().getName());
 
             PreparedStatement userRolesInsert = connection.prepareStatement
                     (USER_ROLE_INSERT);

@@ -17,7 +17,7 @@ public class EmailUtils {
     private JavaMailSender emailSender;
 
     @Value("${mail.application.url}")
-    private String activationUrl;
+    private String appURL;
 
     Logger log = LoggerFactory.getLogger(EmailUtils.class);
 
@@ -33,7 +33,7 @@ public class EmailUtils {
 
     public String buildUrl(String token,String apiURL) throws UnsupportedEncodingException {
             String activationLink = new String();
-            activationLink=activationLink.concat(activationUrl).concat(apiURL)
+            activationLink=activationLink.concat(appURL).concat(apiURL)
                   .concat("?token=").concat(token);
         return activationLink;
 

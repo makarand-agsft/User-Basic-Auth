@@ -1,6 +1,0 @@
-<html>
-<body>
-<p>Hello firstname: ${firstName}</p>
-<p>lastName: ${lastName}</p>
-</body>
-</html>

@@ -8,6 +8,7 @@ import com.formz.model.Account;
 import com.formz.model.Form;
 import com.formz.model.User;
 import com.formz.multitenancy.MultiTenantDataSourceConfig;
+import com.formz.multitenancy.TenantContext;
 import com.formz.repo.AccountRepository;
 import com.formz.repo.FormRepository;
 import com.formz.security.JwtProvider;
@@ -71,6 +72,9 @@ public class TenantServiceImpl implements TenantService {
 
     @Autowired
     private FormRepository formRepository;
+
+    @Value("${application.directory.base.path}")
+    private String applicationDirectoryBasePath;
 
     private static final Logger log = LogManager.getLogger(TenantServiceImpl.class);
     public static final String USER_ROLE_INSERT = "insert into user_role(user_id, role_id) values (?,?)";
@@ -149,10 +153,15 @@ public class TenantServiceImpl implements TenantService {
 
     private void createFormDirectory(String tenantName) throws IOException {
 
-        File file = new File("src/main/resources/templates/"+tenantName+"/forms/");
-        if(!file.exists()){
+        File file = new File("src/main/resources/templates/" + tenantName + "/forms/");
+        if (!file.exists()) {
             Files.createDirectories(Paths.get(file.toURI()));
         }
-
+        File requestJsonDirectory = new File(applicationDirectoryBasePath + "/" + TenantContext.getCurrentTenant() + "/request-json-strings/");
+        if (!requestJsonDirectory.exists())
+            requestJsonDirectory.mkdir();
+        File downloadPdfDirectory = new File(applicationDirectoryBasePath + "/" + TenantContext.getCurrentTenant() + "/pdfs/");
+        if (!downloadPdfDirectory.exists())
+            downloadPdfDirectory.mkdir();
     }
 }

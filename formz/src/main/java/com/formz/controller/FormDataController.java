@@ -22,7 +22,7 @@ public class FormDataController {
 
     @PostMapping(value = "/add")
     public ResponseEntity addFormData(@RequestBody List<FormDataListDTO> formDataListDTO) throws IOException, DocumentException {
-    formDataService.addForms(formDataListDTO);
-    return ResponseEntity.ok(null);
+    String requestId = formDataService.addForms(formDataListDTO);
+    return ResponseEntity.ok(requestId);
     }
 }

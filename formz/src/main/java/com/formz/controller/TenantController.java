@@ -5,8 +5,7 @@ import com.formz.dto.ResponseDto;
 import com.formz.dto.ResponseObject;
 import com.formz.dto.TenantDto;
 import com.formz.exception.BadRequestException;
-import com.formz.service.impl.TenantService;
-import com.formz.service.impl.TenantServiceImpl;
+import com.formz.service.TenantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Locale;
 
 
 @RestController
@@ -41,4 +39,6 @@ public class TenantController {
         }
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
     }
+
+
 }

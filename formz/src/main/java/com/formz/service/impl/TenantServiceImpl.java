@@ -5,10 +5,13 @@ import com.formz.constants.TokenType;
 import com.formz.dto.TenantDto;
 import com.formz.exception.BadRequestException;
 import com.formz.model.Account;
+import com.formz.model.Form;
 import com.formz.model.User;
 import com.formz.multitenancy.MultiTenantDataSourceConfig;
 import com.formz.repo.AccountRepository;
+import com.formz.repo.FormRepository;
 import com.formz.security.JwtProvider;
+import com.formz.service.TenantService;
 import com.formz.utils.EmailUtils;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.logging.log4j.LogManager;
@@ -22,15 +25,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.List;
 
 @Transactional(propagation = Propagation.REQUIRES_NEW,rollbackFor = Exception.class)
 @Service
@@ -66,6 +69,8 @@ public class TenantServiceImpl implements TenantService {
     @Autowired
     private EmailUtils emailUtils;
 
+    @Autowired
+    private FormRepository formRepository;
 
     private static final Logger log = LogManager.getLogger(TenantServiceImpl.class);
     public static final String USER_ROLE_INSERT = "insert into user_role(user_id, role_id) values (?,?)";
@@ -95,6 +100,7 @@ public class TenantServiceImpl implements TenantService {
         Reader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
         scriptRunner.runScript(reader);
         addTenantAdmin(tenantDto);
+        createFormDirectory(tenantDto.getTenant());
         connection.close();
 
     }
@@ -138,6 +144,15 @@ public class TenantServiceImpl implements TenantService {
             connection.close();
         }
         log.info("Tenant admin saved successfully");
+
+    }
+
+    private void createFormDirectory(String tenantName) throws IOException {
+
+        File file = new File("src/main/resources/templates/"+tenantName+"/forms/");
+        if(!file.exists()){
+            Files.createDirectories(Paths.get(file.toURI()));
+        }
 
     }
 }

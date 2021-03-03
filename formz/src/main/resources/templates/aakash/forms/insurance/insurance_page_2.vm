@@ -1,0 +1,6 @@
+<html>
+<body>
+<p>Address: ${address}</p>
+<p>education: ${education}</p>
+</body>
+</html>

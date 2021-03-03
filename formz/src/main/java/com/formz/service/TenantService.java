@@ -1,4 +1,4 @@
-package com.formz.service.impl;
+package com.formz.service;
 
 import com.formz.dto.TenantDto;
 

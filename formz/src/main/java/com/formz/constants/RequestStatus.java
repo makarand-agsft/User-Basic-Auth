@@ -3,9 +3,9 @@ package com.formz.constants;
 public enum RequestStatus {
 
     PROCESSING(1,"PROCESSING"),
-    COMPLETED(2,"COMPLETED"),
-    FAILED(3,"FAILED");
-
+    GENERATED(2,"GENERATED"),
+    COMPLETED(3,"COMPLETED"),
+    FAILED(4,"FAILED");
     Integer id;
     String value;
 

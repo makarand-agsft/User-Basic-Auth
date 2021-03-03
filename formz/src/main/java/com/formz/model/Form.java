@@ -21,9 +21,6 @@ public class Form extends AuditingEntity{
     @Column(name = "version")
     private Double version;
 
-    @Column(name = "template_name")
-    private String templateName;
-
     @OneToMany(mappedBy = "form")
     private List<FormField> formFields;
 
@@ -90,11 +87,4 @@ public class Form extends AuditingEntity{
         this.label = label;
     }
 
-    public String getTemplateName() {
-        return templateName;
-    }
-
-    public void setTemplateName(String templateName) {
-        this.templateName = templateName;
-    }
 }

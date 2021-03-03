@@ -41,7 +41,6 @@ CREATE TABLE `form` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `label` varchar(255) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
-  `template_name` varchar(255) DEFAULT NULL,
   `version` double DEFAULT NULL,
   `category_id` bigint(20) DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -28,13 +29,14 @@ public class FormDataController {
     @Autowired
     private MessageSource messageSource;
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping(value = "/add")
     public ResponseEntity addFormData(@RequestBody List<FormDataListDTO> formDataListDTO) throws IOException, DocumentException {
         ResponseDto responseDto = null;
         try {
             String requestId = RandomStringUtils.randomAlphanumeric(12);
             formDataService.addForms(formDataListDTO, requestId);
-            responseDto = new ResponseDto(new ResponseObject(200, messageSource.getMessage("form.data.saved.successfully", null, Locale.ENGLISH), requestId), ApiStatus.SUCCESS);
+            responseDto = new ResponseDto(new ResponseObject(200, messageSource.getMessage("form.request.accepted.successfully", null, Locale.ENGLISH), "Your request id is : "+requestId), ApiStatus.SUCCESS);
 
         } catch (BadRequestException exception) {
             responseDto = new ResponseDto(new ResponseObject(200, exception.getMessage(), null), ApiStatus.FAILURE);
@@ -42,6 +44,8 @@ public class FormDataController {
         return ResponseEntity.ok(responseDto);
     }
 
+
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping(value = "/check-request-status")
     public ResponseEntity checkRequestStatusById(@RequestParam(value = "requestId") String requestId) throws IOException, DocumentException {
         ResponseDto responseDto = null;
@@ -55,6 +59,7 @@ public class FormDataController {
         return ResponseEntity.ok().body(responseDto);
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping(value = "/download-pdf")
     public ResponseEntity downloadPdfByRequestId(@RequestParam(value = "requestId") String requestId, HttpServletResponse response) throws IOException, DocumentException {
         FileDTO fileDTO = null;

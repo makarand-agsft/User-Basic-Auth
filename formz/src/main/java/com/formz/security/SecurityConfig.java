@@ -37,7 +37,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	public void configure(WebSecurity web) throws Exception {
 		web.ignoring()
 
-				.antMatchers("/swagger-ui.html", "/auth/login","/auth/activate-user","/form-data/add","/form-data/check-request-status","/form-data/download-pdf");
+				.antMatchers("/swagger-ui.html", "/auth/login","/auth/activate-user");
 
 		web.ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
 	}

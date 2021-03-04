@@ -23,8 +23,8 @@ public class RequestHistory extends AuditingEntity{
     @Column(name = "request_json")
     private String requestJson;
 
-    @Column(name = "pdf_download_path")
-    private String pdfDownloadPath;
+    @Column(name = "result")
+    private String result;
 
     public Long getId() {
         return id;
@@ -58,11 +58,11 @@ public class RequestHistory extends AuditingEntity{
         this.requestJson = requestJson;
     }
 
-    public String getPdfDownloadPath() {
-        return pdfDownloadPath;
+    public String getResult() {
+        return result;
     }
 
-    public void setPdfDownloadPath(String pdfDownloadPath) {
-        this.pdfDownloadPath = pdfDownloadPath;
+    public void setResult(String result) {
+        this.result = result;
     }
 }

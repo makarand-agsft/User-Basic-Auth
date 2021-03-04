@@ -86,9 +86,10 @@ public class FormDataServiceImpl implements FormDataService {
             Optional<Form> form = formRepository.findByName(formDataList.getFormName());
             if (!form.isPresent()) {
                 requestHistory.setRequestStatus(RequestStatus.FAILED);
+                String failedCause = String.format("Form [%s] not found: [Request Id: ]", formDataList.getFormName(), requestId);
+                requestHistory.setResult(failedCause);
                 requestHistoryRepository.save(requestHistory);
-                throw new BadRequestException
-                        (String.format("Form [%s] not found: [Request Id: ]", formDataList.getFormName(), requestId));
+                throw new BadRequestException(failedCause);
             }
             //user data list
             int formId = 1;
@@ -100,9 +101,11 @@ public class FormDataServiceImpl implements FormDataService {
                     Optional<Field> field = fieldRepository.findByFieldName(userFieldData.getFieldName());
                     if (!field.isPresent()) {
                         requestHistory.setRequestStatus(RequestStatus.FAILED);
+                        String failedCause = String.format
+                                ("Field name[%s] is not valid: [Request Id: %s]", userFieldData.getFieldName(), requestId);
+                        requestHistory.setResult(failedCause);
                         requestHistoryRepository.save(requestHistory);
-                        throw new BadRequestException(String.format
-                                ("Field name[%s] is not valid: [Request Id: %s]", userFieldData.getFieldName(), requestId));
+                        throw new BadRequestException(failedCause);
                     }
                     if (userFieldData.getFieldValue() == null)
                         userFieldData.setFieldValue("NONE");
@@ -116,8 +119,12 @@ public class FormDataServiceImpl implements FormDataService {
                 for (FormPage formPage : formPages) {
                     String location = formPage.getTemplateLocation();
                     File file = new File(new ClassPathResource(location).getURI());
-                    if(!file.exists()){
-                        throw new BadRequestException("Template "+location.substring(location.lastIndexOf('/')+1)+" not found");
+                    if (!file.exists()) {
+                        requestHistory.setRequestStatus(RequestStatus.FAILED);
+                        String failedCause = "Template " + location.substring(location.lastIndexOf('/') + 1) + " not found";
+                        requestHistory.setResult(failedCause);
+                        requestHistoryRepository.save(requestHistory);
+                        throw new BadRequestException(failedCause);
                     }
                     String html = formzUtils.getTemplatetoText(location, userDataMap);
                     byte[] formPageBytes = new String(html.getBytes(), Charset.defaultCharset().name()).getBytes();
@@ -134,7 +141,7 @@ public class FormDataServiceImpl implements FormDataService {
         MemoryUsageSetting memoryUsageSetting = MemoryUsageSetting.setupMainMemoryOnly();
         pdfMergerUtility.mergeDocuments(memoryUsageSetting);
         requestHistory.setRequestStatus(RequestStatus.GENERATED);
-        requestHistory.setPdfDownloadPath(mainPDF.getAbsolutePath());
+        requestHistory.setResult(mainPDF.getAbsolutePath());
         requestHistoryRepository.save(requestHistory);
 
         return requestId;
@@ -183,6 +190,7 @@ public class FormDataServiceImpl implements FormDataService {
         RequestStatusDTO requestStatusDTO = modelMapper.map(requestHistory, RequestStatusDTO.class);
         requestStatusDTO.setLastUpdatedAt(requestHistory.getLastModifiedDate());
         requestStatusDTO.setRequestStatus(requestHistory.getRequestStatus().getValue());
+        requestStatusDTO.setOutput(requestHistory.getResult());
         return requestStatusDTO;
     }
 
@@ -195,7 +203,7 @@ public class FormDataServiceImpl implements FormDataService {
         RequestHistory requestHistory = requestHistoryRepository.
                 findByRequestId(requestId).orElseThrow(() -> new BadRequestException("invalid request id"));
 
-        String pdfDownloadPath = requestHistory.getPdfDownloadPath();
+        String pdfDownloadPath = requestHistory.getResult();
 
         if (pdfDownloadPath == null || !new File(pdfDownloadPath).exists()) {
             throw new BadRequestException(messageSource.getMessage("pdf.file.not.found", null, Locale.ENGLISH));
@@ -205,7 +213,7 @@ public class FormDataServiceImpl implements FormDataService {
         File file = new File(pdfDownloadPath);
         if (pdfFileData != null) {
             requestHistory.setRequestStatus(RequestStatus.COMPLETED);
-            requestHistory.setPdfDownloadPath(null);
+            requestHistory.setResult(null);
             requestHistoryRepository.save(requestHistory);
              fileDTO= new FileDTO();
             fileDTO.setFileData(pdfFileData);

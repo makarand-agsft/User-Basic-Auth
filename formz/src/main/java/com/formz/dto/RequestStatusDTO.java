@@ -10,6 +10,16 @@ public class RequestStatusDTO {
 
     private String requestStatus;
 
+    private String output;
+
+    public String getOutput() {
+        return output;
+    }
+
+    public void setOutput(String output) {
+        this.output = output;
+    }
+
     @JsonFormat(pattern = "dd/MM/yyyy hh:mm:ss", shape = JsonFormat.Shape.STRING)
     private Date lastUpdatedAt;
 

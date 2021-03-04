@@ -2,10 +2,7 @@ package com.formz.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formz.constants.RequestStatus;
-import com.formz.dto.FieldDataDTO;
-import com.formz.dto.FormDataListDTO;
-import com.formz.dto.RequestStatusDTO;
-import com.formz.dto.UserDataRequestDTO;
+import com.formz.dto.*;
 import com.formz.exception.BadRequestException;
 import com.formz.model.Field;
 import com.formz.model.Form;
@@ -20,23 +17,22 @@ import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 public class FormDataServiceImpl implements FormDataService {
@@ -70,16 +66,16 @@ public class FormDataServiceImpl implements FormDataService {
     @Autowired
     private ModelMapper modelMapper;
 
-    private PDFMergerUtility pdfMergerUtility = new PDFMergerUtility();
 
-
+    @Async
     @Override
-    public String addForms(List<FormDataListDTO> formDataListDTO) throws IOException, DocumentException {
+    public String addForms(List<FormDataListDTO> formDataListDTO, String requestId) throws IOException, DocumentException {
+        PDFMergerUtility pdfMergerUtility = new PDFMergerUtility();
         if (formDataListDTO == null) {
             throw new BadRequestException("Invalid request");
         }
         RequestHistory requestHistory = new RequestHistory();
-        String requestId = RandomStringUtils.randomAlphanumeric(12);
+
         File jsonFile = saveJsonFile(formDataListDTO, requestId);
         requestHistory.setRequestId(requestId);
         requestHistory.setRequestStatus(RequestStatus.PROCESSING);
@@ -108,20 +104,24 @@ public class FormDataServiceImpl implements FormDataService {
                         throw new BadRequestException(String.format
                                 ("Field name[%s] is not valid: [Request Id: %s]", userFieldData.getFieldName(), requestId));
                     }
+                    if (userFieldData.getFieldValue() == null)
+                        userFieldData.setFieldValue("NONE");
                     userDataMap.put(field.get().getFieldName(), userFieldData.getFieldValue());
 
                 }
+
+                userDataMap.put("currentDate",  getFormatedDate());
                 //retrieve form pages and template location for each page
                 List<FormPage> formPages = formPageRepository.findByForm(form.get());
                 for (FormPage formPage : formPages) {
                     String location = formPage.getTemplateLocation();
-//                    File file = new File(location);
-//                    if(!file.exists()){
-//                        throw new BadRequestException("Template "+location.substring(location.lastIndexOf('/')+1)+" not found");
-//                    }
+                    File file = new File(new ClassPathResource(location).getURI());
+                    if(!file.exists()){
+                        throw new BadRequestException("Template "+location.substring(location.lastIndexOf('/')+1)+" not found");
+                    }
                     String html = formzUtils.getTemplatetoText(location, userDataMap);
                     byte[] formPageBytes = new String(html.getBytes(), Charset.defaultCharset().name()).getBytes();
-                    convertToPDF(formPageBytes, form.get().getName() + formPage.getPageNo(), formId);
+                    convertToPDF(formPageBytes, form.get().getName() + formPage.getPageNo(), formId,pdfMergerUtility);
                 }
                 formId++;
             }
@@ -133,14 +133,17 @@ public class FormDataServiceImpl implements FormDataService {
         pdfMergerUtility.setDestinationFileName(mainPDF.getAbsolutePath());
         MemoryUsageSetting memoryUsageSetting = MemoryUsageSetting.setupMainMemoryOnly();
         pdfMergerUtility.mergeDocuments(memoryUsageSetting);
-        //set request status as generated
         requestHistory.setRequestStatus(RequestStatus.GENERATED);
         requestHistory.setPdfDownloadPath(mainPDF.getAbsolutePath());
         requestHistoryRepository.save(requestHistory);
 
         return requestId;
     }
-
+    private String getFormatedDate(){
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMMM dd , yyyy ");
+        String date= dateFormat.format(new Date());
+        return date;
+    }
     private File saveJsonFile(List<FormDataListDTO> formDataListDTO, String requestId) throws IOException {
         File jsonFile = new File(applicationDirectoryBasePath + "/" + TenantContext.getCurrentTenant() + "/request-json-strings/" + requestId + ".json");
         ObjectMapper mapper = new ObjectMapper();
@@ -152,7 +155,7 @@ public class FormDataServiceImpl implements FormDataService {
         return jsonFile;
     }
 
-    private boolean convertToPDF(byte[] pdfData, String pageName, int formId) throws IOException, DocumentException {
+    private void convertToPDF(byte[] pdfData, String pageName, int formId,PDFMergerUtility pdfMergerUtility) throws IOException, DocumentException {
         File file = new File("src/main/resources/" + pageName + formId + ".pdf");
         if (!file.exists())
             file.createNewFile();
@@ -163,9 +166,11 @@ public class FormDataServiceImpl implements FormDataService {
         document.open();
         XMLWorkerHelper.getInstance().parseXHtml(writer, document, templateInputStream, XMLWorkerHelper.class.getResourceAsStream("/default.css"));
         document.close();
+
         pdfMergerUtility.addSource(file);
+        fos.close();
+        writer.close();
         file.delete();
-        return false;
     }
 
     @Override
@@ -182,22 +187,32 @@ public class FormDataServiceImpl implements FormDataService {
     }
 
     @Override
-    public byte[] downloadPDF(String requestId) throws IOException {
+    public FileDTO downloadPDF(String requestId) throws IOException {
         if (requestId == null || requestId.isEmpty()) {
             throw new BadRequestException(messageSource.getMessage("invalid.request", null, Locale.ENGLISH));
         }
+
         RequestHistory requestHistory = requestHistoryRepository.
                 findByRequestId(requestId).orElseThrow(() -> new BadRequestException("invalid request id"));
 
         String pdfDownloadPath = requestHistory.getPdfDownloadPath();
 
-        if (pdfDownloadPath == null && !new File(pdfDownloadPath).exists()) {
+        if (pdfDownloadPath == null || !new File(pdfDownloadPath).exists()) {
             throw new BadRequestException(messageSource.getMessage("pdf.file.not.found", null, Locale.ENGLISH));
         }
+        FileDTO fileDTO = null;
         byte[] pdfFileData = Files.readAllBytes(Paths.get(pdfDownloadPath));
         File file = new File(pdfDownloadPath);
+        if (pdfFileData != null) {
+            requestHistory.setRequestStatus(RequestStatus.COMPLETED);
+            requestHistory.setPdfDownloadPath(null);
+            requestHistoryRepository.save(requestHistory);
+             fileDTO= new FileDTO();
+            fileDTO.setFileData(pdfFileData);
+            fileDTO.setFileName(file.getName());
+        }
         file.delete();
-        return pdfFileData;
+        return fileDTO;
     }
 
 

@@ -1,13 +1,12 @@
 package com.formz.controller;
 
 import com.formz.constants.ApiStatus;
-import com.formz.dto.FormDataListDTO;
-import com.formz.dto.RequestStatusDTO;
-import com.formz.dto.ResponseDto;
-import com.formz.dto.ResponseObject;
+import com.formz.dto.*;
 import com.formz.exception.BadRequestException;
 import com.formz.service.FormDataService;
 import com.itextpdf.text.DocumentException;
+import com.sun.mail.iap.Response;
+import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
@@ -31,8 +30,16 @@ public class FormDataController {
 
     @PostMapping(value = "/add")
     public ResponseEntity addFormData(@RequestBody List<FormDataListDTO> formDataListDTO) throws IOException, DocumentException {
-    String requestId = formDataService.addForms(formDataListDTO);
-    return ResponseEntity.ok(requestId);
+        ResponseDto responseDto = null;
+        try {
+            String requestId = RandomStringUtils.randomAlphanumeric(12);
+            formDataService.addForms(formDataListDTO, requestId);
+            responseDto = new ResponseDto(new ResponseObject(200, messageSource.getMessage("form.data.saved.successfully", null, Locale.ENGLISH), requestId), ApiStatus.SUCCESS);
+
+        } catch (BadRequestException exception) {
+            responseDto = new ResponseDto(new ResponseObject(200, exception.getMessage(), null), ApiStatus.FAILURE);
+        }
+        return ResponseEntity.ok(responseDto);
     }
 
     @PostMapping(value = "/check-request-status")
@@ -50,17 +57,18 @@ public class FormDataController {
 
     @PostMapping(value = "/download-pdf")
     public ResponseEntity downloadPdfByRequestId(@RequestParam(value = "requestId") String requestId, HttpServletResponse response) throws IOException, DocumentException {
+        FileDTO fileDTO = null;
         ResponseDto responseDto = null;
-        byte[] fileData=null;
         try {
-             fileData=formDataService.downloadPDF(requestId);
+            fileDTO = formDataService.downloadPDF(requestId);
             response.setContentType("application/x-msdownload");
-            response.setHeader("Content-disposition", "attachment; filename="+ "abc.pdf");
-            responseDto = new ResponseDto(new ResponseObject(200, messageSource.getMessage("request.status.fetched.successfully", null, Locale.ENGLISH), fileData), ApiStatus.SUCCESS);
+            response.setHeader("Content-disposition", "attachment; filename=" + fileDTO.getFileName());
+
         } catch (BadRequestException badRequestException) {
             responseDto = new ResponseDto(new ResponseObject(400, badRequestException.getMessage(), null), ApiStatus.FAILURE);
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(responseDto);
         }
-        return ResponseEntity.ok().contentLength(fileData.length).contentType(MediaType.APPLICATION_OCTET_STREAM).body(fileData);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(fileDTO.getFileData());
     }
 
 

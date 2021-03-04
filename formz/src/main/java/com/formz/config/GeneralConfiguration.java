@@ -1,8 +1,10 @@
 package com.formz.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.VelocityException;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.IOException;
+import java.util.TimeZone;
 
 @Configuration
 public class GeneralConfiguration {
@@ -45,5 +48,9 @@ public class GeneralConfiguration {
         messageSource.setBasename("classpath:message");
         messageSource.setCacheSeconds(10); //reload messages every 10 seconds
         return messageSource;
+    }
+    @Autowired
+    public void configureJackson(ObjectMapper objectMapper) {
+        objectMapper.setTimeZone(TimeZone.getDefault());
     }
 }

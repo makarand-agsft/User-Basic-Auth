@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8"></meta>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
+    <title>Document</title>
+</head>
+
+<body style="width: 21cm;
+height: 29.7cm;
+margin: 0 auto; padding: 50px;background-color: #ffffff;border: 1px solid black;">
+    <header style="text-align: center;">
+        <img src="AlertAuto_Logo.jpg" alt="" width="150"/>
+    </header>
+    <div style="text-align: center;">
+        <p style = "color:red;">COMPANY CODE: 38722</p>
+    </div>
+    <div>
+        <p> ${currentDate}</p>
+        <p>To Whom It May Concern:</p>
+        <p>This letter is to confirm that <b> ${firstName}, ${lastName}</b> who lives at <b>${street}, ${landMark}, ${state}
+                ${pincode}</b> has been insured with <b> ${companyName}</b> under policy number <b>
+                ${policyNo}</b> from
+            <b> ${policyStartDate} TO ${policyEndDate}</b> with no lapse in coverage as today’s date of <b> ${policyDueDate}</b>
+        </p>
+    </div>
+    <div>
+        <p><b>DRIVERS ON POLICY:</b></p>
+        <p style="margin-bottom: 0px;">1. ${driver1} (DOB:02/02/1994 DL:B162954947718 EXC:No )</p>
+        <p style="margin:0px;">2. ${driver2} (DOB:07/18/1995 DL:Q622216953616 EXC:No )</p>
+        <p style="margin:0px;">3. ${driver3}</p>
+        <p style="margin:0px;">4. ${driver4}</p>
+        <p style="margin:0px;">5. ${driver5}</p>
+    </div>
+    <div>
+        <p><b>VEHICLES ON POLICY:</b></p>
+        <p style="margin-bottom: 0px;">1. ${vehicle1} (VIN:JN1CV6ARXFM650201 )</p>
+        <p style="margin:0px;">2. ${vehicle2}</p>
+        <p style="margin:0px;">3. ${vehicle3}</p>
+        <p style="margin:0px;">4. ${vehicle4}</p>
+        <p style="margin:0px;">5. ${vehicle5}</p>
+    </div>
+
+    <div>
+        <p style="margin-bottom: 0px;">The limits of coverage offered are:</p>
+        <p style="margin:0px;">Bodily Injury: <b>${bodyInjuryPerPerson}</b>  per person / <b>${bodyInjuryPerAccident}</b>  per accident</p>
+        <p style="margin:0px;">Property Damage: <b>${propertyDamagePerAccident}</b> per accident</p>
+        <p style="margin:0px;">Personal Injury: <b>${personalInjuryPerAccident}</b> per accident, <b>${personalInjuryPerDeduct}</b> Deduct, <b>NIRR</b></p>
+        <p style="margin:0px;">Med Pay: <b>${medPay}</b> per accident</p>
+        <p style="margin:0px;">Uninsured Motorist: <b>${unInsuredMotorist}</b></p>
+        <p style="margin:0px;">Comprehensive Deduct: ACV <b>${comprehensiveDeduct}</b> Deduct</p>
+        <p style="margin:0px;">Collision Deduct: ACV <b>${collisionDeduct}</b> Deduct</p>
+        <p style="margin:0px;">Loss of Use: <b>${lossOfUse}</b></p>
+        <p style="margin:0px;">Custom / Add’l Equip: <b>${customEquip}</b></p>
+    </div>
+    <div>
+        <p>If there are any questions or corrections to be made, please contact us at <b>${phoneNumber}</b></p>
+    </div>
+    <div>
+        <p style="margin:0px;">Respectfully Yours,</p>
+        <p style="margin:0px;">ALERT AUTO INSURANCE INC.</p>
+        <p style="margin:0px;">FLORIDA COMPANY CODE: 38722</p>
+    </div>
+
+
+  <div style="text-align:center;padding-top:50px">
+        <p style="margin:0px;">P.O. Box 25187 Sarasota, FL 34277-2187</p>
+        <p style="margin:0px;">Phone: (833) 275-7256 Fax: (941) 296-8733</p>
+    </div>
+    </body>
+
+</html>

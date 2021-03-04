@@ -1,5 +1,7 @@
 package com.formz.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.util.Date;
 
 public class RequestStatusDTO {
@@ -8,6 +10,7 @@ public class RequestStatusDTO {
 
     private String requestStatus;
 
+    @JsonFormat(pattern = "dd/MM/yyyy hh:mm:ss", shape = JsonFormat.Shape.STRING)
     private Date lastUpdatedAt;
 
     public String getRequestId() {

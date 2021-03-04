@@ -1,5 +1,6 @@
 package com.formz.service;
 
+import com.formz.dto.FileDTO;
 import com.formz.dto.FormDataListDTO;
 import com.formz.dto.RequestStatusDTO;
 import com.itextpdf.text.DocumentException;
@@ -9,9 +10,9 @@ import java.util.List;
 
 public interface FormDataService {
 
-    String addForms(List<FormDataListDTO> formDataListDTO) throws IOException, DocumentException;
+    String addForms(List<FormDataListDTO> formDataListDTO, String requestId) throws IOException, DocumentException;
 
     RequestStatusDTO checkRequestStatus(String requestId);
 
-    byte[] downloadPDF(String requestId) throws IOException;
+    FileDTO downloadPDF(String requestId) throws IOException;
 }

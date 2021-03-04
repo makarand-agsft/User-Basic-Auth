@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableAsync;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 
@@ -18,6 +19,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableJpaAuditing(auditorAwareRef = "auditorAware")
 @EnableSwagger2
 @EnableAutoConfiguration(exclude = { FreeMarkerAutoConfiguration.class })
+@EnableAsync
 public class FormzApplication {
 
 	private static final Logger log = LogManager.getLogger(FormzApplication.class);

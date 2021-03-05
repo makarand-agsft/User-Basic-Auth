@@ -41,7 +41,7 @@ public class FormDataController {
         } catch (BadRequestException exception) {
             responseDto = new ResponseDto(new ResponseObject(200, exception.getMessage(), null), ApiStatus.FAILURE);
         }
-        return ResponseEntity.ok(responseDto);
+        return ResponseEntity.ok().body(responseDto);
     }
 
 

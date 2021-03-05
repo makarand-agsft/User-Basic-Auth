@@ -13,6 +13,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableAsync;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 
 @SpringBootApplication(exclude = { DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class,
 		DataSourceTransactionManagerAutoConfiguration.class })
@@ -24,10 +29,11 @@ public class FormzApplication {
 
 	private static final Logger log = LogManager.getLogger(FormzApplication.class);
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		log.info("STARTING APPLICATION");
 		SpringApplication.run(FormzApplication.class, args);
 		log.info("APPLICATION STARTED");
+
 	}
 
 }

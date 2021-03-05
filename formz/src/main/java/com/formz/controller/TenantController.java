@@ -33,7 +33,6 @@ public class TenantController {
         try {
             tenantService.addTenant(tenantDto);
             responseDto = new ResponseDto(new ResponseObject(201, "Tenant Added", null), ApiStatus.SUCCESS);
-            return ResponseEntity.ok("Added");
         } catch (BadRequestException exception) {
             responseDto = new ResponseDto(new ResponseObject(200, exception.getMessage(), null), ApiStatus.FAILURE);
         }

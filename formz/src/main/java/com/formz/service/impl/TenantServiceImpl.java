@@ -103,6 +103,9 @@ public class TenantServiceImpl implements TenantService {
         ClassPathResource c = new ClassPathResource("database/tenant/V1__main_script.sql");
         Reader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
         scriptRunner.runScript(reader);
+        ClassPathResource bootStrapDataFile = new ClassPathResource("database/tenant/V1__bootstrap_data_script.sql");
+        Reader bootStrapFileReader = new BufferedReader(new InputStreamReader(bootStrapDataFile.getInputStream()));
+        scriptRunner.runScript(bootStrapFileReader);
         addTenantAdmin(tenantDto);
         createFormDirectory(tenantDto.getTenant());
         connection.close();
@@ -157,11 +160,12 @@ public class TenantServiceImpl implements TenantService {
         if (!file.exists()) {
             Files.createDirectories(Paths.get(file.toURI()));
         }
-        File requestJsonDirectory = new File(applicationDirectoryBasePath + "/" + TenantContext.getCurrentTenant() + "/request-json-strings/");
+        File requestJsonDirectory = new File(applicationDirectoryBasePath + "/" + tenantName + "/request-json-strings/");
         if (!requestJsonDirectory.exists())
-            requestJsonDirectory.mkdir();
-        File downloadPdfDirectory = new File(applicationDirectoryBasePath + "/" + TenantContext.getCurrentTenant() + "/pdfs/");
+            Files.createDirectories(Paths.get(requestJsonDirectory.toURI()));
+
+        File downloadPdfDirectory = new File(applicationDirectoryBasePath + "/" + tenantName + "/pdfs/");
         if (!downloadPdfDirectory.exists())
-            downloadPdfDirectory.mkdir();
+            Files.createDirectories(Paths.get(downloadPdfDirectory.toURI()));
     }
 }

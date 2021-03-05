@@ -214,6 +214,7 @@ public class FormDataServiceImpl implements FormDataService {
         if (pdfFileData != null) {
             requestHistory.setRequestStatus(RequestStatus.COMPLETED);
             requestHistory.setResult(null);
+            requestHistory.setRequestJson(null);
             requestHistoryRepository.save(requestHistory);
              fileDTO= new FileDTO();
             fileDTO.setFileData(pdfFileData);

@@ -87,7 +87,7 @@ CREATE TABLE `request_history` (
   `request_id` varchar(255) DEFAULT NULL,
   `status` varchar(255) DEFAULT NULL,
   `request_json` varchar(255) DEFAULT NULL,
-  `pdf_download_path` varchar(255) DEFAULT NULL,
+  `result` varchar(255) DEFAULT NULL,
   `created_by` varchar(255) DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_by` varchar(255) DEFAULT NULL,

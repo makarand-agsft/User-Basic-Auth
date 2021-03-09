@@ -118,8 +118,8 @@ public class FormDataServiceImpl implements FormDataService {
                 List<FormPage> formPages = formPageRepository.findByForm(form.get());
                 for (FormPage formPage : formPages) {
                     String location = formPage.getTemplateLocation();
-                    File file = new File(new ClassPathResource(location).getURI());
-                    if (!file.exists()) {
+                    InputStream is=FormDataServiceImpl.class.getClassLoader().getResourceAsStream(location);
+                    if (is==null || is.available()==0) {
                         requestHistory.setRequestStatus(RequestStatus.FAILED);
                         String failedCause = "Template " + location.substring(location.lastIndexOf('/') + 1) + " not found";
                         requestHistory.setResult(failedCause);
@@ -163,7 +163,7 @@ public class FormDataServiceImpl implements FormDataService {
     }
 
     private void convertToPDF(byte[] pdfData, String pageName, int formId,PDFMergerUtility pdfMergerUtility) throws IOException, DocumentException {
-        File file = new File("src/main/resources/" + pageName + formId + ".pdf");
+        File file = new File(pageName + formId + ".pdf");
         if (!file.exists())
             file.createNewFile();
         Document document = new Document(PageSize.A4);

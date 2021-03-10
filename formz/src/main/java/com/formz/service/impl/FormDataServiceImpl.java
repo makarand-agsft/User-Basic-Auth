@@ -31,6 +31,9 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+/**
+ * This class is responsible for providing form data operations
+ */
 @Service
 public class FormDataServiceImpl implements FormDataService {
 
@@ -64,6 +67,14 @@ public class FormDataServiceImpl implements FormDataService {
     private ModelMapper modelMapper;
 
 
+    /**
+     * This method accepts form request data and generates its pdf via velocity template
+     *
+     * @param formDataListDTO
+     * @param requestId
+     * @return
+     * @throws IOException
+     */
     @Async
     @Override
     public String addForms(List<FormDataListDTO> formDataListDTO, String requestId) throws IOException {
@@ -110,13 +121,13 @@ public class FormDataServiceImpl implements FormDataService {
 
                 }
 
-                userDataMap.put("currentDate",  getFormatedDate());
+                userDataMap.put("currentDate", getFormatedDate());
                 //retrieve form pages and template location for each page
                 List<FormPage> formPages = formPageRepository.findByForm(form.get());
                 for (FormPage formPage : formPages) {
                     String location = formPage.getTemplateLocation();
-                    InputStream is=FormDataServiceImpl.class.getClassLoader().getResourceAsStream(location);
-                    if (is==null || is.available()==0) {
+                    InputStream is = FormDataServiceImpl.class.getClassLoader().getResourceAsStream(location);
+                    if (is == null || is.available() == 0) {
                         requestHistory.setRequestStatus(RequestStatus.FAILED);
                         String failedCause = "Template " + location.substring(location.lastIndexOf('/') + 1) + " not found";
                         requestHistory.setResult(failedCause);
@@ -125,7 +136,7 @@ public class FormDataServiceImpl implements FormDataService {
                     }
                     Resource resource = new ClassPathResource("images/sample.png");
                     byte[] bytes = Files.readAllBytes(Paths.get(resource.getURI()));
-                    userDataMap.put("logoimage", "data:image/png;charset=utf-8;base64,"+Base64.getEncoder().encodeToString(bytes));
+                    userDataMap.put("logoimage", "data:image/png;charset=utf-8;base64," + Base64.getEncoder().encodeToString(bytes));
                     String html = formzUtils.getTemplatetoText(location, userDataMap);
                     convertHtmlToPdf(formId, form.get().getName(), pdfMergerUtility, html);
                 }
@@ -146,19 +157,42 @@ public class FormDataServiceImpl implements FormDataService {
         return requestId;
     }
 
+    /**
+     * This method returns current date with specified format
+     *
+     * @return formatted date
+     */
+    private String getFormatedDate() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMMM dd , yyyy ");
+        String date = dateFormat.format(new Date());
+        return date;
+    }
+
+    /**
+     * This method is responsible for converting html content to pdf with image
+     *
+     * @param formId
+     * @param name
+     * @param pdfMergerUtility
+     * @param html
+     * @throws IOException
+     */
     private void convertHtmlToPdf(int formId, String name, PDFMergerUtility pdfMergerUtility, String html) throws IOException {
         File file = new File(name + formId + ".pdf");
-        if(!file.exists())
-        HtmlConverter.convertToPdf(html, new FileOutputStream(file));
+        if (!file.exists())
+            HtmlConverter.convertToPdf(html, new FileOutputStream(file));
         pdfMergerUtility.addSource(file);
         file.delete();
     }
 
-    private String getFormatedDate(){
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMMM dd , yyyy");
-        String date= dateFormat.format(new Date());
-        return date;
-    }
+    /**
+     * This method accepts form data and request id, saves the request json in specified directory
+     *
+     * @param formDataListDTO
+     * @param requestId
+     * @return json file
+     * @throws IOException
+     */
     private File saveJsonFile(List<FormDataListDTO> formDataListDTO, String requestId) throws IOException {
         File jsonFile = new File(applicationDirectoryBasePath + "/" + TenantContext.getCurrentTenant() + "/request-json-strings/" + requestId + ".json");
         ObjectMapper mapper = new ObjectMapper();
@@ -170,6 +204,12 @@ public class FormDataServiceImpl implements FormDataService {
         return jsonFile;
     }
 
+    /**
+     * This method is responsible for checking request status by given request id
+     *
+     * @param requestId
+     * @return
+     */
     @Override
     public RequestStatusDTO checkRequestStatus(String requestId) {
         if (requestId == null || requestId.isEmpty()) {
@@ -184,6 +224,13 @@ public class FormDataServiceImpl implements FormDataService {
         return requestStatusDTO;
     }
 
+    /**
+     * This method returns pdf file for given request id
+     *
+     * @param requestId
+     * @return
+     * @throws IOException
+     */
     @Override
     public FileDTO downloadPDF(String requestId) throws IOException {
         if (requestId == null || requestId.isEmpty()) {
@@ -206,13 +253,12 @@ public class FormDataServiceImpl implements FormDataService {
             requestHistory.setResult(null);
             requestHistory.setRequestJson(null);
             requestHistoryRepository.save(requestHistory);
-             fileDTO= new FileDTO();
+            fileDTO = new FileDTO();
             fileDTO.setFileData(pdfFileData);
             fileDTO.setFileName(file.getName());
         }
         file.delete();
         return fileDTO;
     }
-
 
 }

@@ -19,6 +19,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 
+/**
+ *
+ * This class is responsible for tenant related operations
+ */
 @RestController
 @RequestMapping(value = "/tenant")
 public class TenantController {
@@ -26,6 +30,13 @@ public class TenantController {
     @Autowired
     private TenantService tenantService;
 
+    /**
+     * This is an end point for adding tenant into system
+     * @param tenantDto
+     * @return success message after adding tenant
+     * @throws IOException
+     * @throws SQLException
+     */
     @PreAuthorize("hasAnyAuthority('SUPER_ADMIN')")
     @PostMapping(value = "/add")
     public ResponseEntity addTenant(@RequestBody TenantDto tenantDto) throws IOException, SQLException {

@@ -17,6 +17,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * This class is responsible for form data operations
+ *
+ */
 @RestController
 @RequestMapping(value = "/form-data")
 public class FormDataController {
@@ -27,6 +31,13 @@ public class FormDataController {
     @Autowired
     private MessageSource messageSource;
 
+    /**
+     * This method is an end point for adding form data
+     *
+     * @param formDataListDTO
+     * @return success message after saving form data with valid request id
+     * @throws IOException
+     */
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping(value = "/add")
     public ResponseEntity addFormData(@RequestBody List<FormDataListDTO> formDataListDTO) throws IOException {
@@ -34,7 +45,7 @@ public class FormDataController {
         try {
             String requestId = RandomStringUtils.randomAlphanumeric(12);
             formDataService.addForms(formDataListDTO, requestId);
-            responseDto = new ResponseDto(new ResponseObject(200, messageSource.getMessage("form.request.accepted.successfully", null, Locale.ENGLISH), "Your request id is : "+requestId), ApiStatus.SUCCESS);
+            responseDto = new ResponseDto(new ResponseObject(200, messageSource.getMessage("form.request.accepted.successfully", null, Locale.ENGLISH), "Your request id is : " + requestId), ApiStatus.SUCCESS);
 
         } catch (BadRequestException exception) {
             responseDto = new ResponseDto(new ResponseObject(200, exception.getMessage(), null), ApiStatus.FAILURE);
@@ -43,13 +54,20 @@ public class FormDataController {
     }
 
 
+    /**
+     * This method is an end point for checking request status by request id
+     *
+     * @param requestId
+     * @return status of request
+     * @throws IOException
+     */
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping(value = "/check-request-status")
-    public ResponseEntity checkRequestStatusById(@RequestParam(value = "requestId") String requestId) throws IOException{
+    public ResponseEntity checkRequestStatusById(@RequestParam(value = "requestId") String requestId) throws IOException {
         ResponseDto responseDto = null;
 
         try {
-            RequestStatusDTO requestStatusDTO =formDataService.checkRequestStatus(requestId);
+            RequestStatusDTO requestStatusDTO = formDataService.checkRequestStatus(requestId);
             responseDto = new ResponseDto(new ResponseObject(200, messageSource.getMessage("request.status.fetched.successfully", null, Locale.ENGLISH), requestStatusDTO), ApiStatus.SUCCESS);
         } catch (BadRequestException badRequestException) {
             responseDto = new ResponseDto(new ResponseObject(400, badRequestException.getMessage(), null), ApiStatus.FAILURE);
@@ -57,9 +75,17 @@ public class FormDataController {
         return ResponseEntity.ok().body(responseDto);
     }
 
+    /**
+     * This method is an endpoint for downloading pdf of form data
+     *
+     * @param requestId
+     * @param response
+     * @return PDF file in response
+     * @throws IOException
+     */
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping(value = "/download-pdf")
-    public ResponseEntity downloadPdfByRequestId(@RequestParam(value = "requestId") String requestId, HttpServletResponse response) throws IOException{
+    public ResponseEntity downloadPdfByRequestId(@RequestParam(value = "requestId") String requestId, HttpServletResponse response) throws IOException {
         FileDTO fileDTO = null;
         ResponseDto responseDto = null;
         try {

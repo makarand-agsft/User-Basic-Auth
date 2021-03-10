@@ -12,8 +12,8 @@
 height: 29.7cm;
 margin: 0 auto;background-color: #ffffff;">
     <header style="text-align: center;">
-        <img src="AlertAuto_Logo.jpg" alt="" width="150"/>
-    </header>
+  </header>
+     <img src="${logoimage}" alt="No Image" width="150"/>
     <div style="text-align: center;">
         <p style = "color:red;">COMPANY CODE: 38722</p>
     </div>
@@ -28,19 +28,29 @@ margin: 0 auto;background-color: #ffffff;">
     </div>
     <div>
         <p><b>DRIVERS ON POLICY:</b></p>
-        <p style="margin-bottom: 0px;">1. ${driver1} (DOB:02/02/1994 DL:B162954947718 EXC:No )</p>
-        <p style="margin:0px;">2. ${driver2} (DOB:07/18/1995 DL:Q622216953616 EXC:No )</p>
-        <p style="margin:0px;">3. ${driver3}</p>
-        <p style="margin:0px;">4. ${driver4}</p>
-        <p style="margin:0px;">5. ${driver5}</p>
+        #if( $driver1)
+        <p style="margin-bottom: 0px;">1. ${driver1} (DOB:02/02/1994 DL:B162954947718 EXC:No )</p>#end
+        #if( $driver2)
+        <p style="margin:0px;">2. ${driver2} (DOB:07/18/1995 DL:Q622216953616 EXC:No )</p>#end
+        #if( $driver3)
+        <p style="margin:0px;">3. ${driver3}</p>#end
+        #if( $driver4)
+        <p style="margin:0px;">4. ${driver4}</p>#end
+        #if( $driver5)
+        <p style="margin:0px;">5. ${driver5}</p>#end
     </div>
     <div>
         <p><b>VEHICLES ON POLICY:</b></p>
-        <p style="margin-bottom: 0px;">1. ${vehicle1} (VIN:JN1CV6ARXFM650201 )</p>
-        <p style="margin:0px;">2. ${vehicle2}</p>
-        <p style="margin:0px;">3. ${vehicle3}</p>
-        <p style="margin:0px;">4. ${vehicle4}</p>
-        <p style="margin:0px;">5. ${vehicle5}</p>
+        #if( $vehicle1)
+        <p style="margin-bottom: 0px;">1. ${vehicle1} (VIN:JN1CV6ARXFM650201 )</p>#end
+        #if( $vehicle2)
+        <p style="margin:0px;">2. ${vehicle2}</p>#end
+        #if( $vehicle3)
+        <p style="margin:0px;">3. ${vehicle3}</p>#end
+        #if( $vehicle4)
+        <p style="margin:0px;">4. ${vehicle4}</p>#end
+        #if( $vehicle5)
+        <p style="margin:0px;">5. ${vehicle5}</p>#end
     </div>
 
     <div>

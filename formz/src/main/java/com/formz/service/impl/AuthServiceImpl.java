@@ -24,6 +24,10 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+/**
+ * This class is responsible for providing user auth features
+ */
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -47,6 +51,13 @@ public class AuthServiceImpl implements AuthService {
     private ModelMapper modelMapper;
 
     Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+
+    /**
+     * This method logs the user in with valid credentials
+     *
+     * @param userLoginRequestDTO
+     * @return user details along with login token
+     */
     @Override
     public UserDto loginUser(UserLoginRequestDTO userLoginRequestDTO) {
         UserDto resDto = null;
@@ -69,15 +80,23 @@ public class AuthServiceImpl implements AuthService {
             tokenRepository.save(token);
 
             resDto = modelMapper.map(user.get(), UserDto.class);
-            resDto.setRoles(user.get().getRoles().stream().map(x->x.getRole()).collect(Collectors.toList()));
+            resDto.setRoles(user.get().getRoles().stream().map(x -> x.getRole()).collect(Collectors.toList()));
             resDto.setToken(token.getToken());
 
-        }else{
+        } else {
             throw new BadRequestException("Invalid Credentials");
         }
         return resDto;
     }
 
+    /**
+     * This method is responsible for activating user profile with permanent password
+     *
+     * @param activateUserDto
+     * @param userToken
+     * @param httpServletRequest
+     * @return user details
+     */
     @Override
     public UserDto activateUser(ActivateUserDto activateUserDto, String userToken, HttpServletRequest httpServletRequest) {
         String resetToken = httpServletRequest.getParameter("token");
@@ -90,7 +109,7 @@ public class AuthServiceImpl implements AuthService {
         if (null == user) {
             throw new BadRequestException("User not found");
         }
-        if(!activateUserDto.getPassword().equalsIgnoreCase(activateUserDto.getConfirmPassword())){
+        if (!activateUserDto.getPassword().equalsIgnoreCase(activateUserDto.getConfirmPassword())) {
             throw new BadRequestException("Password doesn't match");
         }
         log.info("Resetting password for user : " + userEmail);

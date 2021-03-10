@@ -4,8 +4,6 @@ import com.formz.constants.ApiStatus;
 import com.formz.dto.*;
 import com.formz.exception.BadRequestException;
 import com.formz.service.FormDataService;
-import com.itextpdf.text.DocumentException;
-import com.sun.mail.iap.Response;
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -31,7 +29,7 @@ public class FormDataController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping(value = "/add")
-    public ResponseEntity addFormData(@RequestBody List<FormDataListDTO> formDataListDTO) throws IOException, DocumentException {
+    public ResponseEntity addFormData(@RequestBody List<FormDataListDTO> formDataListDTO) throws IOException {
         ResponseDto responseDto = null;
         try {
             String requestId = RandomStringUtils.randomAlphanumeric(12);
@@ -47,7 +45,7 @@ public class FormDataController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping(value = "/check-request-status")
-    public ResponseEntity checkRequestStatusById(@RequestParam(value = "requestId") String requestId) throws IOException, DocumentException {
+    public ResponseEntity checkRequestStatusById(@RequestParam(value = "requestId") String requestId) throws IOException{
         ResponseDto responseDto = null;
 
         try {
@@ -61,7 +59,7 @@ public class FormDataController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping(value = "/download-pdf")
-    public ResponseEntity downloadPdfByRequestId(@RequestParam(value = "requestId") String requestId, HttpServletResponse response) throws IOException, DocumentException {
+    public ResponseEntity downloadPdfByRequestId(@RequestParam(value = "requestId") String requestId, HttpServletResponse response) throws IOException{
         FileDTO fileDTO = null;
         ResponseDto responseDto = null;
         try {

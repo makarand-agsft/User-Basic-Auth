@@ -10,7 +10,7 @@
 
 <body style="width: 21cm;
 height: 29.7cm;
-margin: 0 auto; padding: 50px;background-color: #ffffff;border: 1px solid black;">
+margin: 0 auto;background-color: #ffffff;">
     <header style="text-align: center;">
         <img src="AlertAuto_Logo.jpg" alt="" width="150"/>
     </header>

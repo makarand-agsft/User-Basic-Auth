@@ -12,11 +12,7 @@ import com.formz.multitenancy.TenantContext;
 import com.formz.repo.*;
 import com.formz.service.FormDataService;
 import com.formz.utils.FormzUtils;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.PageSize;
-import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.tool.xml.XMLWorkerHelper;
+import com.itextpdf.html2pdf.HtmlConverter;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.modelmapper.ModelMapper;
@@ -24,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -69,7 +66,7 @@ public class FormDataServiceImpl implements FormDataService {
 
     @Async
     @Override
-    public String addForms(List<FormDataListDTO> formDataListDTO, String requestId) throws IOException, DocumentException {
+    public String addForms(List<FormDataListDTO> formDataListDTO, String requestId) throws IOException {
         PDFMergerUtility pdfMergerUtility = new PDFMergerUtility();
         if (formDataListDTO == null) {
             throw new BadRequestException("Invalid request");
@@ -126,9 +123,11 @@ public class FormDataServiceImpl implements FormDataService {
                         requestHistoryRepository.save(requestHistory);
                         throw new BadRequestException(failedCause);
                     }
+                    Resource resource = new ClassPathResource("images/sample.png");
+                    byte[] bytes = Files.readAllBytes(Paths.get(resource.getURI()));
+                    userDataMap.put("logoimage", "data:image/png;charset=utf-8;base64,"+Base64.getEncoder().encodeToString(bytes));
                     String html = formzUtils.getTemplatetoText(location, userDataMap);
-                    byte[] formPageBytes = new String(html.getBytes(), Charset.defaultCharset().name()).getBytes();
-                    convertToPDF(formPageBytes, form.get().getName() + formPage.getPageNo(), formId,pdfMergerUtility);
+                    convertHtmlToPdf(formId, form.get().getName(), pdfMergerUtility, html);
                 }
                 formId++;
             }
@@ -146,8 +145,17 @@ public class FormDataServiceImpl implements FormDataService {
 
         return requestId;
     }
+
+    private void convertHtmlToPdf(int formId, String name, PDFMergerUtility pdfMergerUtility, String html) throws IOException {
+        File file = new File(name + formId + ".pdf");
+        if(!file.exists())
+        HtmlConverter.convertToPdf(html, new FileOutputStream(file));
+        pdfMergerUtility.addSource(file);
+        file.delete();
+    }
+
     private String getFormatedDate(){
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMMM dd , yyyy ");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMMM dd , yyyy");
         String date= dateFormat.format(new Date());
         return date;
     }
@@ -160,24 +168,6 @@ public class FormDataServiceImpl implements FormDataService {
         writer.write(mapper.writeValueAsString(formDataListDTO));
         writer.close();
         return jsonFile;
-    }
-
-    private void convertToPDF(byte[] pdfData, String pageName, int formId,PDFMergerUtility pdfMergerUtility) throws IOException, DocumentException {
-        File file = new File(pageName + formId + ".pdf");
-        if (!file.exists())
-            file.createNewFile();
-        Document document = new Document(PageSize.A4);
-        ByteArrayInputStream templateInputStream = new ByteArrayInputStream(pdfData);
-        FileOutputStream fos = new FileOutputStream(file);
-        PdfWriter writer = PdfWriter.getInstance(document, fos);
-        document.open();
-        XMLWorkerHelper.getInstance().parseXHtml(writer, document, templateInputStream, XMLWorkerHelper.class.getResourceAsStream("/default.css"));
-        document.close();
-
-        pdfMergerUtility.addSource(file);
-        fos.close();
-        writer.close();
-        file.delete();
     }
 
     @Override

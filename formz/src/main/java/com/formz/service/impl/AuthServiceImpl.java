@@ -68,6 +68,7 @@ public class AuthServiceImpl implements AuthService {
         if (!user.isPresent()) {
             throw new BadRequestException("Invalid credentials");
         }
+        log.info("user logging in :"+user.get().getEmail());
         if (passwordEncoder.matches(userLoginRequestDTO.getPassword(), user.get().getPassword()) && user.get().getActive().equals(Boolean.TRUE)) {
             Token token = new Token();
             token.setToken(jwtProvider.generateToken(user.get()));
@@ -84,6 +85,7 @@ public class AuthServiceImpl implements AuthService {
             resDto.setToken(token.getToken());
 
         } else {
+            log.info("Invalid credentials provided by user:"+user.get().getEmail());
             throw new BadRequestException("Invalid Credentials");
         }
         return resDto;
@@ -107,9 +109,11 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByEmail(userEmail).orElse(null);
         if (null == user) {
+            log.info("User not found:"+userEmail);
             throw new BadRequestException("User not found");
         }
         if (!activateUserDto.getPassword().equalsIgnoreCase(activateUserDto.getConfirmPassword())) {
+            log.info("Password doesn't match for user :"+userEmail);
             throw new BadRequestException("Password doesn't match");
         }
         log.info("Resetting password for user : " + userEmail);

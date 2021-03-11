@@ -16,6 +16,8 @@ import com.itextpdf.html2pdf.HtmlConverter;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -30,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This class is responsible for providing form data operations
@@ -66,6 +69,7 @@ public class FormDataServiceImpl implements FormDataService {
     @Autowired
     private ModelMapper modelMapper;
 
+    Logger log = LoggerFactory.getLogger(FormDataServiceImpl.class);
 
     /**
      * This method accepts form request data and generates its pdf via velocity template
@@ -78,6 +82,7 @@ public class FormDataServiceImpl implements FormDataService {
     @Async
     @Override
     public String addForms(List<FormDataListDTO> formDataListDTO, String requestId) throws IOException {
+
         PDFMergerUtility pdfMergerUtility = new PDFMergerUtility();
         if (formDataListDTO == null) {
             throw new BadRequestException("Invalid request");
@@ -103,6 +108,7 @@ public class FormDataServiceImpl implements FormDataService {
             int formId = 1;
             for (UserDataRequestDTO userData : formDataList.getUserDataList()) {
                 HashMap<String, Object> userDataMap = new HashMap<>();
+
                 //field list
                 for (FieldDataDTO userFieldData : userData.getFieldDataList()) {
                     //validate fields here
@@ -115,10 +121,29 @@ public class FormDataServiceImpl implements FormDataService {
                         requestHistoryRepository.save(requestHistory);
                         throw new BadRequestException(failedCause);
                     }
+                    if (field.get().getType().equalsIgnoreCase("table")) {
+                        List<HashMap<String, Object>> tableDataList = (List<HashMap<String, Object>>) ((List) userFieldData.getFieldValue()).stream().collect(Collectors.toList());
+                        List<String> childField = field.get().getChildFields().stream().map(x -> x.getFieldName()).collect(Collectors.toList());
+                        for (HashMap<String, Object> tableDataField : tableDataList) {
+                            for (String child : childField) {
+
+                                if (tableDataField.get(child) == null) {
+                                    requestHistory.setRequestStatus(RequestStatus.FAILED);
+                                    String failedCause = String.format
+                                            ("Table data incorrect for [%s] : [Request Id: %s]", field.get().getFieldName(), requestId);
+                                    requestHistory.setResult(failedCause);
+                                    requestHistoryRepository.save(requestHistory);
+                                    throw new BadRequestException(failedCause);
+
+                                }
+                            }
+                        }
+                    }
+
+
                     if (userFieldData.getFieldValue() == null)
                         userFieldData.setFieldValue("NONE");
                     userDataMap.put(field.get().getFieldName(), userFieldData.getFieldValue());
-
                 }
 
                 userDataMap.put("currentDate", getFormatedDate());

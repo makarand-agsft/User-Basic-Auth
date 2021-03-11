@@ -10,10 +10,11 @@
 
 <body style="width: 21cm;
 height: 29.7cm;
-margin: 0 auto;background-color: #ffffff;">
+margin: 0 auto; padding: 50px;background-color: #ffffff;border: 1px solid black;">
     <header style="text-align: center;">
-  </header>
-     <img src="${logoimage}" alt="No Image" width="150"/>
+        <img src="AlertAuto_Logo.jpg" alt="" width="150"/>
+    </header>
+    <img src="{logoimage}" alt="" width=100px height=100px>
     <div style="text-align: center;">
         <p style = "color:red;">COMPANY CODE: 38722</p>
     </div>
@@ -39,23 +40,11 @@ margin: 0 auto;background-color: #ffffff;">
         #if( $driver5)
         <p style="margin:0px;">5. ${driver5}</p>#end
     </div>
-    <div>
-        <p><b>VEHICLES ON POLICY:</b></p>
-        #if( $vehicle1)
-        <p style="margin-bottom: 0px;">1. ${vehicle1} (VIN:JN1CV6ARXFM650201 )</p>#end
-        #if( $vehicle2)
-        <p style="margin:0px;">2. ${vehicle2}</p>#end
-        #if( $vehicle3)
-        <p style="margin:0px;">3. ${vehicle3}</p>#end
-        #if( $vehicle4)
-        <p style="margin:0px;">4. ${vehicle4}</p>#end
-        #if( $vehicle5)
-        <p style="margin:0px;">5. ${vehicle5}</p>#end
-    </div>
+  
 
     <div>
         <p style="margin-bottom: 0px;">The limits of coverage offered are:</p>
-        <p style="margin:0px;">Bodily Injury: <b>${bodyInjuryPerPerson}</b>  per person / <b>${bodyInjuryPerAccident}</b>  per accident</p>
+        <p style="margin:0px;">Bodily Injury: <b>${bodyInjuryPerPerson}</b>  per vehicle / <b>${bodyInjuryPerAccident}</b>  per accident</p>
         <p style="margin:0px;">Property Damage: <b>${propertyDamagePerAccident}</b> per accident</p>
         <p style="margin:0px;">Personal Injury: <b>${personalInjuryPerAccident}</b> per accident, <b>${personalInjuryPerDeduct}</b> Deduct, <b>NIRR</b></p>
         <p style="margin:0px;">Med Pay: <b>${medPay}</b> per accident</p>
@@ -65,7 +54,7 @@ margin: 0 auto;background-color: #ffffff;">
         <p style="margin:0px;">Loss of Use: <b>${lossOfUse}</b></p>
         <p style="margin:0px;">Custom / Add’l Equip: <b>${customEquip}</b></p>
     </div>
-    <div>
+    <div style="font-family: 'Times New Roman';font-style: italic;color: red;background-color: royalblue;">
         <p>If there are any questions or corrections to be made, please contact us at <b>${phoneNumber}</b></p>
     </div>
     <div>
@@ -79,6 +68,30 @@ margin: 0 auto;background-color: #ffffff;">
         <p style="margin:0px;">P.O. Box 25187 Sarasota, FL 34277-2187</p>
         <p style="margin:0px;">Phone: (833) 275-7256 Fax: (941) 296-8733</p>
     </div>
+
+      <table style="width:100%;" border=1>
+            <tr>
+              <th>Id</th>
+              <th>name</th>
+              <th>VIN</th>
+            </tr>
+            #if(${vehicles})
+
+            #foreach(${vehicle} in ${vehicles})
+
+            <tr>
+                <td>${vehicle.vehicleNo}</td>
+                <td>${vehicle.vehicleName}</td>
+                <td>${vehicle.VIN}</td>
+            </tr>
+
+        #end
+        #end
+      </table>
+
+
+
+
     </body>
 
 </html>

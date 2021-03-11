@@ -24,6 +24,29 @@ public class Field extends AuditingEntity{
     @OneToMany(mappedBy = "field")
     private List<FormField> formFields;
 
+    @ManyToOne
+    @JoinColumn(name = "parent_field_id")
+    private Field parentField;
+
+    @OneToMany(mappedBy = "parentField",fetch = FetchType.EAGER)
+    private List<Field> childFields;
+
+    public Field getParentField() {
+        return parentField;
+    }
+
+    public void setParentField(Field parentField) {
+        this.parentField = parentField;
+    }
+
+    public List<Field> getChildFields() {
+        return childFields;
+    }
+
+    public void setChildFields(List<Field> childFields) {
+        this.childFields = childFields;
+    }
+
     public List<FormField> getFormFields() {
         return formFields;
     }

@@ -66,7 +66,7 @@ margin: 0 auto; padding: 50px;background-color: #ffffff;border: 1px solid black;
         <p style="margin:0px;">Loss of Use: <b>${lossOfUse}</b></p>
         <p style="margin:0px;">Custom / Add’l Equip: <b>${customEquip}</b></p>
     </div>
-    <div>
+    <div style="font-family: 'Times New Roman';font-style: italic;color: red;">
         <p>If there are any questions or corrections to be made, please contact us at <b>${phoneNumber}</b></p>
     </div>
     <div>

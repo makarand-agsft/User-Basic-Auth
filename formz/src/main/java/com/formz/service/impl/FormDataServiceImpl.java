@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.formz.constants.RequestStatus;
 import com.formz.dto.*;
 import com.formz.exception.BadRequestException;
-import com.formz.model.Field;
-import com.formz.model.Form;
-import com.formz.model.FormPage;
-import com.formz.model.RequestHistory;
+import com.formz.model.*;
 import com.formz.multitenancy.TenantContext;
 import com.formz.repo.*;
 import com.formz.service.FormDataService;
@@ -69,6 +66,7 @@ public class FormDataServiceImpl implements FormDataService {
     @Autowired
     private ModelMapper modelMapper;
 
+
     Logger log = LoggerFactory.getLogger(FormDataServiceImpl.class);
 
     /**
@@ -111,8 +109,9 @@ public class FormDataServiceImpl implements FormDataService {
 
                 //field list
                 for (FieldDataDTO userFieldData : userData.getFieldDataList()) {
+                    List<FormField> formFields = formFieldRepository.findByForm(form.get());
                     //validate fields here
-                    Optional<Field> field = fieldRepository.findByFieldName(userFieldData.getFieldName());
+                    Optional<Field> field = getFieldByName(userFieldData.getFieldName(), formFields);
                     if (!field.isPresent()) {
                         requestHistory.setRequestStatus(RequestStatus.FAILED);
                         String failedCause = String.format
@@ -123,24 +122,22 @@ public class FormDataServiceImpl implements FormDataService {
                     }
                     if (field.get().getType().equalsIgnoreCase("table")) {
                         List<HashMap<String, Object>> tableDataList = (List<HashMap<String, Object>>) ((List) userFieldData.getFieldValue()).stream().collect(Collectors.toList());
-                        List<String> childField = field.get().getChildFields().stream().map(x -> x.getFieldName()).collect(Collectors.toList());
-                        for (HashMap<String, Object> tableDataField : tableDataList) {
-                            for (String child : childField) {
-
-                                if (tableDataField.get(child) == null) {
-                                    requestHistory.setRequestStatus(RequestStatus.FAILED);
-                                    String failedCause = String.format
-                                            ("Table data incorrect for [%s] : [Request Id: %s]", field.get().getFieldName(), requestId);
-                                    requestHistory.setResult(failedCause);
-                                    requestHistoryRepository.save(requestHistory);
-                                    throw new BadRequestException(failedCause);
-
-                                }
+                        Set<String> tableKeys = new HashSet<>();
+                        for (HashMap<String, Object> map : tableDataList)
+                            for (String k : map.keySet())
+                                tableKeys.add(k);
+                        for (String key : tableKeys) {
+                            Optional<Field> columnField = getFieldByName(key, formFields);
+                            if (!columnField.isPresent() || columnField.get().getParentField() == null) {
+                                requestHistory.setRequestStatus(RequestStatus.FAILED);
+                                String failedCause = String.format
+                                        ("Column name[%s] is not valid: [Request Id: %s]", key, requestId);
+                                requestHistory.setResult(failedCause);
+                                requestHistoryRepository.save(requestHistory);
+                                throw new BadRequestException(failedCause);
                             }
                         }
                     }
-
-
                     if (userFieldData.getFieldValue() == null)
                         userFieldData.setFieldValue("NONE");
                     userDataMap.put(field.get().getFieldName(), userFieldData.getFieldValue());
@@ -178,8 +175,16 @@ public class FormDataServiceImpl implements FormDataService {
         requestHistory.setRequestStatus(RequestStatus.GENERATED);
         requestHistory.setResult(mainPDF.getAbsolutePath());
         requestHistoryRepository.save(requestHistory);
-
         return requestId;
+    }
+
+    private Optional<Field> getFieldByName(String fieldName, List<FormField> formFields) {
+        if(formFields!=null || !formFields.isEmpty()) {
+            Optional<FormField> formField = formFields.stream().filter(x -> x.getField().getFieldName().equalsIgnoreCase(fieldName)).findAny();
+            if (formField.isPresent())
+                return Optional.of(formField.get().getField());
+        }
+        return Optional.empty();
     }
 
     /**

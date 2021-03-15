@@ -6,6 +6,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
+/**
+ * This configuration is used for working multitenancy fine with sync
+ */
 @Configuration
 public class AsyncConfig extends AsyncConfigurerSupport {
 

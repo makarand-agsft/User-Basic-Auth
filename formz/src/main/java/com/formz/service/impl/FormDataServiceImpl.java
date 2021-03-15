@@ -66,6 +66,9 @@ public class FormDataServiceImpl implements FormDataService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Value("${pdf.download.url}")
+    private String pdfDownloadLink;
+
 
     Logger log = LoggerFactory.getLogger(FormDataServiceImpl.class);
 
@@ -83,6 +86,7 @@ public class FormDataServiceImpl implements FormDataService {
 
         PDFMergerUtility pdfMergerUtility = new PDFMergerUtility();
         if (formDataListDTO == null) {
+            log.error("Form data is null");
             throw new BadRequestException("Invalid request");
         }
         RequestHistory requestHistory = new RequestHistory();
@@ -96,6 +100,7 @@ public class FormDataServiceImpl implements FormDataService {
         for (FormDataListDTO formDataList : formDataListDTO) {
             Optional<Form> form = formRepository.findByName(formDataList.getFormName());
             if (!form.isPresent()) {
+                log.error(String.format("Form [%s] not found: [Request Id: ]", formDataList.getFormName(), requestId));
                 requestHistory.setRequestStatus(RequestStatus.FAILED);
                 String failedCause = String.format("Form [%s] not found: [Request Id: ]", formDataList.getFormName(), requestId);
                 requestHistory.setResult(failedCause);
@@ -113,6 +118,7 @@ public class FormDataServiceImpl implements FormDataService {
                     //validate fields here
                     Optional<Field> field = getFieldByName(userFieldData.getFieldName(), formFields);
                     if (!field.isPresent()) {
+                        log.error(String.format("Field name[%s] is not valid: [Request Id: %s]", userFieldData.getFieldName(), requestId));
                         requestHistory.setRequestStatus(RequestStatus.FAILED);
                         String failedCause = String.format
                                 ("Field name[%s] is not valid: [Request Id: %s]", userFieldData.getFieldName(), requestId);
@@ -129,6 +135,7 @@ public class FormDataServiceImpl implements FormDataService {
                         for (String key : tableKeys) {
                             Optional<Field> columnField = getFieldByName(key, formFields);
                             if (!columnField.isPresent() || columnField.get().getParentField() == null) {
+                                log.error(String.format("Column name[%s] is not valid: [Request Id: %s]", key, requestId));
                                 requestHistory.setRequestStatus(RequestStatus.FAILED);
                                 String failedCause = String.format
                                         ("Column name[%s] is not valid: [Request Id: %s]", key, requestId);
@@ -141,6 +148,7 @@ public class FormDataServiceImpl implements FormDataService {
                     if (userFieldData.getFieldValue() == null)
                         userFieldData.setFieldValue("NONE");
                     userDataMap.put(field.get().getFieldName(), userFieldData.getFieldValue());
+                    log.info("Data values loaded");
                 }
 
                 userDataMap.put("currentDate", getFormatedDate());
@@ -153,6 +161,7 @@ public class FormDataServiceImpl implements FormDataService {
                         requestHistory.setRequestStatus(RequestStatus.FAILED);
                         String failedCause = "Template " + location.substring(location.lastIndexOf('/') + 1) + " not found";
                         requestHistory.setResult(failedCause);
+                        log.error(failedCause);
                         requestHistoryRepository.save(requestHistory);
                         throw new BadRequestException(failedCause);
                     }
@@ -174,6 +183,7 @@ public class FormDataServiceImpl implements FormDataService {
         pdfMergerUtility.mergeDocuments(memoryUsageSetting);
         requestHistory.setRequestStatus(RequestStatus.GENERATED);
         requestHistory.setResult(mainPDF.getAbsolutePath());
+        log.info("PDF generated successfully");
         requestHistoryRepository.save(requestHistory);
         return requestId;
     }
@@ -231,6 +241,7 @@ public class FormDataServiceImpl implements FormDataService {
         FileWriter writer = new FileWriter(jsonFile);
         writer.write(mapper.writeValueAsString(formDataListDTO));
         writer.close();
+        log.info("Json file created");
         return jsonFile;
     }
 
@@ -250,7 +261,11 @@ public class FormDataServiceImpl implements FormDataService {
         RequestStatusDTO requestStatusDTO = modelMapper.map(requestHistory, RequestStatusDTO.class);
         requestStatusDTO.setLastUpdatedAt(requestHistory.getLastModifiedDate());
         requestStatusDTO.setRequestStatus(requestHistory.getRequestStatus().getValue());
-        requestStatusDTO.setOutput(requestHistory.getResult());
+        if(!requestHistory.getRequestStatus().equals(RequestStatus.GENERATED))
+            requestStatusDTO.setOutput(requestHistory.getResult());
+        else
+            requestStatusDTO.setOutput(pdfDownloadLink+"?requestId="+requestHistory.getRequestId());
+        log.info("Request status fetched for request id: "+requestId);
         return requestStatusDTO;
     }
 
@@ -264,6 +279,7 @@ public class FormDataServiceImpl implements FormDataService {
     @Override
     public FileDTO downloadPDF(String requestId) throws IOException {
         if (requestId == null || requestId.isEmpty()) {
+            log.error("Request id empty");
             throw new BadRequestException(messageSource.getMessage("invalid.request", null, Locale.ENGLISH));
         }
 
@@ -286,6 +302,7 @@ public class FormDataServiceImpl implements FormDataService {
             fileDTO = new FileDTO();
             fileDTO.setFileData(pdfFileData);
             fileDTO.setFileName(file.getName());
+            log.info("PDF downloaded successfully");
         }
         file.delete();
         return fileDTO;

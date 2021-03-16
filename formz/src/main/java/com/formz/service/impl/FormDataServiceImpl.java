@@ -165,9 +165,9 @@ public class FormDataServiceImpl implements FormDataService {
                         requestHistoryRepository.save(requestHistory);
                         throw new BadRequestException(failedCause);
                     }
-                    Resource resource = new ClassPathResource("images/sample.png");
+                    Resource resource = new ClassPathResource("images/AlertAuto_Logo.jpg");
                     byte[] bytes = Files.readAllBytes(Paths.get(resource.getURI()));
-                    userDataMap.put("logoimage", "data:image/png;charset=utf-8;base64," + Base64.getEncoder().encodeToString(bytes));
+                    userDataMap.put("logoimage", "data:image/jpg;charset=utf-8;base64," + Base64.getEncoder().encodeToString(bytes));
                     String html = formzUtils.getTemplatetoText(location, userDataMap);
                     convertHtmlToPdf(formId, form.get().getName(), pdfMergerUtility, html);
                 }

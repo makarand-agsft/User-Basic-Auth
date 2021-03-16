@@ -1,0 +1,261 @@
+<html>
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+<meta name=Generator content="Microsoft Word 15 (filtered)">
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Arial",sans-serif;}
+p.MsoTitle, li.MsoTitle, div.MsoTitle
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	line-height:115%;
+	page-break-after:avoid;
+	font-size:26.0pt;
+	font-family:"Arial",sans-serif;}
+.MsoChpDefault
+	{font-family:"Arial",sans-serif;}
+.MsoPapDefault
+	{line-height:115%;}
+ /* Page Definitions */
+ @page WordSection1
+	{size:595.3pt 841.9pt;
+	margin:.25in .25in .25in .25in;}
+div.WordSection1
+	{page:WordSection1;}
+ /* List Definitions */
+ ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style>
+
+</head>
+
+<body style="width: 21cm;
+height: 29.7cm;
+margin: 0 auto;background-color: #ffffff;">
+
+<div class=WordSection1>
+
+<p class=MsoNormal style='margin-left:.5in'><b><span lang=EN style='font-size:
+12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>&nbsp;</span></b></p>
+
+<table class=2 border=1 cellspacing=0 cellpadding=0 width=738 style='margin-left:
+ 10.25pt;border-collapse:collapse;border:none'>
+ <tr style='height:22.0pt'>
+  <td width=352 rowspan=3 valign=top style='width:264.0pt;border:solid white 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:22.0pt'>
+  <p class=MsoNormal style='line-height:normal'><b><span lang=EN
+  style='font-size:14.0pt;font-family:"Calibri",sans-serif'>${CONAME}</span></b></p>
+  <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-size:
+  12.0pt;font-family:"Calibri",sans-serif'>Representing Agile Auto Insurance
+  Company</span></p>
+  <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-size:
+  12.0pt;font-family:"Calibri",sans-serif'>${COSTREET}</span></p>
+  <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-size:
+  12.0pt;font-family:"Calibri",sans-serif'>${COCITY},
+  ${COSTATE} ${COZIP}</span></p>
+  </td>
+  <td width=211 valign=top style='width:158.25pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:22.0pt'>
+  <p class=MsoNormal style='margin-left:4.5pt;line-height:normal'><span
+  lang=EN style='font-family:"Calibri",sans-serif'>Policy Number:</span></p>
+  </td>
+  <td width=175 valign=top style='width:131.25pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:22.0pt'>
+  <p class=MsoNormal style='margin-left:4.5pt;line-height:normal'><span
+  lang=EN style='font-family:"Calibri",sans-serif'>${POLICYNO}</span></p>
+  </td>
+ </tr>
+ <tr style='height:22.0pt'>
+  <td width=211 valign=top style='width:158.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt;height:22.0pt'>
+  <p class=MsoNormal style='margin-left:4.5pt;line-height:normal'><span
+  lang=EN style='font-family:"Calibri",sans-serif'>Policy Effective Date:</span></p>
+  </td>
+  <td width=175 valign=top style='width:131.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt;height:22.0pt'>
+  <p class=MsoNormal style='margin-left:4.5pt;line-height:normal'><span
+  lang=EN style='font-family:"Calibri",sans-serif'>${POLEFTDATE}</span></p>
+  </td>
+ </tr>
+ <tr style='height:22.0pt'>
+  <td width=211 valign=top style='width:158.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt;height:22.0pt'>
+  <p class=MsoNormal style='margin-left:4.5pt;line-height:normal'><span
+  lang=EN style='font-family:"Calibri",sans-serif'>Policy Expiration Date:</span></p>
+  </td>
+  <td width=175 valign=top style='width:131.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt;height:22.0pt'>
+  <p class=MsoNormal style='margin-left:4.5pt;line-height:normal'><span
+  lang=EN style='font-family:"Calibri",sans-serif'>${POLEXPDATE}</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal><b><span lang=EN style='font-size:12.0pt;line-height:115%;
+font-family:"Calibri",sans-serif'>&nbsp;</span></b></p>
+
+<table class=1 border=1 cellspacing=0 cellpadding=0 width=734 style='margin-left:
+ 14.0pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=367 valign=top style='width:275.15pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='line-height:7%'><b><span lang=EN style='font-size:
+  12.0pt;line-height:7%;font-family:"Calibri",sans-serif'>Name and Address of
+  Insured:</span></b></p>
+  </td>
+  <td width=367 valign=top style='width:275.15pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='line-height:7%'><b><span lang=EN style='font-size:
+  12.0pt;line-height:7%;font-family:"Calibri",sans-serif'>Name and Address of
+  Producer:</span></b></p>
+  </td>
+ </tr>
+ <tr style='height:63.0pt'>
+  <td width=367 valign=top style='width:275.15pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:63.0pt'>
+  <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-size:
+  12.0pt;font-family:"Calibri",sans-serif'>${INSUREDNAME}</span></p>
+  <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-size:
+  12.0pt;font-family:"Calibri",sans-serif'>${INSUREDSTREET}</span></p>
+  <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-size:
+  12.0pt;font-family:"Calibri",sans-serif'>${INSCITY},
+  ${INSST} ${INSZIP}</span></p>
+  <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-size:
+  12.0pt;font-family:"Calibri",sans-serif'>&nbsp;</span></p>
+  </td>
+  <td width=367 valign=top style='width:275.15pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt;height:63.0pt'>
+  <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-size:
+  12.0pt;font-family:"Calibri",sans-serif'>${AGENTNAME}</span></p>
+  <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-size:
+  12.0pt;font-family:"Calibri",sans-serif'>${AGENTSTREET}</span></p>
+  <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-size:
+  12.0pt;font-family:"Calibri",sans-serif'>${AGENTCITY},
+  ${AGENTST} ${AGENTZIP}<br>
+  ${AGENTCODE}</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-top:10.0pt;margin-right:0in;margin-bottom:
+0in;margin-left:9.0pt;margin-bottom:.0001pt;line-height:150%'><span lang=EN
+style='font-size:18.0pt;line-height:150%'>RE: ${DOCUMENTNAME}</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-size:
+12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>Dear Sir or Madam,</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-size:
+12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>In reference to the
+above stated policy the following item(s) were missing or not attached and are
+required for the policy to stay in force:</span></p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in'><span lang=EN
+style='font-size:12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>●<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span
+lang=EN style='font-size:12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>${SUSPENSEITEM1}</span></p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in'><span lang=EN
+style='font-size:12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>●<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span
+lang=EN style='font-size:12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>${SUSPENSEITEM2}</span></p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in'><span lang=EN
+style='font-size:12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>●<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span
+lang=EN style='font-size:12.0pt;line-height:115%;font-family:"Calibri",sans-serif'> </span></p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in'><span lang=EN
+style='font-size:12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>●<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span
+lang=EN style='font-size:12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>${SUSPENSEITEM10}</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-size:
+12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-size:
+12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>Please remit the
+above information as soon as possible to prevent the policy from being
+cancelled for underwriting reasons. This notice was not sent to your insured.
+Your agency is required to obtain and remit all required information as
+requested by the company. This may be your final notice before this policy is
+noticed for cancellation.</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-size:
+12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>Please return a copy
+of this notice with the requested information to ${UWEMAIL} or fax
+the</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-size:
+12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>documentation to
+${COPHONE}. If you have any questions please contact the underwriting
+department at ${COPHONE}.</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-size:
+12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-size:
+12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt;line-height:150%'><span lang=EN
+style='font-size:12.0pt;line-height:150%;font-family:"Calibri",sans-serif'>Thank
+you,</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt;line-height:150%'><span lang=EN
+style='font-size:12.0pt;line-height:150%;font-family:"Calibri",sans-serif'>Underwriting
+Department</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt;line-height:normal'><span lang=EN
+style='font-size:12.0pt;font-family:"Calibri",sans-serif'>${CONAME}</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-size:
+12.0pt;line-height:115%;font-family:"Calibri",sans-serif'>${COCODE}
+${COCODEVAL}</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-family:
+"Calibri",sans-serif'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-family:
+"Calibri",sans-serif'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-family:
+"Calibri",sans-serif'>&nbsp;</span></p>
+
+<p class=MsoTitle align=center style='margin-top:12.0pt;text-align:center;
+line-height:7%'><a name="_vl31kebcx1lz"></a><b><span lang=EN>${NOTICEDURATION}</span></b></p>
+
+<p class=MsoNormal style='margin-left:9.0pt'><span lang=EN style='font-family:
+"Calibri",sans-serif'>&nbsp;</span></p>
+
+<p class=MsoNormal><span lang=EN style='font-family:"Calibri",sans-serif'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span lang=EN style='font-family:
+"Calibri",sans-serif'>&nbsp;</span></p>
+
+</div>
+
+</body>
+
+</html>

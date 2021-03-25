@@ -54,23 +54,25 @@ public class PalmInsuranceService {
         }
         List<FormDataListDTO> inputJsonList = new ArrayList<>();
         for (FormPolicyDTO form : formDto.getFormPolicyDTO()) {
-            List<Policy> policies = policyRepository.findByIdIn(form.policyIds);
-            if (policies.isEmpty()) {
-                throw new BadRequestException("Policy id's invalid");
-            }
-            if (form.getFormName().equals(FormNames.SUSPENSE)) {
-                FormDataListDTO inputJson = getJsonData(policies, FormNames.SUSPENSE);
-                inputJsonList.add(inputJson);
-            } else if (form.getFormName().equals(FormNames.AGENT)) {
-                FormDataListDTO inputJson = getJsonData(policies, FormNames.AGENT);
-                inputJsonList.add(inputJson);
-            } else if (form.getFormName().equals(FormNames.INSURED)) {
-                FormDataListDTO inputJson = getJsonData(policies, FormNames.INSURED);
-                inputJsonList.add(inputJson);
-            }
+            if (form.policyIds != null && !form.policyIds.isEmpty()) {
+                List<Policy> policies = policyRepository.findByIdIn(form.policyIds);
+                if (policies.isEmpty()) {
+                    throw new BadRequestException("Policy id's invalid");
+                }
+                if (form.getFormName().equals(FormNames.SUSPENSE)) {
+                    FormDataListDTO inputJson = getJsonData(policies, FormNames.SUSPENSE);
+                    inputJsonList.add(inputJson);
+                } else if (form.getFormName().equals(FormNames.AGENT)) {
+                    FormDataListDTO inputJson = getJsonData(policies, FormNames.AGENT);
+                    inputJsonList.add(inputJson);
+                } else if (form.getFormName().equals(FormNames.INSURED)) {
+                    FormDataListDTO inputJson = getJsonData(policies, FormNames.INSURED);
+                    inputJsonList.add(inputJson);
+                }
 
+            }
+            String s = mapper.writeValueAsString(inputJsonList);
         }
-        String s = mapper.writeValueAsString(inputJsonList);
     }
 
     private FormDataListDTO getJsonData(List<Policy> policies, FormNames formNames) throws JsonProcessingException {

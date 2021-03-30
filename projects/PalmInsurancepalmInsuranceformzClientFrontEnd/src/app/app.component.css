@@ -1,0 +1,19 @@
+.loginmodal-container {
+    padding: 20px;
+    max-width: 400px;
+    width: 100% !important;
+    background-color: #F7F7F7;
+    margin: 0 auto;
+    border-radius: 2px;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    padding-left: 25px;
+    padding-right: 25px;
+    border-radius: 15px;
+  }
+  
+  .loginmodal-container input[type=button] {
+    width: 46%;
+    display: block;
+    position: relative;
+  }

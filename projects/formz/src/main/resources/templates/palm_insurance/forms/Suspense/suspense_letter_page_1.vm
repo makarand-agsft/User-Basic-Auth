@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    </meta>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    </meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </meta>
+    <title>Suspense Letter</title>
+    <style>
+        div.page-footer-right {
+            display: block;
+            text-align: right;
+            font-size: 14px;
+            position: running(page-footer-right);
+        }
+
+        div.page-footer-center {
+            display: block;
+            text-align: left;
+            font-size: 14px;
+            position: running(page-footer-center);
+        }
+
+        .page-header {
+            display: block;
+            text-align: left;
+            position: running(page-header);
+        }
+
+        @page {
+            @top-left {
+                content: element(page-header);
+            }
+
+            @bottom-left {
+                content: "Page "counter(page) " of "counter(pages);
+                padding-left: 20px;
+                font-size: 14px;
+                font-family: FreeSans;
+            }
+
+            @bottom-center {
+                content: element(page-footer-center);
+            }
+
+            @bottom-right {
+                content: element(page-footer-right);
+                font-family: FreeSans;
+            }
+        }
+
+        @page {
+            size: 21cm 29.7cm;
+            padding: 5px 0px 0px 0px;
+            margin: 3.2cm 0.8cm 2.5cm 0cm;
+        }
+    </style>
+</head>
+
+<body style="font-family: FreeSans;margin: 0 auto;background-color: #ffffff;">
+    <div class="page-footer-right">Printed: ${currentDate}</div>
+    <div class="page-footer-center">Send to:<a href=${AGENTEMAIL}>${AGENTEMAIL}</a> </div>
+    <header class="page-header" style="margin-left:0.3cm;margin-top:0.3cm;margin-right:0.2cm;">
+        <table cellpadding="8" style="border-collapse: collapse; width: 100%;padding-right:0px;">
+            <tr>
+                <td> <img src=${logoimage} alt="" width="120" style="margin-top:-25px;"> </img>
+                </td>
+                <td style="text-align: right;padding-right:-10px;"> <span style="font-size: 16px;"><b>${CONAME}</b>
+                    </span>
+                    <br /> <span style="font-size: 14px;">${COSTREET}</span>
+                    <br /> <span style="font-size: 14px;">${COCITY}, ${COST} ${COZIP}</span>
+                    <br />
+                </td>
+            </tr>
+        </table>
+    </header>
+
+    <div style="margin-left:1cm;">
+        <section>
+            <table cellpadding="8" style="border-collapse: collapse; width: 100%;margin-top:10px;">
+                <tr>
+                    <td rowspan="4" style="width: 330px;">
+                        <p style="font-size: 16px;font-weight: 700; margin: 0;margin-bottom:10px;">${CONAME}</p>
+                        <p style="margin: 0; font-size: 14px;">Representing Agile Auto Insurance Company
+                        </p>
+                        <p style="margin: 0; font-size: 14px;">${COSTREET}</p>
+                        <p style="margin: 0; font-size: 14px;">${COCITY}, ${COST} ${COZIP}</p>
+                    </td>
+                    <td style="border: 1px solid #000000;font-size: 13px;padding-left:10px;">Policy Number:</td>
+                    <td style="border: 1px solid #000000;font-size: 13px;">${POLICYNO}</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000000;font-size: 13px;">Policy Effective Date:</td>
+                    <td style="border: 1px solid #000000;font-size: 13px;">${POLEFTDATE}</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000000;font-size: 13px;">Policy Expiration Date:</td>
+                    <td style="border: 1px solid #000000;font-size: 13px;">${POLEXPDATE}</td>
+                </tr>
+            </table>
+        </section>
+        <section style="margin-top: 20px;">
+            <table cellpadding="4" style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #000000; text-align: left;padding-left: 10px;font-size: 14px;">Name
+                            and
+                            Address of Insured:</th>
+                        <th style="border: 1px solid #000000;text-align: left;padding-left: 10px;font-size: 14px;">Name
+                            and
+                            Address of Producer:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #000000;padding-left: 10px;font-size: 14px;">
+                            <span>${INSUREDNAME}</span>
+                            <br /> <span>${INSUREDSTREET}</span>
+                            <br /> <span>${INSCITY}, ${INSST}</span>
+                            <span> ${INSZIP}</span>
+                        </td>
+                        <td style="border: 1px solid #000000;padding-left: 10px;font-size: 14px;">
+                            <span>${AGENTNAME}</span>
+                            <br /> <span>${AGENTSTREET}</span>
+                            <br /> <span>${AGENTCITY}, ${AGENTST} ${AGENTZIP}</span>
+                            <br /> <span>${AGENTCODE}</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section style="font-size: 15px;">
+            <p style="font-size: 22px; margin-bottom: 10px;margin-top: 13px;">RE: ${DOCUMENTNAME}</p>
+            <p style="margin: 0px;">Dear Sir or Madam,</p>
+            <p style="margin-top: 0px;margin-bottom:0px"> In reference to the above stated policy the following item(s)
+                were missing or not
+                attached and are required for the policy to stay in force:</p>
+            <ul style="margin-top:0px;font-size:14px;margin-left:-10px;"> #foreach(${suspenseitem} in ${SUSPENSEITEMS})
+                <li>${suspenseitem}</li> #end
+            </ul>
+            <p style="font-size:15px;"> Please remit the above information as soon as possible to prevent the policy
+                from
+                being cancelled for underwriting reasons. This notice was not sent to your insured. Your agency is
+                required
+                to obtain and remit all required information as requested by the company. This may be your final notice
+                before this policy is noticed for cancellation.
+                <br /> Please return a copy of this notice with the requested information to ${UWEMAIL} or fax the
+                documentation to ${COPHONE}. If you have any questions please contact the underwriting department at
+                ${COPHONE}.
+            </p>
+            <p style="margin-top:50px;
+                  margin-bottom: 10px;">Thank you,</p>
+            <p style=" margin-top: 2px;
+margin-bottom: 0px;font-size:14px;">Underwriting Department</p>
+            <p style="margin-top:10px;font-size:14px;">${CONAME}
+                <br />${COCODE} : ${COCODEVAL}
+            </p>
+        </section>
+        <section>
+            <div style="text-align: center; font-size: 38px;margin-top:60px;
+font-weight: 600;">${NOTICEDURATION}</div>
+        </section>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    </meta>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    </meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </meta>
+    <title>Suspense Letter</title>
+
+    <style>
+        div.page-footer-right {
+            display: block;
+            text-align: right;
+            font-size: 14px;
+            font-family: FreeSans;
+            position: running(page-footer-right);
+        }
+
+        div.page-footer-center {
+            display: block;
+            text-align: left;
+            font-size: 14px;
+            font-family: FreeSans;
+            position: running(page-footer-center);
+        }
+
+        .page-header {
+            display: block;
+            text-align: left;
+            position: running(page-header);
+        }
+
+        @page {
+            @top-left {
+                content: element(page-header);
+            }
+
+            @bottom-left {
+                content: "Page "counter(page) " of "counter(pages);
+                font-size: 14px;
+                font-family: FreeSans;
+            }
+
+            @bottom-center {
+                content: "1st Insured Copy";
+                font-family: FreeSans;
+                font-size: 14px;
+            }
+
+            @bottom-right {
+                content: element(page-footer-right);
+            }
+        }
+
+        @page {
+            size: 21cm 29.7cm;
+            margin: 7.5cm 1cm 2cm 1cm;
+        }
+    </style>
+</head>
+
+<body style="font-family: FreeSans; background-color: #ffffff;font-size:14px;">
+    <div class="page-footer-right">Printed: ${currentDate}</div>
+    <header class="page-header">
+        <table cellpadding="8" style="border-collapse: collapse; width: 100%;">
+            <tr>
+                <td style="padding-bottom: 20px;"> <img src=${logoimage} alt="" width="120"> </img></td>
+                <td style="text-align: right;padding-bottom: 20px;">
+                    <span style="font-size: 16px;font-weight: bolder;"><b>${CONAME}</b> </span> <br />
+                    <span style="font-size: 14px;">${COSTREET}</span> <br />
+                    <span style="font-size: 14px;">${COCITY}, ${COST} ${COZIP}</span> <br />
+                </td>
+            </tr>
+        </table>
+
+
+        <section>
+            <table cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                <tbody>
+                    <tr>
+                        <td rowspan="4" style="padding-right: 45px;width: 240px; ">
+                            <p style="font-size: 16px;font-weight: 700; margin: 0;">${CONAME}</p>
+                            <p style="margin: 0; font-size: 14px;">Representing Agile Auto Insurance Company</p>
+                            <p style="margin: 0; font-size: 14px;">${COSTREET}</p>
+                            <p style="margin: 0; font-size: 14px;">${COCITY}, ${COST} ${COZIP}</p>
+
+                        </td>
+                        <td
+                            style="border: 1px solid #000000;text-align: right;font-weight: bold;font-size: 14px;width:210px;">
+                            Policy
+                            Number:</td>
+                        <td style="border: 1px solid #000000;padding-left:10px;width:210px;">${POLICYNO}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #000000;text-align: right;font-weight: bold;font-size: 14px;">
+                            Policy
+                            Effective Date:</td>
+                        <td style="border: 1px solid #000000;padding-left:10px;">${POLEFTDATE}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #000000;text-align: right;font-weight: bold;font-size: 14px;">
+                            CoverageTermination Date:</td>
+                        <td style="border: 1px solid #000000;padding-left:10px;">${POLEXPDATE}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #000000;text-align: right;font-weight: bold;font-size: 14px;">
+                            Mailing
+                            Date:
+                        </td>
+                        <td style="border: 1px solid #000000;padding-left:10px;">${MAILINGDATE}</td>
+                    </tr>
+                </tbody>
+            </table>
+    </header>
+    </section>
+
+    </section>
+
+    <section style="margin-top:-20px">
+        <p style="text-align: center; font-size: 18px;font-weight: bolder;"><b> Notice of Dishonored Deposit </b> </p>
+        <p style="font-size: 14px; padding-left: 35px;margin-bottom: 70px;">
+            <span><b> Name and Address of Insured: </b></span> <br />
+            <span>${INSUREDNAME}</span> <br />
+            <span>${INSUREDSTREET}</span> <br />
+            <span>${INSCITY}, ${INSST}, ${INSZIP}</span>
+        </p>
+    </section>
+
+    <section style="margin-top: 40px;">
+        <span> Please read the attached notice carefully. Please be sure to contact your agent or use our insured
+            portal to make
+            your payment. Your agent's name is ${AGENTNAME} and can be reached at ${COPHONE}. The link to our
+            insured
+            portal is</span>
+
+    </section>
+
+    <section style="text-align: center;">
+        <p style="font-size:16px; margin-bottom: 30px;margin-top:25px;
+">
+            <a href="https://www.palminsure.com/Client/Login" style="color: black;text-decoration:none;">
+                https://www.palminsure.com/Client/Login</a>
+        </p>
+
+    </section>
+
+    <section>
+        <span>Please keep in mind that if you provided your correct e-mail address at time of binding, we sent you
+            an e-mail
+            with a link allowing you to create your password and the ability to log into our insured portal. This is
+            where you
+            can access all of your policy documents and make payments.</span>
+    </section>
+
+    <section style="text-align:center;font-weight: bold;margin-top: 115px;page-break-after:always;"> IF YOU HAVE
+        ANY QUESTIONS PLEASE CONTACT US AT ${COPHONE}</section>
+
+    <section style="margin-top: 4px;">
+        <table cellpadding="4" style="border-collapse: collapse; width: 100%;">
+            <thead>
+                <tr>
+                    <td colspan="2"
+                        style="text-align: center;font-weight: bolder; padding-bottom: 3px;font-size: 20px;"><b>Notice
+                            of Dishonored Deposit</b> </td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000000;text-align: left;width: 50%;font-weight:600;font-size: 14px;">
+                        Name and
+                        Address of Insured
+                    </td>
+                    <td
+                        style="border: 1px solid #000000; text-align: left;width: 50%;font-weight:bold;font-size: 14px;">
+                        Name and
+                        Address of
+                        Producer: ${AGENTCODE}</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+
+                    <td style="padding-top:7px;padding-bottom:7px;border: 1px solid #000000;">
+                        <span>${INSUREDNAME}</span> <br />
+                        <span>${INSUREDSTREET}</span> <br />
+                        <span>${INSCITY}, ${INSST}, ${INSZIP}</span> <br />
+
+                    </td>
+                    <td style="padding-top:7px;padding-bottom:7px;border: 1px solid #000000;">
+                        <span>${AGENTNAME}</span> <br />
+                        <span>${AGENTSTREET}</span> <br />
+                        <span>${AGENTCITY}, ${AGENTST} ${AGENTZIP}</span> <br />
+
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <p style="margin-top: 12px;">
+            <span style="padding-bottom: 10px; display: block;font-weight:600;font-size: 14px;"> Reason For
+                Cancellation: <br /></span>
+            Your Deposit payment was not honored by your banking institution due to insufficient funds or a closed
+            account.
+            A NSF Fee of $15.00 will be applied. You have until <b> ${POLEXPDATE}</b> to make a payment or your policy
+            will
+            be
+            voided
+            effective <b>${POLEFTDATE}</b> with no coverage afforded. Contact your agent to make a payment.
+
+        </p>
+    </section>
+
+    <section>
+        <p style="text-align: center;"><b>IF YOU HAVE ANY QUESTIONS PLEASE CONTACT US AT
+                ${COPHONE}</b></p>
+
+        <p style="text-align: center;margin-top: 25px;"><b>IMPORTANT NOTICES</b></p>
+    </section>
+
+    <section style="font-size:15px;">
+        <p style="font-size:15px;">State Joint Underwriting Association Information (applicable only to policies
+            providing Automobile Liability
+            and/or Personal Injury Protection coverage): You have been notified herewith that this Company does not
+            desire to carry your automobile insurance any longer. You are possibly eligible for automobile insurance
+            through another insurer or through the State Joint Underwriting Association. For the information regarding
+            the
+            replacement insurance, either from another insurer or the Association, please consult your agent or company
+            representatives. This notification of the availability for State Joint Underwriting Association is given
+            pursuant to
+            the provisions of Section 627.728 of the State Statutes.
+        </p>
+        <p>Please be so advised that any claims you may make against this policy, as the result of losses up until the
+            effective date of the cancellation, will not be considered if there is any material misrepresentation by
+            you, or
+            any insured person under your policy. (State Statute 627.409)
+        </p>
+
+        <p>In compliance with State Statute 627.728, you are hereby notified that you may be eligible for personal car
+            coverage through the State Joint Underwriting Association. Please contact your agent for replacement
+            coverage or for more information regarding your eligibility for coverage through the State Joint
+            Underwriting
+            Association.
+        </p>
+
+        <p>
+            You are permitted by law to appeal this cancellation. An appeal must be filed no later than 20 days before
+            the
+            effective date of cancellation set forth in this notice. Forms for such appeal and the regulations
+            pertaining
+            thereto may be obtained from the office. The office does not have the authority to extend the effective date
+            of
+            cancellation; therefore you should obtain replacement coverage prior to the effective date of cancellation.
+
+        </p>
+        <p>(State Statute 627.728 (7))</p>
+        <p>
+            Any cancellation or non-renewal of mandatory insurance will be reported to the Department of Highway Safety
+            and Motor Vehicles. Failure to maintain Personal Injury Protection and Property Damage Liability insurance
+            on
+            a motor vehicle as required by law may result in the loss of your registration and driving privileges. A
+            reinstatement fee of $150 for the first reinstatement, $250 for the second and $500 for each additional
+            reinstatement during the 3-year period after the first reinstatement is mandatory (State Statute 627.733)
+            and
+            must be paid, along with meeting proof of mandatory insurance requirements to the State Department of
+            Highway Safety and Motor Vehicles.
+        </p>
+    </section>
+</body>
+
+</html>
